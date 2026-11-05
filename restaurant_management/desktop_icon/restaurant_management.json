@@ -1,0 +1,22 @@
+{
+ "app": "restaurant_management",
+ "creation": "2026-11-02 14:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon": "utensils",
+ "icon_type": "Link",
+ "idx": 1,
+ "label": "Restaurant Management",
+ "link_to": "Restaurant Management",
+ "link_type": "Workspace Sidebar",
+ "modified": "2026-11-02 14:00:00.000000",
+ "modified_by": "Administrator",
+ "name": "Restaurant Management",
+ "owner": "Administrator",
+ "parent_icon": "",
+ "restrict_removal": 0,
+ "roles": [],
+ "standard": 1
+}
+

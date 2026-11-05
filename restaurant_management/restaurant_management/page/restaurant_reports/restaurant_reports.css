@@ -1,0 +1,730 @@
+/* =============================================================================
+   Izen Bistro — Reports & Analytics Stylesheet
+   Clean, light-theme restaurant analytics matching Dashboard & Approved Modules
+   ============================================================================= */
+
+:root {
+	--rr-bg: #f8fafc;
+	--rr-card-bg: #ffffff;
+	--rr-text-dark: #0f172a;
+	--rr-text-muted: #64748b;
+	--rr-border: #e2e8f0;
+	--rr-primary: #4f46e5;
+	--rr-success: #059669;
+	--rr-warning: #d97706;
+	--rr-danger: #dc2626;
+	--rr-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+	--rr-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+}
+
+.restaurant-reports-wrapper {
+	background: var(--rr-bg);
+	min-height: calc(100vh - 60px);
+	padding: 1.25rem 1.5rem 3rem;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	color: var(--rr-text-dark);
+	box-sizing: border-box;
+}
+
+/* =============================================================================
+   1. Brand Header & Controls
+   ============================================================================= */
+.rr-brand-header {
+	background: var(--rr-card-bg);
+	border: 1px solid var(--rr-border);
+	border-radius: 12px;
+	padding: 1.2rem 1.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	box-shadow: var(--rr-shadow-sm);
+	margin-bottom: 1.25rem;
+	gap: 1.25rem;
+	flex-wrap: wrap;
+}
+
+.rr-brand-left {
+	display: flex;
+	align-items: center;
+	gap: 1.15rem;
+}
+
+.rr-brand-logo-frame {
+	width: 52px;
+	height: 52px;
+	background: #0f172a;
+	border-radius: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+	flex-shrink: 0;
+}
+
+.rr-monogram {
+	color: #f8fafc;
+	font-weight: 800;
+	font-size: 1.35rem;
+	letter-spacing: 0.05em;
+	font-family: "Georgia", serif;
+}
+
+.rr-brand-meta {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+}
+
+.rr-brand-title-row {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.rr-brand-name {
+	font-size: 1.4rem;
+	font-weight: 800;
+	color: var(--rr-text-dark);
+	margin: 0;
+	letter-spacing: 0.06em;
+	line-height: 1.2;
+}
+
+.rr-badge-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	background: #eef2ff;
+	color: var(--rr-primary);
+	border: 1px solid #c7d2fe;
+	padding: 0.2rem 0.65rem;
+	border-radius: 9999px;
+	font-size: 0.76rem;
+	font-weight: 600;
+}
+
+.rr-brand-subtitle {
+	font-size: 0.88rem;
+	color: var(--rr-text-muted);
+	margin: 0;
+	font-weight: 500;
+}
+
+.rr-brand-location {
+	font-size: 0.82rem;
+	color: var(--rr-text-muted);
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+
+.rr-brand-right {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.rr-header-chips {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	flex-wrap: wrap;
+}
+
+.rr-info-chip {
+	background: #f1f5f9;
+	border: 1px solid var(--rr-border);
+	padding: 0.45rem 0.85rem;
+	border-radius: 8px;
+	font-size: 0.82rem;
+	color: var(--rr-text-dark);
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+}
+
+.btn-rr-action {
+	padding: 0.45rem 0.95rem;
+	border-radius: 8px;
+	font-weight: 600;
+	font-size: 0.82rem;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	cursor: pointer;
+	border: 1px solid var(--rr-border);
+	background: #ffffff;
+	color: var(--rr-text-dark);
+	transition: all 0.15s ease;
+}
+
+.btn-rr-action:hover {
+	background: #f1f5f9;
+	border-color: #cbd5e1;
+}
+
+.btn-rr-primary {
+	background: var(--rr-primary);
+	border-color: var(--rr-primary);
+	color: #ffffff;
+}
+
+.btn-rr-primary:hover {
+	background: #4338ca;
+	border-color: #4338ca;
+	color: #ffffff;
+}
+
+/* =============================================================================
+   2. Filter Toolbar Bar
+   ============================================================================= */
+.rr-filter-toolbar {
+	background: var(--rr-card-bg);
+	border: 1px solid var(--rr-border);
+	border-radius: 10px;
+	padding: 0.75rem 1.25rem;
+	margin-bottom: 1.25rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	box-shadow: var(--rr-shadow-sm);
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
+.rr-filter-group-left {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+.rr-filter-label {
+	font-size: 0.82rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	color: var(--rr-text-muted);
+	letter-spacing: 0.04em;
+	margin-right: 0.35rem;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+
+.rr-period-btn {
+	background: #f8fafc;
+	border: 1px solid var(--rr-border);
+	padding: 0.35rem 0.85rem;
+	border-radius: 6px;
+	font-size: 0.82rem;
+	font-weight: 600;
+	color: var(--rr-text-muted);
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.rr-period-btn:hover {
+	background: #f1f5f9;
+	color: var(--rr-text-dark);
+}
+
+.rr-period-btn.active {
+	background: var(--rr-primary);
+	border-color: var(--rr-primary);
+	color: #ffffff;
+	box-shadow: 0 1px 3px rgba(79, 70, 229, 0.3);
+}
+
+.rr-custom-inputs-row {
+	display: none;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.rr-custom-inputs-row.show {
+	display: flex;
+}
+
+.rr-date-input {
+	border: 1px solid var(--rr-border);
+	border-radius: 6px;
+	padding: 0.35rem 0.65rem;
+	font-size: 0.82rem;
+	color: var(--rr-text-dark);
+	background: #ffffff;
+}
+
+.rr-period-display-badge {
+	background: #f1f5f9;
+	border: 1px solid var(--rr-border);
+	padding: 0.35rem 0.85rem;
+	border-radius: 6px;
+	font-size: 0.82rem;
+	font-weight: 600;
+	color: var(--rr-text-dark);
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+/* =============================================================================
+   3. Summary KPI Cards (6 Cards Responsive Grid)
+   ============================================================================= */
+.rr-kpi-grid {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 1rem;
+	margin-bottom: 1.35rem;
+}
+
+.rr-kpi-card {
+	background: var(--rr-card-bg);
+	border: 1px solid var(--rr-border);
+	border-radius: 10px;
+	padding: 1.1rem 1.2rem;
+	box-shadow: var(--rr-shadow-sm);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	min-width: 0;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rr-kpi-card:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--rr-shadow-md);
+}
+
+.rr-kpi-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.5rem;
+}
+
+.rr-kpi-title {
+	font-size: 0.76rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--rr-text-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.rr-kpi-icon {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.95rem;
+	flex-shrink: 0;
+}
+
+.kpi-revenue .rr-kpi-icon { background: #ecfdf5; color: #059669; }
+.kpi-orders .rr-kpi-icon { background: #eff6ff; color: #2563eb; }
+.kpi-aov .rr-kpi-icon { background: #fdf2f8; color: #db2777; }
+.kpi-paid-bills .rr-kpi-icon { background: #ecfeff; color: #0891b2; }
+.kpi-pending .rr-kpi-icon { background: #fff7ed; color: #ea580c; }
+.kpi-cancelled .rr-kpi-icon { background: #fef2f2; color: #dc2626; }
+
+.rr-kpi-value {
+	font-size: 1.6rem;
+	font-weight: 800;
+	color: var(--rr-text-dark);
+	line-height: 1.2;
+	margin-bottom: 0.45rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.rr-kpi-footer {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 0.74rem;
+	color: var(--rr-text-muted);
+}
+
+.rr-kpi-badge {
+	font-size: 0.7rem;
+	font-weight: 700;
+	padding: 0.15rem 0.45rem;
+	border-radius: 4px;
+	display: inline-block;
+}
+
+.badge-positive { background: #dcfce7; color: #15803d; }
+.badge-neutral { background: #f1f5f9; color: #475569; }
+.badge-warning { background: #fef3c7; color: #b45309; }
+.badge-danger { background: #fee2e2; color: #b91c1c; }
+
+/* =============================================================================
+   4. Section Blocks & Standard Card Styles
+   ============================================================================= */
+.rr-section-block {
+	margin-bottom: 1.35rem;
+}
+
+.rr-section-header {
+	display: flex;
+	align-items: baseline;
+	gap: 0.75rem;
+	margin-bottom: 0.75rem;
+	padding: 0 0.2rem;
+}
+
+.rr-section-title {
+	font-size: 0.92rem;
+	font-weight: 700;
+	color: var(--rr-text-dark);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+}
+
+.rr-section-hint {
+	font-size: 0.8rem;
+	color: var(--rr-text-muted);
+}
+
+.rr-card {
+	background: var(--rr-card-bg);
+	border: 1px solid var(--rr-border);
+	border-radius: 10px;
+	box-shadow: var(--rr-shadow-sm);
+	overflow: hidden;
+	margin-bottom: 1.25rem;
+}
+
+.rr-card-header {
+	padding: 0.95rem 1.25rem;
+	border-bottom: 1px solid var(--rr-border);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background: #ffffff;
+}
+
+.rr-card-title {
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: var(--rr-text-dark);
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.rr-card-subtitle {
+	font-size: 0.78rem;
+	color: var(--rr-text-muted);
+	margin: 0.15rem 0 0;
+}
+
+.rr-card-badge {
+	font-size: 0.75rem;
+	font-weight: 600;
+	padding: 0.25rem 0.6rem;
+	background: #f1f5f9;
+	color: var(--rr-text-muted);
+	border: 1px solid var(--rr-border);
+	border-radius: 6px;
+}
+
+.rr-card-body {
+	padding: 1.25rem;
+}
+
+/* Multi-column Grid Layouts */
+.rr-two-col-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1.25rem;
+}
+
+.rr-three-col-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 1.25rem;
+}
+
+/* =============================================================================
+   5. Interactive Revenue Trend Chart (SVG / HTML Bar-Chart)
+   ============================================================================= */
+.rr-chart-container {
+	width: 100%;
+	padding: 0.5rem 0;
+}
+
+.rr-bar-chart {
+	display: flex;
+	align-items: flex-end;
+	gap: 0.85rem;
+	height: 180px;
+	padding: 1.5rem 0.5rem 0;
+	border-bottom: 1px solid var(--rr-border);
+	box-sizing: border-box;
+}
+
+.rr-chart-bar-group {
+	flex: 1;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+	position: relative;
+	cursor: pointer;
+}
+
+.rr-chart-bar {
+	width: 100%;
+	max-width: 42px;
+	background: #818cf8;
+	border-radius: 4px 4px 0 0;
+	transition: height 0.3s ease, background 0.15s ease;
+	position: relative;
+}
+
+.rr-chart-bar.bar-today {
+	background: var(--rr-primary);
+}
+
+.rr-chart-bar-group:hover .rr-chart-bar {
+	background: #4338ca;
+}
+
+.rr-bar-tooltip {
+	position: absolute;
+	top: -38px;
+	background: #0f172a;
+	color: #ffffff;
+	font-size: 0.72rem;
+	font-weight: 600;
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+	white-space: nowrap;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.15s ease;
+	transform: translateY(4px);
+	z-index: 10;
+}
+
+.rr-chart-bar-group:hover .rr-bar-tooltip {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+.rr-bar-x-label {
+	font-size: 0.72rem;
+	color: var(--rr-text-muted);
+	margin-top: 0.45rem;
+	font-weight: 500;
+	text-align: center;
+	white-space: nowrap;
+}
+
+/* =============================================================================
+   6. GST 5% Tax Audit Summary Box
+   ============================================================================= */
+.rr-gst-box {
+	background: #f8fafc;
+	border: 1px solid var(--rr-border);
+	border-radius: 8px;
+	padding: 1.15rem;
+}
+
+.rr-gst-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.55rem 0;
+	border-bottom: 1px dashed var(--rr-border);
+	font-size: 0.85rem;
+}
+
+.rr-gst-row:last-child {
+	border-bottom: none;
+	padding-top: 0.75rem;
+	margin-top: 0.25rem;
+	border-top: 2px solid var(--rr-border);
+	font-weight: 700;
+	font-size: 0.95rem;
+}
+
+.rr-gst-label {
+	color: var(--rr-text-muted);
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.rr-gst-val {
+	font-weight: 700;
+	color: var(--rr-text-dark);
+}
+
+/* =============================================================================
+   7. Tables & Data Lists
+   ============================================================================= */
+.rr-table-responsive {
+	overflow-x: auto;
+	width: 100%;
+}
+
+.rr-table {
+	width: 100%;
+	border-collapse: collapse;
+	text-align: left;
+	font-size: 0.85rem;
+}
+
+.rr-table th {
+	background: #f8fafc;
+	color: var(--rr-text-muted);
+	font-weight: 600;
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	padding: 0.75rem 1rem;
+	border-bottom: 1px solid var(--rr-border);
+}
+
+.rr-table td {
+	padding: 0.85rem 1rem;
+	border-bottom: 1px solid #f1f5f9;
+	color: var(--rr-text-dark);
+	vertical-align: middle;
+}
+
+.rr-table tr:hover td {
+	background: #f8fafc;
+}
+
+.rr-table tr:last-child td {
+	border-bottom: none;
+}
+
+/* Status Badges */
+.rr-status-badge {
+	font-size: 0.72rem;
+	font-weight: 700;
+	padding: 0.2rem 0.55rem;
+	border-radius: 9999px;
+	display: inline-block;
+	text-transform: capitalize;
+}
+
+.badge-confirmed { background: #e0e7ff; color: #4338ca; }
+.badge-preparing { background: #fef3c7; color: #b45309; }
+.badge-ready { background: #d1fae5; color: #047857; }
+.badge-served { background: #dcfce7; color: #15803d; }
+.badge-billed { background: #e0f2fe; color: #0369a1; }
+.badge-paid { background: #d1fae5; color: #059669; }
+.badge-cancelled { background: #fee2e2; color: #b91c1c; }
+
+/* Progress Mini Bars */
+.rr-progress-bar-wrap {
+	height: 6px;
+	background: #f1f5f9;
+	border-radius: 9999px;
+	overflow: hidden;
+	margin-top: 0.35rem;
+}
+
+.rr-progress-fill {
+	height: 100%;
+	background: var(--rr-primary);
+	border-radius: 9999px;
+}
+
+/* =============================================================================
+   8. Responsive Breakpoints
+   ============================================================================= */
+@media (max-width: 1200px) {
+	.rr-kpi-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+	.rr-three-col-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 992px) {
+	.rr-two-col-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 768px) {
+	.restaurant-reports-wrapper {
+		padding: 1rem 0.85rem;
+	}
+	.rr-brand-header {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+	.rr-brand-right {
+		width: 100%;
+		justify-content: flex-start;
+	}
+	.rr-kpi-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	.rr-filter-toolbar {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+}
+
+@media (max-width: 480px) {
+	.rr-kpi-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* =============================================================================
+   9. Print Stylesheet (@media print)
+   ============================================================================= */
+@media print {
+	body {
+		background: #ffffff !important;
+		color: #000000 !important;
+	}
+	.page-head, .desk-sidebar, .body-sidebar-container, .navbar, .rr-filter-toolbar, .rr-header-chips button, .btn-rr-action {
+		display: none !important;
+	}
+	.restaurant-reports-wrapper {
+		padding: 0 !important;
+		background: #ffffff !important;
+	}
+	.rr-brand-header {
+		box-shadow: none !important;
+		border: 1px solid #000000 !important;
+		margin-bottom: 1.5rem !important;
+	}
+	.rr-card {
+		box-shadow: none !important;
+		border: 1px solid #cccccc !important;
+		page-break-inside: avoid;
+		margin-bottom: 1.5rem !important;
+	}
+	.rr-kpi-grid {
+		grid-template-columns: repeat(3, 1fr) !important;
+		gap: 0.5rem !important;
+	}
+	.rr-kpi-card {
+		box-shadow: none !important;
+		border: 1px solid #cccccc !important;
+	}
+}

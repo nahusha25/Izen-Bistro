@@ -1,0 +1,558 @@
+/* =============================================================================
+   Izen Bistro — Inventory & Warehouse Management Stylesheet
+   Clean, light-theme styling matching Dashboard, Menu, Billing & Reports
+   ============================================================================= */
+
+:root {
+	--ri-bg: #f8fafc;
+	--ri-card-bg: #ffffff;
+	--ri-text-dark: #0f172a;
+	--ri-text-muted: #64748b;
+	--ri-border: #e2e8f0;
+	--ri-primary: #4f46e5;
+	--ri-primary-light: #eef2ff;
+	--ri-success: #059669;
+	--ri-success-light: #ecfdf5;
+	--ri-warning: #d97706;
+	--ri-warning-light: #fffbeb;
+	--ri-danger: #dc2626;
+	--ri-danger-light: #fef2f2;
+	--ri-info: #0284c7;
+	--ri-info-light: #f0f9ff;
+	--ri-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+	--ri-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+}
+
+.restaurant-inventory-wrapper {
+	background: var(--ri-bg);
+	min-height: calc(100vh - 60px);
+	padding: 1.25rem 1.5rem 3rem;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	color: var(--ri-text-dark);
+	box-sizing: border-box;
+}
+
+/* =============================================================================
+   1. Brand Header & Quick Actions Bar
+   ============================================================================= */
+.ri-brand-header {
+	background: var(--ri-card-bg);
+	border: 1px solid var(--ri-border);
+	border-radius: 12px;
+	padding: 1.2rem 1.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	box-shadow: var(--ri-shadow-sm);
+	margin-bottom: 1.25rem;
+	gap: 1.25rem;
+	flex-wrap: wrap;
+}
+
+.ri-brand-left {
+	display: flex;
+	align-items: center;
+	gap: 1.15rem;
+}
+
+.ri-brand-logo {
+	width: 52px;
+	height: 52px;
+	border-radius: 12px;
+	background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+	color: #ffffff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 24px;
+	box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+}
+
+.ri-brand-text h2 {
+	margin: 0;
+	font-size: 1.35rem;
+	font-weight: 700;
+	color: var(--ri-text-dark);
+	letter-spacing: -0.02em;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.ri-brand-text p {
+	margin: 0.2rem 0 0;
+	font-size: 0.85rem;
+	color: var(--ri-text-muted);
+}
+
+.ri-header-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	flex-wrap: wrap;
+}
+
+.ri-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+	padding: 0.5rem 0.9rem;
+	border-radius: 8px;
+	border: 1px solid var(--ri-border);
+	background: #ffffff;
+	color: var(--ri-text-dark);
+	cursor: pointer;
+	transition: all 0.15s ease-in-out;
+}
+
+.ri-btn:hover {
+	background: #f1f5f9;
+	border-color: #cbd5e1;
+}
+
+.ri-btn-primary {
+	background: var(--ri-primary);
+	border-color: var(--ri-primary);
+	color: #ffffff;
+}
+
+.ri-btn-primary:hover {
+	background: #4338ca;
+	border-color: #4338ca;
+	color: #ffffff;
+}
+
+.ri-btn-success {
+	background: var(--ri-success);
+	border-color: var(--ri-success);
+	color: #ffffff;
+}
+
+.ri-btn-success:hover {
+	background: #047857;
+	border-color: #047857;
+	color: #ffffff;
+}
+
+.ri-btn-danger {
+	background: #ffffff;
+	border-color: #fca5a5;
+	color: var(--ri-danger);
+}
+
+.ri-btn-danger:hover {
+	background: var(--ri-danger-light);
+	border-color: var(--ri-danger);
+}
+
+/* =============================================================================
+   2. KPI Metric Cards
+   ============================================================================= */
+.ri-kpi-grid {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 1rem;
+	margin-bottom: 1.5rem;
+}
+
+.ri-kpi-card {
+	background: var(--ri-card-bg);
+	border: 1px solid var(--ri-border);
+	border-radius: 12px;
+	padding: 1.15rem;
+	box-shadow: var(--ri-shadow-sm);
+	position: relative;
+	overflow: hidden;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ri-kpi-card:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--ri-shadow-md);
+}
+
+.ri-kpi-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.6rem;
+}
+
+.ri-kpi-title {
+	font-size: 0.78rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--ri-text-muted);
+}
+
+.ri-kpi-icon {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 15px;
+}
+
+.icon-items { background: var(--ri-primary-light); color: var(--ri-primary); }
+.icon-val { background: var(--ri-success-light); color: var(--ri-success); }
+.icon-low { background: var(--ri-warning-light); color: var(--ri-warning); }
+.icon-out { background: var(--ri-danger-light); color: var(--ri-danger); }
+.icon-exp { background: #fef3c7; color: #b45309; }
+.icon-mov { background: var(--ri-info-light); color: var(--ri-info); }
+
+.ri-kpi-value {
+	font-size: 1.6rem;
+	font-weight: 700;
+	color: var(--ri-text-dark);
+	letter-spacing: -0.02em;
+	line-height: 1.2;
+}
+
+.ri-kpi-sub {
+	margin-top: 0.35rem;
+	font-size: 0.75rem;
+	color: var(--ri-text-muted);
+}
+
+/* =============================================================================
+   3. Main Tabs Navigation
+   ============================================================================= */
+.ri-tabs-nav {
+	display: flex;
+	gap: 0.5rem;
+	border-bottom: 2px solid var(--ri-border);
+	margin-bottom: 1.25rem;
+	overflow-x: auto;
+	white-space: nowrap;
+	padding-bottom: 2px;
+}
+
+.ri-tab-btn {
+	padding: 0.65rem 1.15rem;
+	font-size: 0.88rem;
+	font-weight: 600;
+	color: var(--ri-text-muted);
+	background: none;
+	border: none;
+	cursor: pointer;
+	border-bottom: 3px solid transparent;
+	margin-bottom: -4px;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	transition: all 0.15s ease-in-out;
+}
+
+.ri-tab-btn:hover {
+	color: var(--ri-primary);
+}
+
+.ri-tab-btn.active {
+	color: var(--ri-primary);
+	border-bottom-color: var(--ri-primary);
+}
+
+.ri-tab-badge {
+	background: #e2e8f0;
+	color: #475569;
+	font-size: 0.72rem;
+	font-weight: 700;
+	padding: 0.15rem 0.5rem;
+	border-radius: 999px;
+}
+
+.ri-tab-btn.active .ri-tab-badge {
+	background: var(--ri-primary-light);
+	color: var(--ri-primary);
+}
+
+/* =============================================================================
+   4. Filter Controls & Search Bar
+   ============================================================================= */
+.ri-filter-panel {
+	background: var(--ri-card-bg);
+	border: 1px solid var(--ri-border);
+	border-radius: 12px;
+	padding: 1rem 1.25rem;
+	margin-bottom: 1.25rem;
+	box-shadow: var(--ri-shadow-sm);
+	display: flex;
+	flex-direction: column;
+	gap: 0.85rem;
+}
+
+.ri-filter-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
+.ri-search-box {
+	position: relative;
+	flex: 1;
+	min-width: 260px;
+	max-width: 380px;
+}
+
+.ri-search-box i {
+	position: absolute;
+	left: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--ri-text-muted);
+	font-size: 14px;
+}
+
+.ri-search-input {
+	width: 100%;
+	padding: 0.5rem 0.85rem 0.5rem 2.2rem;
+	border: 1px solid var(--ri-border);
+	border-radius: 8px;
+	font-size: 0.85rem;
+	outline: none;
+	transition: border-color 0.15s;
+}
+
+.ri-search-input:focus {
+	border-color: var(--ri-primary);
+	box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+}
+
+.ri-pills-row {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	flex-wrap: wrap;
+}
+
+.ri-pill {
+	font-size: 0.78rem;
+	font-weight: 600;
+	padding: 0.35rem 0.75rem;
+	border-radius: 20px;
+	border: 1px solid var(--ri-border);
+	background: #ffffff;
+	color: var(--ri-text-muted);
+	cursor: pointer;
+	transition: all 0.15s ease;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+
+.ri-pill:hover {
+	border-color: #cbd5e1;
+	background: #f8fafc;
+	color: var(--ri-text-dark);
+}
+
+.ri-pill.active {
+	background: var(--ri-primary);
+	border-color: var(--ri-primary);
+	color: #ffffff;
+}
+
+.ri-pill-count {
+	font-size: 0.72rem;
+	opacity: 0.85;
+}
+
+/* =============================================================================
+   5. Data Table Styling
+   ============================================================================= */
+.ri-table-card {
+	background: var(--ri-card-bg);
+	border: 1px solid var(--ri-border);
+	border-radius: 12px;
+	box-shadow: var(--ri-shadow-sm);
+	overflow: hidden;
+	margin-bottom: 1.5rem;
+}
+
+.ri-table-wrapper {
+	width: 100%;
+	overflow-x: auto;
+}
+
+.ri-data-table {
+	width: 100%;
+	border-collapse: collapse;
+	text-align: left;
+	font-size: 0.86rem;
+}
+
+.ri-data-table th {
+	background: #f8fafc;
+	color: var(--ri-text-muted);
+	font-weight: 600;
+	text-transform: uppercase;
+	font-size: 0.72rem;
+	letter-spacing: 0.05em;
+	padding: 0.85rem 1rem;
+	border-bottom: 1px solid var(--ri-border);
+	white-space: nowrap;
+}
+
+.ri-data-table td {
+	padding: 0.85rem 1rem;
+	border-bottom: 1px solid var(--ri-border);
+	vertical-align: middle;
+	color: var(--ri-text-dark);
+}
+
+.ri-data-table tr:last-child td {
+	border-bottom: none;
+}
+
+.ri-data-table tr:hover td {
+	background: #f8fafc;
+}
+
+/* Badges */
+.ri-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.25rem 0.6rem;
+	border-radius: 999px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.ri-badge-success { background: var(--ri-success-light); color: var(--ri-success); border: 1px solid #a7f3d0; }
+.ri-badge-warning { background: var(--ri-warning-light); color: var(--ri-warning); border: 1px solid #fde68a; }
+.ri-badge-danger { background: var(--ri-danger-light); color: var(--ri-danger); border: 1px solid #fecaca; }
+.ri-badge-info { background: var(--ri-info-light); color: var(--ri-info); border: 1px solid #bae6fd; }
+.ri-badge-purple { background: var(--ri-primary-light); color: var(--ri-primary); border: 1px solid #c7d2fe; }
+
+/* Location Tag */
+.ri-loc-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	font-size: 0.78rem;
+	color: #475569;
+	background: #f1f5f9;
+	padding: 0.2rem 0.55rem;
+	border-radius: 6px;
+	font-weight: 500;
+}
+
+/* Row Action Buttons */
+.ri-action-btns {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+
+.ri-row-btn {
+	padding: 0.3rem 0.55rem;
+	border-radius: 6px;
+	font-size: 0.78rem;
+	font-weight: 600;
+	border: 1px solid var(--ri-border);
+	background: #ffffff;
+	color: var(--ri-text-dark);
+	cursor: pointer;
+	transition: all 0.12s ease;
+}
+
+.ri-row-btn:hover {
+	background: #f1f5f9;
+	border-color: #cbd5e1;
+}
+
+.ri-row-btn.btn-in { color: var(--ri-success); }
+.ri-row-btn.btn-in:hover { background: var(--ri-success-light); border-color: #a7f3d0; }
+.ri-row-btn.btn-out { color: var(--ri-warning); }
+.ri-row-btn.btn-out:hover { background: var(--ri-warning-light); border-color: #fde68a; }
+.ri-row-btn.btn-adj { color: var(--ri-info); }
+.ri-row-btn.btn-adj:hover { background: var(--ri-info-light); border-color: #bae6fd; }
+
+/* =============================================================================
+   6. Report Panel
+   ============================================================================= */
+.ri-report-controls {
+	background: var(--ri-card-bg);
+	border: 1px solid var(--ri-border);
+	border-radius: 12px;
+	padding: 1.15rem;
+	margin-bottom: 1.25rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+	box-shadow: var(--ri-shadow-sm);
+}
+
+.ri-report-selects {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.ri-select {
+	padding: 0.45rem 0.85rem;
+	border-radius: 8px;
+	border: 1px solid var(--ri-border);
+	font-size: 0.84rem;
+	font-weight: 500;
+	outline: none;
+	background: #ffffff;
+}
+
+.ri-select:focus {
+	border-color: var(--ri-primary);
+}
+
+.ri-empty-state {
+	text-align: center;
+	padding: 3.5rem 1rem;
+	color: var(--ri-text-muted);
+}
+
+.ri-empty-state i {
+	font-size: 2.5rem;
+	margin-bottom: 0.75rem;
+	opacity: 0.4;
+}
+
+/* =============================================================================
+   7. Responsive Breakpoints
+   ============================================================================= */
+@media (max-width: 1200px) {
+	.ri-kpi-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+@media (max-width: 768px) {
+	.ri-kpi-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	.ri-brand-header {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+	.ri-header-actions {
+		width: 100%;
+		justify-content: flex-start;
+	}
+}
+
+@media (max-width: 480px) {
+	.ri-kpi-grid {
+		grid-template-columns: 1fr;
+	}
+}
+

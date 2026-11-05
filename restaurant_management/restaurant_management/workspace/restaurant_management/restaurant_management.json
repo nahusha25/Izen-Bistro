@@ -1,0 +1,441 @@
+{
+ "app": "restaurant_management",
+ "charts": [],
+ "content": "[{\"id\": \"rmHdr01xxx\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h3\\\"><b>\\ud83c\\udf7d\\ufe0f IZEN BISTRO \\u2014 Restaurant Management</b></span>\", \"col\": 12}}, {\"id\": \"rmPrg01xxx\", \"type\": \"paragraph\", \"data\": {\"text\": \"Welcome to Izen Bistro. Daily dining room operations, 20-table floor seating, centralized customer registry, kitchen orders, guest billing, and financial reports.\", \"col\": 12}}, {\"id\": \"rmSpc01xxx\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"rmHdr02xxx\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Operations Navigation</b></span>\", \"col\": 12}}, {\"id\": \"rmSc01xxxx\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Restaurant Dashboard\", \"col\": 3}}, {\"id\": \"rmSc02xxxx\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Floor & Tables\", \"col\": 3}}, {\"id\": \"rmSc03xxxx\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Customers\", \"col\": 3}}, {\"id\": \"rmSc04xxxx\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Menu Management\", \"col\": 3}}, {\"id\": \"rmSc05xxxx\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Order Management\", \"col\": 3}}, {\"id\": \"rmSc06xxxx\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Kitchen Display System\", \"col\": 3}}, {\"id\": \"rmSc07xxxx\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Billing & Payments\", \"col\": 3}}, {\"id\": \"rmSc08xxxx\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Reports\", \"col\": 3}}]",
+ "creation": "2026-11-03 14:01:32.157127",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "utensils",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Restaurant Management",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Restaurant Operations",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Restaurant Dashboard",
+   "link_count": 0,
+   "link_to": "restaurant-dashboard",
+   "link_type": "Page",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Restaurant Company",
+   "link_count": 0,
+   "link_to": "Company",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Restaurant Cost Center",
+   "link_count": 0,
+   "link_to": "Cost Center",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Floor & Tables",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Floor & Table Management",
+   "link_count": 0,
+   "link_to": "restaurant-floor-management",
+   "link_type": "Page",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "POS & Counter Profiles",
+   "link_count": 0,
+   "link_to": "POS Profile",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Kitchen & Bar Locations",
+   "link_count": 0,
+   "link_to": "Warehouse",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Menu Management",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Menu Management",
+   "link_count": 0,
+   "link_to": "restaurant-menu-management",
+   "link_type": "Page",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Menu Items",
+   "link_count": 0,
+   "link_to": "Item",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Menu Categories",
+   "link_count": 0,
+   "link_to": "Item Group",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Price Lists",
+   "link_count": 0,
+   "link_to": "Price List",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Item Prices",
+   "link_count": 0,
+   "link_to": "Item Price",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Orders & Kitchen",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Kitchen Display System",
+   "link_count": 0,
+   "link_to": "restaurant-kitchen-display",
+   "link_type": "Page",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Order Management",
+   "link_count": 0,
+   "link_to": "restaurant-order-management",
+   "link_type": "Page",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Point of Sale",
+   "link_count": 0,
+   "link_to": "restaurant-order-management",
+   "link_type": "Page",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "POS Shift Opening",
+   "link_count": 0,
+   "link_to": "POS Opening Entry",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "POS Shift Closing",
+   "link_count": 0,
+   "link_to": "POS Closing Entry",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Billing & Payments",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Billing & Payments",
+   "link_count": 0,
+   "link_to": "restaurant-billing-payments",
+   "link_type": "Page",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "POS Invoices",
+   "link_count": 0,
+   "link_to": "POS Invoice",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Invoices",
+   "link_count": 0,
+   "link_to": "Sales Invoice",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Entries",
+   "link_count": 0,
+   "link_to": "Payment Entry",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Modes of Payment",
+   "link_count": 0,
+   "link_to": "Mode of Payment",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reports",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "POS Register",
+   "link_count": 0,
+   "link_to": "POS Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "POS Invoice",
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Sales Analytics",
+   "link_count": 0,
+   "link_to": "Sales Analytics",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Sales Invoice",
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Item-wise Sales Register",
+   "link_count": 0,
+   "link_to": "Item-wise Sales Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Sales Invoice",
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Sales Trends",
+   "link_count": 0,
+   "link_to": "Sales Invoice Trends",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": "Sales Invoice",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Inventory",
+   "link_count": 0,
+   "link_to": "restaurant-inventory",
+   "link_type": "Page",
+   "onboard": 1,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-11-03 17:52:34.809547",
+ "modified_by": "Administrator",
+ "module": "Restaurant Management",
+ "name": "Restaurant Management",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [],
+ "sequence_id": 20.0,
+ "shortcuts": [
+  {
+   "color": "#6366F1",
+   "doc_view": "",
+   "icon": "layout-dashboard",
+   "label": "Restaurant Dashboard",
+   "link_to": "restaurant-dashboard",
+   "type": "Page"
+  },
+  {
+   "color": "#2563EB",
+   "doc_view": "",
+   "icon": "table",
+   "label": "Floor & Tables",
+   "link_to": "restaurant-floor-management",
+   "type": "Page"
+  },
+  {
+   "color": "#DB2777",
+   "doc_view": "",
+   "icon": "users",
+   "label": "Customers",
+   "link_to": "restaurant-customers",
+   "type": "Page"
+  },
+  {
+   "color": "#D97706",
+   "doc_view": "",
+   "icon": "utensils",
+   "label": "Menu Management",
+   "link_to": "restaurant-menu-management",
+   "type": "Page"
+  },
+  {
+   "color": "#7C3AED",
+   "doc_view": "",
+   "icon": "list-ordered",
+   "label": "Order Management",
+   "link_to": "restaurant-order-management",
+   "type": "Page"
+  },
+  {
+   "color": "#EA580C",
+   "doc_view": "",
+   "icon": "tv",
+   "label": "Kitchen Display System",
+   "link_to": "restaurant-kitchen-display",
+   "type": "Page"
+  },
+  {
+   "color": "#059669",
+   "doc_view": "",
+   "icon": "credit-card",
+   "label": "Billing & Payments",
+   "link_to": "restaurant-billing-payments",
+   "type": "Page"
+  },
+  {
+   "color": "#475569",
+   "doc_view": "",
+   "icon": "chart",
+   "label": "Reports",
+   "link_to": "restaurant-reports",
+   "type": "Page"
+  },
+  {
+   "color": "#475569",
+   "doc_view": "",
+   "icon": "box",
+   "label": "Inventory",
+   "link_to": "restaurant-inventory",
+   "type": "Page"
+  }
+ ],
+ "title": "Restaurant Management",
+ "type": "Workspace"
+}

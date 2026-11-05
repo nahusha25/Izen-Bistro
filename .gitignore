@@ -53,3 +53,13 @@ jspm_packages/
 
 # Aider AI Chat
 .aider*
+
+# Logs
+logs/
+*.log
+
+# Scratch and local test scripts
+*.bak
+restaurant_management/scratch/
+restaurant_management/test_*.py
+

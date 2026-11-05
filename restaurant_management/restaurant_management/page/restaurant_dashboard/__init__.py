@@ -1,0 +1,2 @@
+# Restaurant Dashboard page module
+

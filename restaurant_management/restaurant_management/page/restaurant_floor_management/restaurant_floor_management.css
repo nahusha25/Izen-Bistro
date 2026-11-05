@@ -1,0 +1,2172 @@
+/* Floor & Table Management - Realistic Top-Down 2D Architectural Floor Plan
+   Izen Bistro Restaurant Management System (Frappe v16)
+   Clean Commercial Aesthetic: Warm Subtle Orange Accents, Charcoal Typography, Light Background */
+
+.floor-management-wrapper {
+	padding: 1.25rem;
+	max-width: 1560px;
+	margin: 0 auto;
+	font-family: var(--font-stack, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif);
+	color: #0f172a;
+}
+
+/* =========================================================================
+   Top Header Section
+   ========================================================================= */
+.floor-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1.25rem;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+.floor-header-left {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.floor-title {
+	font-size: 1.35rem;
+	font-weight: 700;
+	color: #0f172a;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.floor-subtitle {
+	font-size: 0.88rem;
+	color: #64748b;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.live-indicator-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	background: #ecfdf5;
+	color: #047857;
+	padding: 0.2rem 0.65rem;
+	border-radius: 9999px;
+	font-size: 0.78rem;
+	font-weight: 600;
+	border: 1px solid #a7f3d0;
+}
+
+.pulse-dot {
+	width: 7px;
+	height: 7px;
+	background-color: #10b981;
+	border-radius: 50%;
+	display: inline-block;
+	box-shadow: 0 0 0 rgba(16, 185, 129, 0.6);
+	animation: pulse-ring 2s infinite;
+}
+
+@keyframes pulse-ring {
+	0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+	70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+	100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* =========================================================================
+   Summary KPI Cards Grid
+   ========================================================================= */
+.floor-kpi-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 1.25rem;
+	margin-bottom: 1.25rem;
+}
+
+.floor-kpi-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 1.1rem 1.25rem;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	position: relative;
+	overflow: hidden;
+	transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.floor-kpi-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.floor-kpi-card::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 3px;
+	background: var(--kpi-border, #64748b);
+}
+
+.floor-kpi-card.kpi-total { --kpi-border: #ea580c; }
+.floor-kpi-card.kpi-available { --kpi-border: #94a3b8; }
+.floor-kpi-card.kpi-occupied { --kpi-border: #1e293b; }
+.floor-kpi-card.kpi-reserved { --kpi-border: #d97706; }
+
+.floor-kpi-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.4rem;
+}
+
+.floor-kpi-title {
+	font-size: 0.78rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: #64748b;
+}
+
+.floor-kpi-icon {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.95rem;
+}
+
+.kpi-total .floor-kpi-icon { background: #fff7ed; color: #ea580c; }
+.kpi-available .floor-kpi-icon { background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; }
+.kpi-occupied .floor-kpi-icon { background: #1e293b; color: #f8fafc; }
+.kpi-reserved .floor-kpi-icon { background: #fef3c7; color: #d97706; }
+
+.floor-kpi-value {
+	font-size: 1.85rem;
+	font-weight: 700;
+	color: #0f172a;
+	line-height: 1.2;
+	margin-bottom: 0.25rem;
+}
+
+.floor-kpi-footer {
+	font-size: 0.8rem;
+	color: #64748b;
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+/* =========================================================================
+   Controls Bar: Area Tabs & Search
+   ========================================================================= */
+.floor-controls-bar {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 0.75rem 1.25rem;
+	margin-bottom: 1.25rem;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+.floor-controls-left {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.floor-controls-right {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+/* Area Selection Tabs */
+.floor-area-tabs {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.area-tab-btn {
+	background: transparent;
+	border: 1px solid transparent;
+	padding: 0.45rem 0.9rem;
+	border-radius: 8px;
+	font-size: 0.84rem;
+	font-weight: 500;
+	color: #64748b;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	transition: all 0.15s ease;
+}
+
+.area-tab-btn:hover {
+	background: #f8fafc;
+	color: #0f172a;
+}
+
+.area-tab-btn.active {
+	background: #fff7ed;
+	color: #ea580c;
+	font-weight: 600;
+	border-color: #fed7aa;
+}
+
+.area-tab-badge {
+	font-size: 0.72rem;
+	font-weight: 700;
+	padding: 1px 6px;
+	border-radius: 9999px;
+	background: #e2e8f0;
+	color: #475569;
+}
+
+.area-tab-btn.active .area-tab-badge {
+	background: #ea580c;
+	color: #ffffff;
+}
+
+/* Status Filter Buttons (Strictly 3 Statuses: Available, Occupied, Reserved) */
+.floor-status-filters {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	border-left: 1px solid #e2e8f0;
+	padding-left: 0.85rem;
+}
+
+.status-filter-btn {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	padding: 0.35rem 0.75rem;
+	border-radius: 6px;
+	font-size: 0.78rem;
+	font-weight: 500;
+	color: #475569;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	transition: all 0.15s ease;
+}
+
+.status-filter-btn:hover {
+	background: #f1f5f9;
+	color: #0f172a;
+}
+
+.status-filter-btn.active {
+	background: #0f172a;
+	color: #ffffff;
+	border-color: #0f172a;
+}
+
+.status-filter-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	display: inline-block;
+}
+
+.dot-available { background: #ffffff; border: 1.5px solid #94a3b8; }
+.dot-occupied { background: #1e293b; }
+.dot-reserved { background: #d97706; }
+
+/* Table Search Input */
+.floor-search-box {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+.floor-search-box .search-icon {
+	position: absolute;
+	left: 10px;
+	color: #94a3b8;
+	font-size: 0.82rem;
+	pointer-events: none;
+}
+
+.floor-search-input {
+	padding: 0.42rem 1.8rem 0.42rem 2rem;
+	border: 1px solid #cbd5e1;
+	border-radius: 8px;
+	font-size: 0.82rem;
+	color: #0f172a;
+	width: 200px;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease, width 0.2s ease;
+}
+
+.floor-search-input:focus {
+	outline: none;
+	border-color: #ea580c;
+	box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
+	width: 230px;
+}
+
+.btn-clear-search {
+	position: absolute;
+	right: 8px;
+	background: transparent;
+	border: none;
+	color: #94a3b8;
+	font-size: 0.8rem;
+	cursor: pointer;
+	padding: 0;
+}
+
+/* =========================================================================
+   Main Workspace: 2D Floor Plan + Right Details Panel
+   ========================================================================= */
+.floor-workspace-layout {
+	display: grid;
+	grid-template-columns: 1fr 370px;
+	gap: 1.25rem;
+	align-items: stretch;
+	min-height: 760px;
+}
+
+/* 2D Viewport Container */
+.floor-2d-viewport {
+	position: relative;
+	background: #f8fafc;
+	border: 1px solid #cbd5e1;
+	border-radius: 14px;
+	overflow: hidden;
+	height: 760px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+	user-select: none;
+}
+
+.floor-2d-viewport:fullscreen {
+	border-radius: 0;
+	height: 100vh;
+	width: 100vw;
+}
+
+/* Viewport Controls Overlay (Top Right) */
+.floor-2d-controls {
+	position: absolute;
+	top: 14px;
+	right: 14px;
+	z-index: 30;
+	display: flex;
+	gap: 6px;
+	background: rgba(255, 255, 255, 0.95);
+	backdrop-filter: blur(6px);
+	padding: 4px 6px;
+	border-radius: 8px;
+	border: 1px solid #cbd5e1;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.floor-ctrl-btn {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	color: #334155;
+	padding: 5px 9px;
+	border-radius: 6px;
+	font-size: 0.78rem;
+	font-weight: 600;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	transition: all 0.15s ease;
+}
+
+.floor-ctrl-btn:hover {
+	background: #f8fafc;
+	color: #0f172a;
+	border-color: #cbd5e1;
+}
+
+.floor-ctrl-btn:active {
+	transform: scale(0.96);
+}
+
+/* Status Legend Overlay (Top Left - Strictly 3 Statuses) */
+.floor-2d-legend {
+	position: absolute;
+	top: 14px;
+	left: 14px;
+	z-index: 30;
+	display: flex;
+	gap: 14px;
+	background: rgba(15, 23, 42, 0.88);
+	backdrop-filter: blur(8px);
+	padding: 6px 14px;
+	border-radius: 20px;
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+	font-size: 0.76rem;
+	font-weight: 600;
+	color: #f1f5f9;
+}
+
+.legend-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.legend-swatch {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	display: inline-block;
+}
+
+.swatch-available {
+	background: #10b981;
+	box-shadow: 0 0 6px #10b981;
+}
+
+.swatch-reserved {
+	background: #f59e0b;
+	box-shadow: 0 0 6px #f59e0b;
+}
+
+.swatch-occupied {
+	background: #ea580c;
+	box-shadow: 0 0 6px #ea580c;
+}
+
+/* Foliage Fairy Accent Lights */
+.foliage-dot {
+	box-shadow: 0 0 6px #fde047;
+	background: #fef08a !important;
+}
+
+/* Bottom Pan/Zoom Hint */
+.floor-2d-hint {
+	position: absolute;
+	bottom: 12px;
+	left: 14px;
+	z-index: 30;
+	font-size: 0.74rem;
+	color: #64748b;
+	background: rgba(255, 255, 255, 0.9);
+	backdrop-filter: blur(4px);
+	padding: 3px 8px;
+	border-radius: 6px;
+	border: 1px solid #e2e8f0;
+	pointer-events: none;
+}
+
+/* 2D Floor Canvas (Pan & Zoom Container) */
+.floor-2d-canvas {
+	width: 100%;
+	height: 100%;
+	position: relative;
+	cursor: grab;
+	overflow: hidden;
+}
+
+.floor-2d-canvas.is-panning {
+	cursor: grabbing;
+}
+
+.floor-2d-stage {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 987px;
+	height: 736px;
+	margin-top: -368px;
+	margin-left: -493.5px;
+	transform-origin: center center;
+	transition: transform 0.05s ease-out;
+	will-change: transform;
+}
+
+/* =========================================================================
+   Realistic 2D Architectural Floor Plan Styling (Top-Down CAD Blueprint & Visualization)
+   ========================================================================= */
+.floor-plan-room {
+	position: relative;
+	width: 987px;
+	height: 736px;
+	background: #73797f;
+	border-radius: 12px;
+	box-shadow: 0 16px 48px rgba(15, 23, 42, 0.25);
+	overflow: hidden;
+}
+
+.room-main-dining {
+	background: #73797f url('/assets/restaurant_management/images/floor_plan_main_dining.jpg') no-repeat center center;
+	background-size: 987px 736px;
+}
+
+/* Architectural Zone Callout Badges */
+.zone-callout {
+	position: absolute;
+	background: rgba(15, 23, 42, 0.75);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	color: #e2e8f0;
+	padding: 4px 10px;
+	border-radius: 4px;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.6px;
+	text-transform: uppercase;
+	border-left: 3px solid #ea580c;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+	pointer-events: none;
+	z-index: 15;
+}
+
+/* =========================================================================
+   Luxury Architectural Table Plaques (Universal Across All Areas)
+   ========================================================================= */
+.floor-plan-room .t2d-table-wrapper {
+	position: absolute;
+	transform: translate(-50%, -50%);
+	cursor: pointer;
+	z-index: 20;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+	outline: none;
+}
+
+.floor-plan-room .t2d-table-wrapper.t2d-shape-round {
+	border-radius: 50%;
+}
+
+.floor-plan-room .t2d-table-wrapper.t2d-shape-rectangular {
+	border-radius: 8px;
+}
+
+.floor-plan-room .t2d-table-wrapper:hover {
+	transform: translate(-50%, -50%) scale(1.06);
+	z-index: 35;
+}
+
+.floor-plan-room .t2d-table-wrapper:hover .table-plaque {
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(245, 158, 11, 0.5);
+}
+
+.floor-plan-room .t2d-table-wrapper.is-selected {
+	transform: translate(-50%, -50%) scale(1.08);
+	z-index: 45;
+}
+
+.floor-plan-room .t2d-table-wrapper.is-selected.t2d-shape-round {
+	box-shadow: 0 0 0 3px #ea580c, 0 0 24px rgba(234, 88, 12, 0.75);
+}
+
+.floor-plan-room .t2d-table-wrapper.is-selected.t2d-shape-rectangular {
+	box-shadow: 0 0 0 3px #ea580c, 0 0 24px rgba(234, 88, 12, 0.75);
+}
+
+.floor-plan-room .t2d-table-wrapper.is-selected .t2d-table-top {
+	box-shadow: 0 0 0 3px #ea580c, 0 0 24px rgba(234, 88, 12, 0.75), 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+.floor-plan-room .table-plaque {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 4px 8px;
+	border-radius: 6px;
+	font-size: 11px;
+	font-weight: 700;
+	line-height: 1.25;
+	letter-spacing: 0.3px;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.38);
+	backdrop-filter: blur(5px);
+	-webkit-backdrop-filter: blur(5px);
+	transition: all 0.2s ease;
+	pointer-events: none;
+	user-select: none;
+	min-width: 50px;
+	text-align: center;
+	z-index: 30;
+}
+
+.floor-plan-room .t2d-status-available .table-plaque {
+	background: rgba(255, 255, 255, 0.94);
+	border: 1.5px solid rgba(16, 185, 129, 0.7);
+	color: #0f172a;
+}
+.floor-plan-room .plaque-cap {
+	font-size: 8.5px;
+	font-weight: 700;
+	letter-spacing: 0.3px;
+	text-transform: uppercase;
+	margin-top: -1px;
+	margin-bottom: 2px;
+	display: block;
+	line-height: 1;
+}
+.floor-plan-room .t2d-status-available .plaque-cap {
+	color: #64748b;
+}
+.floor-plan-room .t2d-status-occupied .plaque-cap {
+	color: #94a3b8;
+}
+.floor-plan-room .t2d-status-reserved .plaque-cap {
+	color: #fde68a;
+}
+.floor-plan-room .t2d-status-available .plaque-id {
+	color: #0f172a;
+	font-size: 12px;
+	font-weight: 800;
+}
+.floor-plan-room .t2d-status-available .status-avail-label {
+	color: #059669;
+	font-size: 9px;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	text-transform: uppercase;
+}
+.floor-plan-room .presence-dot {
+	display: inline-block;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: #10b981;
+	box-shadow: 0 0 6px #10b981;
+}
+
+.floor-plan-room .t2d-status-occupied .table-plaque {
+	background: rgba(15, 23, 42, 0.94);
+	border: 1.5px solid rgba(234, 88, 12, 0.85);
+	color: #ffffff;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 0 14px rgba(234, 88, 12, 0.3);
+}
+.floor-plan-room .t2d-status-occupied .plaque-id {
+	color: #f8fafc;
+	font-size: 12px;
+	font-weight: 800;
+}
+.floor-plan-room .t2d-status-occupied .status-occ-label {
+	color: #fdba74;
+	font-size: 9.5px;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	max-width: 80px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.floor-plan-room .t2d-status-reserved .table-plaque {
+	background: rgba(217, 119, 6, 0.94);
+	border: 1.5px solid rgba(254, 240, 138, 0.85);
+	color: #ffffff;
+	box-shadow: 0 6px 18px rgba(180, 83, 9, 0.45);
+}
+.floor-plan-room .t2d-status-reserved .plaque-id {
+	color: #ffffff;
+	font-size: 12px;
+	font-weight: 800;
+}
+.floor-plan-room .t2d-status-reserved .status-res-label {
+	color: #fef08a;
+	font-size: 9px;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	gap: 3px;
+}
+
+@keyframes arch-occupied-glow {
+	0% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.45); }
+	70% { box-shadow: 0 0 0 10px rgba(234, 88, 12, 0); }
+	100% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0); }
+}
+.floor-plan-room .t2d-status-occupied {
+	animation: arch-occupied-glow 2.4s infinite;
+}
+
+/* =========================================================================
+   Garden Patio Architectural Styling
+   ========================================================================= */
+.room-garden-patio .t2d-table-top {
+	background: radial-gradient(circle at 30% 30%, #52341d 0%, #321c0e 100%);
+	border: 2px solid #6b4424;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.15);
+}
+.room-garden-patio .t2d-shape-round .t2d-table-top {
+	background: radial-gradient(circle at 35% 35%, #5c3c24 0%, #362012 100%);
+	border: 2px solid #784c28;
+}
+.room-garden-patio .t2d-chair {
+	background: #713f12;
+}
+.room-garden-patio .t2d-chair-back {
+	background: repeating-linear-gradient(90deg, #5c320d 0px, #5c320d 3px, #854d0e 3px, #854d0e 6px);
+}
+.room-garden-patio .t2d-chair-cushion {
+	background: #fef08a;
+	border: 1px solid #ca8a04;
+}
+
+/* =========================================================================
+   Rooftop Terrace Architectural Styling
+   ========================================================================= */
+.room-rooftop-terrace .t2d-shape-round .t2d-table-top {
+	background: radial-gradient(circle at 35% 35%, #ffffff 0%, #f1f5f9 60%, #cbd5e1 100%);
+	border: 2px solid #b45309;
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45), inset 0 1px 3px rgba(255, 255, 255, 0.9);
+}
+.room-rooftop-terrace .t2d-shape-rectangular .t2d-table-top {
+	background: radial-gradient(circle at 30% 30%, #3e271a 0%, #20130a 100%);
+	border: 2px solid #573824;
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.1);
+}
+.room-rooftop-terrace .t2d-chair {
+	background: #18181b;
+}
+.room-rooftop-terrace .t2d-chair-back {
+	background: #09090b;
+}
+.room-rooftop-terrace .t2d-chair-cushion {
+	background: #27272a;
+	border: 1px solid #3f3f46;
+}
+.room-rooftop-terrace .t2d-shape-round .t2d-chair-cushion {
+	background: #991b1b;
+	border: 1px solid #7f1d1d;
+}
+.room-rooftop-terrace .t2d-centerpiece {
+	background: #f59e0b;
+	border: 1.5px solid #d97706;
+	box-shadow: 0 0 8px #f59e0b;
+}
+
+/* VIP Lounge Sectional Sofa */
+.rooftop-sectional-lounge {
+	position: absolute;
+	z-index: 15;
+	pointer-events: none;
+}
+.sectional-bench {
+	position: absolute;
+	background: #334155;
+	border-radius: 8px;
+	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+	border: 1px solid #475569;
+}
+.sectional-cushion {
+	position: absolute;
+	inset: 4px;
+	background: #1e293b;
+	border-radius: 6px;
+}
+.accent-pillow {
+	position: absolute;
+	width: 14px;
+	height: 14px;
+	border-radius: 3px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+.coffee-table-marble {
+	position: absolute;
+	background: radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%);
+	border-radius: 6px;
+	border: 1.5px solid #94a3b8;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.service-bar-title {
+	font-size: 10.5px;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.bar-stools-row {
+	position: absolute;
+	display: flex;
+	gap: 16px;
+}
+.arch-bar-stool {
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Background Vector SVG Floor Canvas */
+.room-floor-svg {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 1;
+	pointer-events: none;
+}
+
+/* Architectural Solid Perimeter Walls */
+.arch-wall {
+	position: absolute;
+	background: #1e293b;
+	z-index: 10;
+}
+
+.arch-wall-top { top: 0; left: 0; right: 0; height: 10px; }
+.arch-wall-bottom { bottom: 0; left: 0; right: 0; height: 10px; }
+.arch-wall-left { top: 0; left: 0; bottom: 0; width: 10px; }
+.arch-wall-right { top: 0; right: 0; bottom: 0; width: 10px; }
+
+/* Industrial Steel-Frame Windows (Top Wall - Street View) */
+.steel-window {
+	position: absolute;
+	height: 14px;
+	top: 0;
+	background: #93c5fd;
+	border: 2px solid #0f172a;
+	display: flex;
+	z-index: 12;
+	box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.steel-window-pane {
+	flex: 1;
+	border-right: 1.5px solid #0f172a;
+	background: linear-gradient(180deg, #dbeafe 0%, #93c5fd 100%);
+}
+
+.steel-window-pane:last-child {
+	border-right: none;
+}
+
+.steel-window-label {
+	position: absolute;
+	top: 16px;
+	left: 50%;
+	transform: translateX(-50%);
+	font-size: 0.62rem;
+	font-weight: 700;
+	color: #64748b;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	pointer-events: none;
+	white-space: nowrap;
+}
+
+/* Vertical Steel-Frame Window (Left Wall) */
+.steel-window-vertical {
+	position: absolute;
+	top: 150px;
+	left: 0;
+	height: 180px;
+	width: 14px;
+	background: #93c5fd;
+	border: 2px solid #0f172a;
+	display: flex;
+	flex-direction: column;
+	z-index: 12;
+	box-shadow: 2px 0 8px rgba(59, 130, 246, 0.3);
+}
+
+.steel-window-pane-v {
+	flex: 1;
+	border-bottom: 1.5px solid #0f172a;
+	background: linear-gradient(90deg, #dbeafe 0%, #93c5fd 100%);
+}
+
+.steel-window-pane-v:last-child {
+	border-bottom: none;
+}
+
+/* Semi-Private Dining Room Architectural Placard */
+.arch-room-tag {
+	position: absolute;
+	background: rgba(255, 255, 255, 0.95);
+	backdrop-filter: blur(4px);
+	border: 1px solid #cbd5e1;
+	border-radius: 4px;
+	padding: 2px 8px;
+	font-size: 0.68rem;
+	font-weight: 700;
+	color: #1e293b;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+	z-index: 8;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	pointer-events: none;
+}
+
+/* Service Counter / Bar Station */
+.arch-service-bar {
+	position: absolute;
+	background: #26211d;
+	border: 2px solid #14110e;
+	border-radius: 6px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+	z-index: 8;
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.service-bar-top {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	color: #f8fafc;
+	font-size: 0.7rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	background: #3d352f;
+	padding: 4px 10px;
+	border-radius: 4px;
+	border: 1px solid #52473f;
+}
+
+/* Host Reception Stand */
+.arch-host-stand {
+	position: absolute;
+	background: #ffffff;
+	border: 1.5px solid #cbd5e1;
+	border-radius: 6px;
+	box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	font-size: 0.72rem;
+	font-weight: 700;
+	color: #1e293b;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	z-index: 8;
+}
+
+/* Skyline Vista Placard */
+.arch-skyline-badge {
+	position: absolute;
+	top: 12px;
+	left: 50%;
+	transform: translateX(-50%);
+	font-size: 0.68rem;
+	font-weight: 700;
+	color: #2563eb;
+	background: #eff6ff;
+	padding: 3px 12px;
+	border-radius: 4px;
+	border: 1px solid #bfdbfe;
+	letter-spacing: 0.04em;
+	z-index: 8;
+}
+
+/* Architectural Swing Doors */
+.arch-doorway {
+	position: absolute;
+	background: transparent;
+	z-index: 15;
+}
+
+.door-leaf {
+	position: absolute;
+	background: #475569;
+	border-radius: 1px;
+}
+
+.door-swing-arc {
+	position: absolute;
+	border: 1px dashed #94a3b8;
+	pointer-events: none;
+}
+
+.arch-door-label {
+	position: absolute;
+	font-size: 0.68rem;
+	font-weight: 700;
+	color: #0f172a;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+	background: #ffffff;
+	padding: 2px 6px;
+	border-radius: 4px;
+	border: 1px solid #cbd5e1;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Lush Clustered Indoor Greenery */
+.arch-foliage-cluster {
+	position: absolute;
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background: #166534;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+	z-index: 15;
+	pointer-events: none;
+	border: 2px solid #14532d;
+	overflow: hidden;
+}
+
+.foliage-leaf {
+	position: absolute;
+	border-radius: 50%;
+	background: #15803d;
+	border: 1px solid #22c55e;
+}
+
+.foliage-leaf.leaf-1 {
+	width: 24px;
+	height: 16px;
+	top: 4px;
+	left: 6px;
+	transform: rotate(-25deg);
+}
+
+.foliage-leaf.leaf-2 {
+	width: 20px;
+	height: 14px;
+	bottom: 4px;
+	right: 6px;
+	transform: rotate(35deg);
+}
+
+.foliage-dot {
+	position: absolute;
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: #fde047;
+	box-shadow: 0 0 5px #fef08a;
+}
+
+.foliage-dot.dot-1 {
+	top: 10px;
+	left: 16px;
+}
+
+.foliage-dot.dot-2 {
+	bottom: 10px;
+	right: 14px;
+}
+
+.arch-foliage-trough {
+	position: absolute;
+	background: #166534;
+	border: 2px solid #14532d;
+	border-radius: 6px;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+	z-index: 15;
+	pointer-events: none;
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+}
+
+/* Central Walkway Guides */
+.arch-walkway {
+	position: absolute;
+	border: 1px dashed rgba(148, 163, 184, 0.4);
+	border-radius: 4px;
+	pointer-events: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.arch-walkway-text {
+	font-size: 0.65rem;
+	font-weight: 600;
+	color: rgba(100, 116, 139, 0.65);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+
+/* =========================================================================
+   Top-Down 2D Furniture: Dining Tables, Booth Banquettes & Realistic Armchairs
+   ========================================================================= */
+.t2d-table-wrapper {
+	position: absolute;
+	cursor: pointer;
+	z-index: 20;
+	transition: filter 0.15s ease, transform 0.15s ease;
+	user-select: none;
+}
+
+.t2d-table-wrapper:hover {
+	z-index: 28;
+	transform: scale(1.02);
+}
+
+.t2d-table-wrapper.is-selected {
+	z-index: 30;
+}
+
+/* 2D Table Surface */
+.t2d-table-top {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 4px;
+	text-align: center;
+	border-radius: inherit;
+	background: linear-gradient(135deg, #442a1b 0%, #301c10 100%);
+	border: 2px solid #5a3821;
+	box-shadow: 0 4px 14px rgba(15, 23, 42, 0.28), inset 0 1px 2px rgba(255, 255, 255, 0.12);
+	transition: box-shadow 0.15s ease, outline 0.15s ease, transform 0.15s ease;
+}
+
+.t2d-shape-round .t2d-table-top::before {
+	content: '';
+	position: absolute;
+	inset: 4px;
+	border-radius: 50%;
+	border: 1px dashed rgba(255, 215, 0, 0.22);
+	pointer-events: none;
+}
+
+.t2d-shape-round {
+	border-radius: 50%;
+}
+
+.t2d-shape-round.t2d-cap-2 {
+	width: 76px;
+	height: 76px;
+}
+
+.t2d-shape-round.t2d-cap-4 {
+	width: 94px;
+	height: 94px;
+}
+
+.t2d-shape-rectangular {
+	border-radius: 8px;
+}
+
+.t2d-shape-rectangular.t2d-cap-2 {
+	width: 88px;
+	height: 72px;
+}
+
+.t2d-shape-rectangular.t2d-cap-4 {
+	width: 118px;
+	height: 74px;
+}
+
+.t2d-shape-rectangular.t2d-cap-6 {
+	width: 156px;
+	height: 76px;
+}
+
+/* Plush Booth / Banquette Sofas */
+.t2d-booth-sofa {
+	position: absolute;
+	top: -24px;
+	left: -6px;
+	width: calc(100% + 12px);
+	height: 22px;
+	border-radius: 6px 6px 0 0;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.32);
+	pointer-events: none;
+	z-index: 18;
+	overflow: hidden;
+}
+
+.booth-sofa-back {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 11px;
+	background: repeating-linear-gradient(90deg, #423022 0, #423022 12px, #2b1f16 12px, #2b1f16 14px);
+	border-radius: 6px 6px 0 0;
+	border-bottom: 1px solid #1a120c;
+}
+
+.booth-sofa-cushion {
+	position: absolute;
+	top: 11px;
+	left: 1px;
+	right: 1px;
+	bottom: 1px;
+	background: linear-gradient(180deg, #573f2d 0%, #3d2c20 100%);
+	border-radius: 0 0 4px 4px;
+}
+
+.booth-sofa-bolster {
+	position: absolute;
+	width: 5px;
+	height: 18px;
+	top: 2px;
+	border-radius: 3px;
+	background: #332317;
+}
+
+.bolster-left { left: 1px; }
+.bolster-right { right: 1px; }
+
+/* Realistic Top-Down Dining Armchairs */
+.t2d-chairs-container {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+.t2d-chair {
+	position: absolute;
+	width: 22px;
+	height: 16px;
+	border-radius: 11px 11px 5px 5px;
+	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.22);
+	z-index: 16;
+	pointer-events: none;
+}
+
+.t2d-chair-back {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 5px;
+	border-radius: 11px 11px 0 0;
+}
+
+.t2d-chair-cushion {
+	position: absolute;
+	top: 5px;
+	left: 2px;
+	right: 2px;
+	bottom: 2px;
+	border-radius: 3px;
+}
+
+/* Chair Positions */
+.chair-pos-top {
+	top: -16px;
+	left: calc(50% - 11px);
+	transform: rotate(180deg);
+}
+
+.chair-pos-bottom {
+	bottom: -16px;
+	left: calc(50% - 11px);
+}
+
+.chair-pos-left {
+	left: -16px;
+	top: calc(50% - 8px);
+	transform: rotate(90deg);
+}
+
+.chair-pos-right {
+	right: -16px;
+	top: calc(50% - 8px);
+	transform: rotate(-90deg);
+}
+
+.chair-top-1 {
+	top: -16px;
+	left: 18px;
+	transform: rotate(180deg);
+}
+
+.chair-top-2 {
+	top: -16px;
+	right: 18px;
+	transform: rotate(180deg);
+}
+
+.t2d-cap-6 .chair-top-1 {
+	top: -16px;
+	left: 18px;
+	transform: rotate(180deg);
+}
+
+.t2d-cap-6 .chair-top-2 {
+	top: -16px;
+	left: calc(50% - 11px);
+	transform: rotate(180deg);
+}
+
+.t2d-cap-6 .chair-top-3 {
+	top: -16px;
+	right: 18px;
+	transform: rotate(180deg);
+}
+
+.chair-bottom-1 {
+	bottom: -16px;
+	left: 18px;
+}
+
+.chair-bottom-2 {
+	bottom: -16px;
+	right: 18px;
+}
+
+.t2d-cap-6 .chair-bottom-1 {
+	bottom: -16px;
+	left: 18px;
+}
+
+.t2d-cap-6 .chair-bottom-2 {
+	bottom: -16px;
+	left: calc(50% - 11px);
+}
+
+.t2d-cap-6 .chair-bottom-3 {
+	bottom: -16px;
+	right: 18px;
+}
+
+/* Place Settings (Plates & Glassware) */
+.t2d-place-setting {
+	position: absolute;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: #ffffff;
+	border: 1.5px solid #d1d5db;
+	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.12);
+	pointer-events: none;
+	z-index: 22;
+}
+
+.plate-inner {
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	right: 2px;
+	bottom: 2px;
+	border-radius: 50%;
+	border: 1px solid #e5e7eb;
+}
+
+.table-glass {
+	position: absolute;
+	top: -3px;
+	right: -3px;
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.85);
+	border: 1px solid rgba(148, 163, 184, 0.7);
+}
+
+/* Place Setting Positions */
+.plate-round-top { top: 6px; left: calc(50% - 7px); }
+.plate-round-bottom { bottom: 6px; left: calc(50% - 7px); }
+.plate-round-left { left: 6px; top: calc(50% - 7px); }
+.plate-round-right { right: 6px; top: calc(50% - 7px); }
+
+.plate-top-1 { top: 5px; left: 18px; }
+.plate-top-2 { top: 5px; right: 18px; }
+.t2d-cap-6 .plate-top-1 { top: 5px; left: 18px; }
+.t2d-cap-6 .plate-top-2 { top: 5px; left: calc(50% - 7px); }
+.t2d-cap-6 .plate-top-3 { top: 5px; right: 18px; }
+
+.plate-bottom-1 { bottom: 5px; left: 18px; }
+.plate-bottom-2 { bottom: 5px; right: 18px; }
+.t2d-cap-6 .plate-bottom-1 { bottom: 5px; left: 18px; }
+.t2d-cap-6 .plate-bottom-2 { bottom: 5px; left: calc(50% - 7px); }
+.t2d-cap-6 .plate-bottom-3 { bottom: 5px; right: 18px; }
+
+/* Table Centerpiece */
+.t2d-centerpiece {
+	position: absolute;
+	top: calc(50% - 5px);
+	left: calc(50% - 5px);
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: #15803d;
+	border: 1.5px solid #166534;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+	pointer-events: none;
+	z-index: 22;
+}
+
+/* Central Table Information Plaque */
+.t2d-table-plaque {
+	position: relative;
+	z-index: 25;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	background: rgba(15, 23, 42, 0.86);
+	backdrop-filter: blur(4px);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	padding: 2px 7px;
+	border-radius: 5px;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+	pointer-events: none;
+	max-width: 88%;
+}
+
+.t2d-plaque-id {
+	font-size: 0.82rem;
+	font-weight: 800;
+	letter-spacing: 0.04em;
+	line-height: 1.1;
+	color: #ffffff;
+}
+
+.t2d-plaque-status {
+	font-size: 0.62rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	margin-top: 2px;
+	line-height: 1.1;
+}
+
+.t2d-plaque-cap {
+	font-size: 0.6rem;
+	font-weight: 600;
+	color: #cbd5e1;
+	margin-top: 1px;
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	line-height: 1;
+}
+
+.t2d-status-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	padding: 1px 5px;
+	border-radius: 3px;
+}
+
+.pill-available {
+	background: rgba(16, 185, 129, 0.22);
+	color: #34d399;
+	border: 1px solid rgba(16, 185, 129, 0.45);
+}
+
+.presence-dot {
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: #10b981;
+	display: inline-block;
+	box-shadow: 0 0 6px #10b981;
+}
+
+.pill-reserved {
+	background: rgba(245, 158, 11, 0.25);
+	color: #fbbf24;
+	border: 1px solid rgba(245, 158, 11, 0.55);
+}
+
+.pill-occupied {
+	background: rgba(56, 189, 248, 0.22);
+	color: #7dd3fc;
+	border: 1px solid rgba(56, 189, 248, 0.45);
+}
+
+/* =========================================================================
+   STRICT TABLE STATUS COLORS (Top-Down 2D Architectural Furniture)
+   1. Available: White / Light Grey with subtle green indicator
+   2. Reserved: Warm Amber / Orange
+   3. Occupied: Dark Charcoal
+   ========================================================================= */
+
+/* 1. AVAILABLE: White or light grey with subtle green indicator */
+/* 1. AVAILABLE: Pristine wood table with subtle emerald green status halo */
+.t2d-status-available .t2d-table-top {
+	background: linear-gradient(135deg, #442a1b 0%, #301c10 100%);
+	border: 2px solid #5a3821;
+	box-shadow: 0 0 0 1.5px #10b981, 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.t2d-status-available .t2d-chair {
+	background: #1e3a29;
+	border: 1.5px solid #2d6a4f;
+}
+
+.t2d-status-available .t2d-chair-back {
+	background: #1b4332;
+}
+
+.t2d-status-available .t2d-chair-cushion {
+	background: #2d6a4f;
+}
+
+/* Alternating tables get cognac tan leather armchairs matching the architectural render */
+.t2d-shape-rectangular.t2d-status-available .t2d-chair {
+	background: #5c3814;
+	border: 1.5px solid #854d0e;
+}
+.t2d-shape-rectangular.t2d-status-available .t2d-chair-back {
+	background: #78350f;
+}
+.t2d-shape-rectangular.t2d-status-available .t2d-chair-cushion {
+	background: #a16207;
+}
+
+/* 2. RESERVED: Warm Amber / Gold glow with reserved badge */
+.t2d-status-reserved .t2d-table-top {
+	background: linear-gradient(135deg, #4d2f1d 0%, #3a2214 100%);
+	border: 2px solid #b45309;
+	box-shadow: 0 0 0 2.5px #f59e0b, 0 4px 16px rgba(245, 158, 11, 0.45);
+}
+
+.t2d-status-reserved .t2d-chair {
+	background: #78350f;
+	border: 1.5px solid #d97706;
+}
+
+.t2d-status-reserved .t2d-chair-back {
+	background: #92400e;
+}
+
+.t2d-status-reserved .t2d-chair-cushion {
+	background: #d97706;
+}
+
+.t2d-status-reserved .t2d-booth-sofa .booth-sofa-back {
+	background: repeating-linear-gradient(90deg, #9a3412 0, #9a3412 12px, #7c2d12 12px, #7c2d12 14px);
+}
+
+.t2d-status-reserved .t2d-booth-sofa .booth-sofa-cushion {
+	background: linear-gradient(180deg, #c2410c 0%, #9a3412 100%);
+}
+
+/* 3. OCCUPIED: Deep Slate / Active dining glow */
+.t2d-status-occupied .t2d-table-top {
+	background: linear-gradient(135deg, #2a1f18 0%, #1c140e 100%);
+	border: 2px solid #0f172a;
+	box-shadow: 0 0 0 2px #38bdf8, 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.t2d-status-occupied .t2d-table-plaque {
+	background: rgba(15, 23, 42, 0.95);
+	border: 1px solid #334155;
+}
+
+.t2d-status-occupied .t2d-plaque-id {
+	color: #f8fafc;
+}
+
+.t2d-status-occupied .t2d-plaque-cap {
+	color: #94a3b8;
+}
+
+.t2d-status-occupied .t2d-chair {
+	background: #334155;
+	border: 1.5px solid #0f172a;
+}
+
+.t2d-status-occupied .t2d-chair-back {
+	background: #020617;
+}
+
+.t2d-status-occupied .t2d-chair-cushion {
+	background: #1e293b;
+}
+
+.t2d-status-occupied .t2d-place-setting {
+	background: #334155;
+	border-color: #475569;
+}
+
+.t2d-status-occupied .plate-inner {
+	border-color: #64748b;
+}
+
+/* Selection Ring Highlighting */
+.t2d-table-wrapper.is-selected .t2d-table-top {
+	outline: 3px solid #ea580c;
+	outline-offset: 3px;
+	box-shadow: 0 0 16px rgba(234, 88, 12, 0.45) !important;
+}
+
+.t2d-selected-badge {
+	position: absolute;
+	top: -24px;
+	left: 50%;
+	transform: translateX(-50%);
+	background: #ea580c;
+	color: #ffffff;
+	font-size: 0.65rem;
+	font-weight: 700;
+	padding: 1px 7px;
+	border-radius: 4px;
+	white-space: nowrap;
+	box-shadow: 0 2px 6px rgba(234, 88, 12, 0.35);
+	z-index: 35;
+	pointer-events: none;
+}
+
+/* =========================================================================
+   Right-Side Details Panel
+   ========================================================================= */
+.floor-detail-panel {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 14px;
+	padding: 1rem 1.15rem;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	height: 640px;
+	overflow-y: auto;
+}
+
+.detail-panel-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	color: #94a3b8;
+	text-align: center;
+	padding: 2rem 1rem;
+}
+
+.detail-panel-empty i {
+	font-size: 2.2rem;
+	margin-bottom: 0.75rem;
+	color: #cbd5e1;
+}
+
+.detail-panel-header {
+	padding-bottom: 0.75rem;
+	border-bottom: 1px solid #f1f5f9;
+}
+
+.detail-table-title-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.25rem;
+}
+
+.detail-table-number {
+	font-size: 1.35rem;
+	font-weight: 800;
+	color: #0f172a;
+}
+
+.detail-table-area {
+	font-size: 0.8rem;
+	color: #64748b;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.detail-table-badges {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 0.4rem;
+	flex-wrap: wrap;
+}
+
+/* Status Badges in Detail Panel (Strictly 3 Statuses) */
+.badge-status-available {
+	background: #f8fafc;
+	color: #334155;
+	border: 1px solid #cbd5e1;
+	font-weight: 700;
+	padding: 2px 8px;
+	border-radius: 6px;
+	font-size: 0.74rem;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.badge-status-reserved {
+	background: #fef3c7;
+	color: #b45309;
+	border: 1px solid #fde68a;
+	font-weight: 700;
+	padding: 2px 8px;
+	border-radius: 6px;
+	font-size: 0.74rem;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.badge-status-occupied {
+	background: #1e293b;
+	color: #f8fafc;
+	border: 1px solid #0f172a;
+	font-weight: 700;
+	padding: 2px 8px;
+	border-radius: 6px;
+	font-size: 0.74rem;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.badge-spec {
+	background: #f8fafc;
+	color: #475569;
+	border: 1px solid #e2e8f0;
+	font-weight: 600;
+	padding: 2px 7px;
+	border-radius: 6px;
+	font-size: 0.74rem;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+/* Detail Panel Content Section */
+.detail-panel-body {
+	padding: 0.75rem 0;
+	flex: 0 1 auto;
+}
+
+.detail-info-card {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 10px;
+	padding: 0.75rem 0.85rem;
+	margin-bottom: 0.5rem;
+}
+
+.detail-info-card.card-occupied {
+	border-left: 4px solid #1e293b;
+}
+
+.detail-info-card.card-reserved {
+	border-left: 4px solid #d97706;
+}
+
+.detail-info-card.card-available {
+	border-left: 4px solid #94a3b8;
+}
+
+.detail-info-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 0.8rem;
+	margin-bottom: 0.35rem;
+}
+
+.detail-info-row:last-child {
+	margin-bottom: 0;
+}
+
+.detail-info-label {
+	color: #64748b;
+	font-weight: 500;
+}
+
+.detail-info-val {
+	color: #0f172a;
+	font-weight: 600;
+	text-align: right;
+}
+
+.detail-guest-title {
+	font-weight: 700;
+	font-size: 0.92rem;
+	color: #0f172a;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.4rem;
+}
+
+/* Detail Panel Actions */
+.detail-panel-actions {
+	padding-top: 0.65rem;
+	border-top: 1px solid #f1f5f9;
+	display: flex;
+	flex-direction: column;
+	gap: 0.45rem;
+	margin-top: auto;
+}
+
+.btn-action-primary {
+	background: #ea580c;
+	color: #ffffff;
+	border: none;
+	padding: 0.52rem 0.9rem;
+	border-radius: 8px;
+	font-weight: 600;
+	font-size: 0.82rem;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.45rem;
+	transition: background 0.15s ease;
+}
+
+.btn-action-primary:hover {
+	background: #c2410c;
+}
+
+.btn-action-secondary {
+	background: #ffffff;
+	color: #334155;
+	border: 1px solid #cbd5e1;
+	padding: 0.45rem 0.8rem;
+	border-radius: 8px;
+	font-weight: 600;
+	font-size: 0.8rem;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	transition: all 0.15s ease;
+}
+
+.btn-action-secondary:hover {
+	background: #f8fafc;
+	border-color: #94a3b8;
+	color: #0f172a;
+}
+
+.actions-row-2 {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.45rem;
+}
+
+/* =========================================================================
+   Responsive Adjustments
+   ========================================================================= */
+@media (max-width: 1200px) {
+	.floor-workspace-layout {
+	display: grid;
+	grid-template-columns: 1fr 370px;
+	gap: 1.25rem;
+	align-items: stretch;
+	min-height: 760px;
+}
+	.floor-detail-panel {
+		height: auto;
+		max-height: 460px;
+	}
+}
+
+@media (max-width: 768px) {
+	.floor-kpi-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	.floor-controls-bar {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.floor-status-filters {
+		border-left: none;
+		padding-left: 0;
+		border-top: 1px solid #e2e8f0;
+		padding-top: 0.5rem;
+	}
+	.floor-search-input {
+		width: 100%;
+	}
+}
+
+/* Interactive KPI Cards */
+.clickable-kpi {
+	cursor: pointer;
+	transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.clickable-kpi:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.filter-count-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1px 7px;
+	border-radius: 10px;
+	font-size: 0.72rem;
+	font-weight: 700;
+	margin-left: 6px;
+	background: rgba(0, 0, 0, 0.06);
+	color: #475569;
+}
+.status-filter-btn.active .filter-count-badge {
+	background: rgba(255, 255, 255, 0.28);
+	color: #ffffff;
+}
+
+
+/* Unified Shared POS Modal Styles */
+.pos-order-container {
+	display: flex;
+	gap: 1.25rem;
+	min-height: 480px;
+}
+
+.pos-left-pane {
+	flex: 3;
+	display: flex;
+	flex-direction: column;
+	gap: 0.85rem;
+}
+
+.pos-right-pane {
+	flex: 2;
+	background: var(--bg-light-gray, #f9fafb);
+	border: 1px solid var(--border-color, #e5e7eb);
+	border-radius: 8px;
+	padding: 1rem;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.pos-header-inputs {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.75rem;
+}
+
+.pos-input-group label {
+	display: block;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	color: var(--text-muted, #6b7280);
+	margin-bottom: 0.25rem;
+}
+
+.pos-input-group select,
+.pos-input-group input {
+	width: 100%;
+	padding: 0.45rem 0.65rem;
+	border: 1px solid var(--border-color, #d1d5db);
+	border-radius: 6px;
+	font-size: 0.85rem;
+	background: var(--control-bg, #ffffff);
+	color: var(--text-color, #111827);
+}
+
+.pos-menu-filters {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.pos-category-pills {
+	display: flex;
+	gap: 0.35rem;
+	overflow-x: auto;
+	padding-bottom: 2px;
+}
+
+.pos-cat-pill {
+	background: var(--control-bg, #ffffff);
+	border: 1px solid var(--border-color, #d1d5db);
+	border-radius: 9999px;
+	padding: 0.25rem 0.65rem;
+	font-size: 0.75rem;
+	font-weight: 500;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.pos-cat-pill.active {
+	background: #4f46e5;
+	color: #ffffff;
+	border-color: #4f46e5;
+}
+
+.pos-dishes-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	gap: 0.65rem;
+	max-height: 320px;
+	overflow-y: auto;
+	padding-right: 4px;
+}
+
+.pos-dish-item {
+	background: var(--card-bg, #ffffff);
+	border: 1px solid var(--border-color, #e5e7eb);
+	border-radius: 8px;
+	padding: 0.65rem;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.pos-dish-item:hover:not(.disabled) {
+	border-color: #4f46e5;
+	box-shadow: 0 2px 8px rgba(79, 70, 229, 0.12);
+	transform: translateY(-1px);
+}
+
+.pos-dish-item.disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+	background: var(--bg-light-gray, #f9fafb);
+	border-style: dashed;
+}
+
+.pos-dish-title {
+	font-size: 0.825rem;
+	font-weight: 600;
+	color: var(--text-color, #111827);
+	line-height: 1.25;
+	margin-bottom: 0.25rem;
+}
+
+.pos-dish-meta {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 0.4rem;
+}
+
+.pos-dish-price {
+	font-size: 0.85rem;
+	font-weight: 700;
+	color: var(--text-color, #111827);
+}
+
+.btn-pos-add {
+	padding: 3px 8px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+/* Cart Panel */
+.pos-cart-title {
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: var(--text-color, #111827);
+	margin-bottom: 0.75rem;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.pos-cart-items {
+	flex: 1;
+	overflow-y: auto;
+	max-height: 280px;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding-right: 4px;
+}
+
+.pos-cart-empty {
+	text-align: center;
+	color: var(--text-muted, #9ca3af);
+	padding: 2.5rem 1rem;
+	font-size: 0.85rem;
+}
+
+.pos-cart-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	background: var(--card-bg, #ffffff);
+	border: 1px solid var(--border-color, #e5e7eb);
+	border-radius: 6px;
+	padding: 0.45rem 0.65rem;
+	font-size: 0.8rem;
+}
+
+.pos-qty-controls {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+
+.pos-qty-btn {
+	width: 22px;
+	height: 22px;
+	border-radius: 4px;
+	border: 1px solid var(--border-color, #d1d5db);
+	background: var(--control-bg, #ffffff);
+	font-weight: 700;
+	font-size: 0.85rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+}
+
+.pos-qty-btn:hover {
+	background: var(--bg-light-gray, #f3f4f6);
+}
+
+.pos-cart-totals {
+	border-top: 1px solid var(--border-color, #e5e7eb);
+	padding-top: 0.75rem;
+	margin-top: 0.75rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	font-size: 0.85rem;
+}
+
+.pos-totals-row {
+	display: flex;
+	justify-content: space-between;
+	color: var(--text-muted, #6b7280);
+}
+
+.pos-totals-row.final-total {
+	font-size: 1.1rem;
+	font-weight: 700;
+	color: var(--text-color, #111827);
+	border-top: 1px dashed var(--border-color, #d1d5db);
+	padding-top: 0.4rem;
+	margin-top: 0.2rem;
+}
