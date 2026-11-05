@@ -419,6 +419,11 @@
 	color: #15803d;
 }
 
+.rm-kpi-badge.badge-negative {
+	background: #fee2e2;
+	color: #b91c1c;
+}
+
 .rm-kpi-badge.badge-neutral {
 	background: #f1f5f9;
 	color: #475569;

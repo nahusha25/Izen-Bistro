@@ -862,7 +862,24 @@ class RestaurantDashboard {
 		if (!kpis) return;
 		// 1. Today's Revenue
 		$('#kpi-today-revenue').text(kpis.formatted_revenue || '₹0');
-		$('#kpi-revenue-growth').text(kpis.revenue_growth || '--');
+		const growthVal = kpis.revenue_growth;
+		const $growthBadge = $('#kpi-revenue-growth');
+		if ($growthBadge.length) {
+			$growthBadge.removeClass('badge-positive badge-negative badge-neutral');
+			if (growthVal === null || growthVal === undefined || growthVal === '') {
+				$growthBadge.text('--').addClass('badge-neutral');
+			} else {
+				$growthBadge.text(growthVal);
+				const strGrowth = String(growthVal);
+				if (strGrowth.startsWith('+')) {
+					$growthBadge.addClass('badge-positive');
+				} else if (strGrowth.startsWith('-')) {
+					$growthBadge.addClass('badge-negative');
+				} else {
+					$growthBadge.addClass('badge-neutral');
+				}
+			}
+		}
 
 		// 2. Today's Orders
 		$('#kpi-today-orders').text(kpis.today_orders || kpis.total_orders || 0);

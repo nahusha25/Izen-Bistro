@@ -2418,17 +2418,23 @@ class RestaurantStore:
 				})
 
 		# Weekly Sales Analytics: Previous 6 days (Mon-Sat) historical baseline + Today's live revenue
-		base_weekly = list(hist.get("base_weekly_sales", [0, 0, 0, 0, 0, 0]))
+		raw_base_weekly = hist.get("base_weekly_sales") if isinstance(hist, dict) else None
+		base_weekly = list(raw_base_weekly) if raw_base_weekly else [0, 0, 0, 0, 0, 0]
 		weekly_values = base_weekly + [today_revenue]
 		weekly_total = sum(weekly_values)
 
-		yesterday_base = base_weekly[-1] if base_weekly else 0
-		if today_revenue > 0 and yesterday_base > 0:
-			diff_pct = round(((today_revenue - yesterday_base) / yesterday_base) * 100, 1)
-			revenue_growth = f"{'+' if diff_pct >= 0 else ''}{diff_pct}%"
-		elif today_revenue > 0 and yesterday_base == 0:
-			revenue_growth = "+100%"
+		yesterday_base = float(base_weekly[-1]) if (base_weekly and base_weekly[-1] is not None) else 0.0
+		today_revenue_val = float(today_revenue) if today_revenue is not None else 0.0
+
+		if yesterday_base > 0:
+			diff_pct = round(((today_revenue_val - yesterday_base) / yesterday_base) * 100, 1)
+			disp_pct = int(diff_pct) if diff_pct == int(diff_pct) else diff_pct
+			revenue_growth = f"{'+' if diff_pct > 0 else ''}{disp_pct}%"
+		elif today_revenue_val > 0:
+			# Yesterday was 0, today has revenue -> undefined growth percentage baseline / new revenue state (null)
+			revenue_growth = None
 		else:
+			# Both today's and yesterday's revenue are zero -> 0% change
 			revenue_growth = "0%"
 
 		# Popular Dishes: Dynamically computed from actual order item quantities in the shared store
@@ -2574,7 +2580,7 @@ class RestaurantStore:
 					}
 				],
 				"total_weekly_revenue": weekly_total,
-				"formatted_weekly_revenue": f"₹{weekly_total:,}",
+				"formatted_weekly_revenue": f"₹{int(weekly_total):,}" if weekly_total == int(weekly_total) else f"₹{weekly_total:,.2f}",
 			},
 			"popular_dishes": popular_dishes,
 			"kitchen_queue": kitchen_queue,
