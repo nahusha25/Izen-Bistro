@@ -128,3 +128,53 @@ def reset_menu_data():
 	RestaurantStore.reset_to_default()
 	return RestaurantStore.get_menu_management_data()
 
+
+@frappe.whitelist()
+def get_recipe_dashboard_data(category=None, status=None, search=None):
+	"""
+	Returns complete Recipe Management Dashboard summary, filtered dish list,
+	and available inventory items for ingredient mapping.
+	"""
+	return RestaurantStore.get_recipe_dashboard_data(
+		category=category,
+		status=status,
+		search=search,
+	)
+
+
+@frappe.whitelist()
+def get_dish_recipe(item_id):
+	"""
+	Returns full recipe configuration (portions, ingredients, wastage, approval status)
+	for a single dish.
+	"""
+	return RestaurantStore.get_dish_recipe_definition(item_id)
+
+
+@frappe.whitelist()
+def save_dish_recipe(item_id, recipe_data=None, approve=0):
+	"""
+	Saves or approves recipe definition for a dish.
+	"""
+	if isinstance(recipe_data, str):
+		try:
+			recipe_data = json.loads(recipe_data)
+		except Exception:
+			recipe_data = {}
+
+	approve_bool = bool(int(approve)) if isinstance(approve, (int, str)) and str(approve).isdigit() else bool(approve)
+	return RestaurantStore.save_dish_recipe_definition(
+		item_id=item_id,
+		recipe_data=recipe_data,
+		approve=approve_bool,
+	)
+
+
+@frappe.whitelist()
+def approve_dish_recipe(item_id):
+	"""
+	Approves recipe for a dish, validating ingredients and enabling inventory consumption.
+	"""
+	return RestaurantStore.approve_dish_recipe(item_id)
+
+

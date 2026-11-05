@@ -488,9 +488,11 @@ class KitchenDisplaySystem {
 		let itemsHtml = '';
 		(order.items || []).forEach(it => {
 			let subnote = it.notes ? `<div class="ticket-item-subnote"><i class="fa fa-pencil"></i> ${frappe.utils.escape_html(it.notes)}</div>` : '';
-			
+			let portionName = it.portion || 'Regular';
+			let portionBadge = `<span class="portion-badge" style="display: inline-block; font-size: 0.72rem; font-weight: 600; background: #e0e7ff; color: #4338ca; padding: 1px 6px; border-radius: 4px; margin-left: 6px;">${frappe.utils.escape_html(portionName)}</span>`;
+
 			let recipeBreakdownHtml = '';
-			if (it.has_recipe && it.ingredients && it.ingredients.length > 0) {
+			if (it.has_recipe && it.is_approved && it.ingredients && it.ingredients.length > 0) {
 				let chips = it.ingredients.map(ing => {
 					let stockColor = ing.in_stock ? '#059669' : '#dc2626';
 					let stockTitle = `${ing.ingredient_name}: ${ing.required_display} required. Stock: ${ing.available_display}`;
@@ -500,6 +502,11 @@ class KitchenDisplaySystem {
 					</span>`;
 				}).join('');
 				recipeBreakdownHtml = `<div class="ticket-item-ingredients-strip">${chips}</div>`;
+			} else if (it.has_recipe && !it.is_approved) {
+				recipeBreakdownHtml = `<div class="ticket-recipe-warning-strip" style="background: #fffbeb; border: 1px dashed #f59e0b; color: #b45309; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; margin-top: 4px;" title="${__('Recipe is in Draft / Pending Approval. Quantities are unverified and stock was not deducted.')}">
+					<i class="fa fa-clock-o"></i>
+					<span>${__('Draft Recipe — Awaiting Approval (Unverified, No Stock Deducted)')}</span>
+				</div>`;
 			} else if (it.has_recipe === false) {
 				recipeBreakdownHtml = `<div class="ticket-recipe-warning-strip" title="${__('No recipe mapped in Menu Management. No inventory deducted.')}">
 					<i class="fa fa-exclamation-triangle"></i>
@@ -509,9 +516,12 @@ class KitchenDisplaySystem {
 
 			itemsHtml += `
 				<div class="ticket-item-row">
-					<div class="ticket-item-header">
-						<span class="ticket-item-qty">${it.qty}&times;</span>
-						<span class="ticket-item-name">${it.name}</span>
+					<div class="ticket-item-header" style="display: flex; align-items: center; justify-content: space-between;">
+						<div>
+							<span class="ticket-item-qty">${it.qty}&times;</span>
+							<span class="ticket-item-name">${frappe.utils.escape_html(it.name)}</span>
+							${portionBadge}
+						</div>
 					</div>
 					${subnote}
 					${recipeBreakdownHtml}
@@ -634,14 +644,27 @@ class KitchenDisplaySystem {
 
 		let unconfiguredAlert = '';
 		if (ticket.has_unconfigured_recipes && ticket.unconfigured_dishes && ticket.unconfigured_dishes.length > 0) {
-			unconfiguredAlert = `
-				<div class="alert alert-warning" style="background: #fffbeb; border: 1px solid #fef3c7; color: #92400e; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px;">
+			unconfiguredAlert += `
+				<div class="alert alert-warning" style="background: #fffbeb; border: 1px solid #fef3c7; color: #92400e; padding: 10px 14px; border-radius: 6px; margin-bottom: 12px;">
 					<div style="font-weight: 700; margin-bottom: 4px;">
 						<i class="fa fa-exclamation-triangle"></i> ${__('Recipe Configuration Notice')}
 					</div>
 					<div style="font-size: 0.85rem;">
 						${__('The following dishes have no recipe configured:')} <strong>${frappe.utils.escape_html(ticket.unconfigured_dishes.join(', '))}</strong>.
-						${__('No inventory was deducted for these items. Please configure ingredients in Menu Management.')}
+						${__('No inventory was deducted for these items.')}
+					</div>
+				</div>
+			`;
+		}
+		if (ticket.has_unapproved_recipes && ticket.unapproved_dishes && ticket.unapproved_dishes.length > 0) {
+			unconfiguredAlert += `
+				<div class="alert alert-info" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; border-left: 4px solid #f59e0b; background: #fffbeb; border-color: #fde68a; color: #92400e;">
+					<div style="font-weight: 700; margin-bottom: 4px;">
+						<i class="fa fa-clock-o"></i> ${__('Unapproved Recipe Notice (Awaiting Sign-Off)')}
+					</div>
+					<div style="font-size: 0.85rem;">
+						${__('The following dishes have draft or unapproved recipes:')} <strong>${frappe.utils.escape_html(ticket.unapproved_dishes.join(', '))}</strong>.
+						${__('Quantities are unverified suggestions; stock is NOT deducted until approved in Menu Management.')}
 					</div>
 				</div>
 			`;
@@ -650,9 +673,16 @@ class KitchenDisplaySystem {
 		// Table Rows
 		let tableRows = '';
 		(ticket.items || []).forEach(it => {
-			if (it.has_recipe && it.ingredients && it.ingredients.length > 0) {
+			let portionName = it.portion || 'Regular';
+			if (it.has_recipe && it.is_approved && it.ingredients && it.ingredients.length > 0) {
 				it.ingredients.forEach((ing, idx) => {
-					let dishCol = idx === 0 ? `<td rowspan="${it.ingredients.length}" style="vertical-align: middle; font-weight: 600; background: #fafafa;">${frappe.utils.escape_html(it.name)}</td><td rowspan="${it.ingredients.length}" style="vertical-align: middle; text-align: center; font-weight: 700; background: #fafafa;">${it.qty}</td>` : '';
+					let dishCol = idx === 0 ? `
+						<td rowspan="${it.ingredients.length}" style="vertical-align: middle; font-weight: 600; background: #fafafa;">
+							${frappe.utils.escape_html(it.name)}
+							<div style="font-size: 0.75rem; color: #6366f1; font-weight: 500;">Portion: ${frappe.utils.escape_html(portionName)}</div>
+						</td>
+						<td rowspan="${it.ingredients.length}" style="vertical-align: middle; text-align: center; font-weight: 700; background: #fafafa;">${it.qty}</td>
+					` : '';
 					
 					let statusBadge = ing.in_stock 
 						? `<span class="badge badge-success" style="background: #ecfdf5; color: #047857; font-weight: 600; padding: 3px 8px; border-radius: 4px;"><i class="fa fa-check"></i> In Stock</span>`
@@ -672,10 +702,29 @@ class KitchenDisplaySystem {
 						</tr>
 					`;
 				});
+			} else if (it.has_recipe && !it.is_approved) {
+				tableRows += `
+					<tr style="background: #fffdf5;">
+						<td style="font-weight: 600;">
+							${frappe.utils.escape_html(it.name)}
+							<div style="font-size: 0.75rem; color: #b45309; font-weight: 500;">Portion: ${frappe.utils.escape_html(portionName)}</div>
+						</td>
+						<td style="text-align: center; font-weight: 700;">${it.qty}</td>
+						<td colspan="4" style="color: #b45309; font-style: italic;">
+							<i class="fa fa-clock-o"></i> ${__('Draft Recipe — Awaiting Approval. Unverified raw material requirement (no stock deducted).')}
+						</td>
+						<td style="text-align: center;">
+							<span class="badge" style="background: #fef3c7; color: #92400e; font-weight: 600; padding: 3px 8px; border-radius: 4px; border: 1px dashed #f59e0b;">Draft (Unverified)</span>
+						</td>
+					</tr>
+				`;
 			} else {
 				tableRows += `
 					<tr style="background: #fffbeb;">
-						<td style="font-weight: 600;">${frappe.utils.escape_html(it.name)}</td>
+						<td style="font-weight: 600;">
+							${frappe.utils.escape_html(it.name)}
+							<div style="font-size: 0.75rem; color: #64748b; font-weight: 500;">Portion: ${frappe.utils.escape_html(portionName)}</div>
+						</td>
 						<td style="text-align: center; font-weight: 700;">${it.qty}</td>
 						<td colspan="4" style="color: #b45309; font-style: italic;">
 							<i class="fa fa-exclamation-triangle"></i> ${__('Recipe Not Configured — No ingredient consumption tracked')}

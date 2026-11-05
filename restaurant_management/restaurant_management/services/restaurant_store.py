@@ -827,6 +827,405 @@ class RestaurantStore:
 	DEFAULT_WASTAGE_RECORDS = DEFAULT_DATA["wastage_records"]
 	DEFAULT_STOCK_MOVEMENTS = DEFAULT_DATA["stock_movements"]
 
+	DEFAULT_DISH_RECIPES = {
+		"ITEM-001": { # Butter Chicken
+			"status": "Approved",
+			"is_unverified": False,
+			"approved_at": "2026-11-04 10:00:00",
+			"approved_by": "Head Chef",
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Chicken", "inventory_item_code": "INV-001", "inventory_item_name": "Chicken", "quantity": 300.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Cream & Butter", "inventory_item_code": "INV-003", "inventory_item_name": "Cream & Butter", "quantity": 100.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Spices & Masala", "inventory_item_code": "INV-006", "inventory_item_name": "Spices & Masala", "quantity": 50.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-002": { # Paneer Tikka
+			"status": "Approved",
+			"is_unverified": False,
+			"approved_at": "2026-11-04 10:00:00",
+			"approved_by": "Head Chef",
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Paneer", "inventory_item_code": "INV-002", "inventory_item_name": "Paneer", "quantity": 250.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Spices & Masala", "inventory_item_code": "INV-006", "inventory_item_name": "Spices & Masala", "quantity": 50.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Cooking Oil", "inventory_item_code": "INV-007", "inventory_item_name": "Cooking Oil", "quantity": 50.0, "unit": "ml", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-003": { # Dal Makhani
+			"status": "Approved",
+			"is_unverified": False,
+			"approved_at": "2026-11-04 10:00:00",
+			"approved_by": "Head Chef",
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Cream & Butter", "inventory_item_code": "INV-003", "inventory_item_name": "Cream & Butter", "quantity": 100.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Spices & Masala", "inventory_item_code": "INV-006", "inventory_item_name": "Spices & Masala", "quantity": 50.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-004": { # Chicken Biryani
+			"status": "Approved",
+			"is_unverified": False,
+			"approved_at": "2026-11-04 10:00:00",
+			"approved_by": "Head Chef",
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Chicken", "inventory_item_code": "INV-001", "inventory_item_name": "Chicken", "quantity": 200.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Basmati Rice", "inventory_item_code": "INV-004", "inventory_item_name": "Basmati Rice", "quantity": 250.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Spices & Masala", "inventory_item_code": "INV-006", "inventory_item_name": "Spices & Masala", "quantity": 50.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-005": { # Garlic Naan
+			"status": "Approved",
+			"is_unverified": False,
+			"approved_at": "2026-11-04 10:00:00",
+			"approved_by": "Head Chef",
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Flour (Maida/Atta)", "inventory_item_code": "INV-005", "inventory_item_name": "Flour (Maida/Atta)", "quantity": 300.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Cream & Butter", "inventory_item_code": "INV-003", "inventory_item_name": "Cream & Butter", "quantity": 50.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-006": { # Tandoori Roti
+			"status": "Approved",
+			"is_unverified": False,
+			"approved_at": "2026-11-04 10:00:00",
+			"approved_by": "Head Chef",
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Flour (Maida/Atta)", "inventory_item_code": "INV-005", "inventory_item_name": "Flour (Maida/Atta)", "quantity": 200.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-007": { # Gulab Jamun
+			"status": "Approved",
+			"is_unverified": False,
+			"approved_at": "2026-11-04 10:00:00",
+			"approved_by": "Head Chef",
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Dairy Milk", "inventory_item_code": "INV-008", "inventory_item_name": "Dairy Milk", "quantity": 150.0, "unit": "ml", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Cooking Oil", "inventory_item_code": "INV-007", "inventory_item_name": "Cooking Oil", "quantity": 50.0, "unit": "ml", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-008": { # Fresh Lime Soda
+			"status": "Draft",
+			"is_unverified": True,
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Fresh Lemons", "inventory_item_code": "INV-014", "inventory_item_name": "Fresh Lemons", "quantity": 20.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Refined Sugar", "inventory_item_code": "INV-016", "inventory_item_name": "Refined Sugar", "quantity": 15.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Soda Water", "inventory_item_code": "", "inventory_item_name": "", "quantity": 200.0, "unit": "ml", "wastage_pct": 0.0, "is_mapped": False},
+					]
+				}
+			}
+		},
+		"ITEM-009": { # Veg Spring Rolls
+			"status": "Approved",
+			"is_unverified": False,
+			"approved_at": "2026-11-04 10:00:00",
+			"approved_by": "Head Chef",
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Flour (Maida/Atta)", "inventory_item_code": "INV-005", "inventory_item_name": "Flour (Maida/Atta)", "quantity": 150.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Cooking Oil", "inventory_item_code": "INV-007", "inventory_item_name": "Cooking Oil", "quantity": 50.0, "unit": "ml", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-010": { # Masala Chai
+			"status": "Approved",
+			"is_unverified": False,
+			"approved_at": "2026-11-04 10:00:00",
+			"approved_by": "Head Chef",
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Dairy Milk", "inventory_item_code": "INV-008", "inventory_item_name": "Dairy Milk", "quantity": 200.0, "unit": "ml", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Spices & Masala", "inventory_item_code": "INV-006", "inventory_item_name": "Spices & Masala", "quantity": 20.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-011": { # Chicken Tikka
+			"status": "Draft",
+			"is_unverified": True,
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Chicken", "inventory_item_code": "INV-001", "inventory_item_name": "Chicken", "quantity": 250.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Spices & Masala", "inventory_item_code": "INV-006", "inventory_item_name": "Spices & Masala", "quantity": 40.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Cooking Oil", "inventory_item_code": "INV-007", "inventory_item_name": "Cooking Oil", "quantity": 30.0, "unit": "ml", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-012": { # Tomato Soup
+			"status": "Draft",
+			"is_unverified": True,
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Ripe Tomatoes", "inventory_item_code": "INV-012", "inventory_item_name": "Ripe Tomatoes", "quantity": 200.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Cream & Butter", "inventory_item_code": "INV-003", "inventory_item_name": "Cream & Butter", "quantity": 30.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Spices & Masala", "inventory_item_code": "INV-006", "inventory_item_name": "Spices & Masala", "quantity": 15.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-013": { # Sweet Corn Soup
+			"status": "Draft",
+			"is_unverified": True,
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Sweet Corn", "inventory_item_code": "", "inventory_item_name": "", "quantity": 150.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": False},
+						{"ingredient_name": "Spices & Masala", "inventory_item_code": "INV-006", "inventory_item_name": "Spices & Masala", "quantity": 15.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Refined Sugar", "inventory_item_code": "INV-016", "inventory_item_name": "Refined Sugar", "quantity": 5.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-014": { # Paneer Butter Masala
+			"status": "Draft",
+			"is_unverified": True,
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Paneer", "inventory_item_code": "INV-002", "inventory_item_name": "Paneer", "quantity": 250.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Cream & Butter", "inventory_item_code": "INV-003", "inventory_item_name": "Cream & Butter", "quantity": 80.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Ripe Tomatoes", "inventory_item_code": "INV-012", "inventory_item_name": "Ripe Tomatoes", "quantity": 120.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Fresh Onions", "inventory_item_code": "INV-011", "inventory_item_name": "Fresh Onions", "quantity": 80.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Spices & Masala", "inventory_item_code": "INV-006", "inventory_item_name": "Spices & Masala", "quantity": 40.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-015": { # Kadai Paneer
+			"status": "Draft",
+			"is_unverified": True,
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Paneer", "inventory_item_code": "INV-002", "inventory_item_name": "Paneer", "quantity": 250.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Fresh Onions", "inventory_item_code": "INV-011", "inventory_item_name": "Fresh Onions", "quantity": 100.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Ripe Tomatoes", "inventory_item_code": "INV-012", "inventory_item_name": "Ripe Tomatoes", "quantity": 100.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Spices & Masala", "inventory_item_code": "INV-006", "inventory_item_name": "Spices & Masala", "quantity": 50.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Cooking Oil", "inventory_item_code": "INV-007", "inventory_item_name": "Cooking Oil", "quantity": 30.0, "unit": "ml", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-016": { # Chicken Curry
+			"status": "Draft",
+			"is_unverified": True,
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Chicken", "inventory_item_code": "INV-001", "inventory_item_name": "Chicken", "quantity": 300.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Fresh Onions", "inventory_item_code": "INV-011", "inventory_item_name": "Fresh Onions", "quantity": 120.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Ripe Tomatoes", "inventory_item_code": "INV-012", "inventory_item_name": "Ripe Tomatoes", "quantity": 100.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Spices & Masala", "inventory_item_code": "INV-006", "inventory_item_name": "Spices & Masala", "quantity": 45.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Cooking Oil", "inventory_item_code": "INV-007", "inventory_item_name": "Cooking Oil", "quantity": 40.0, "unit": "ml", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-017": { # Kadai Chicken
+			"status": "Draft",
+			"is_unverified": True,
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Chicken", "inventory_item_code": "INV-001", "inventory_item_name": "Chicken", "quantity": 300.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Fresh Onions", "inventory_item_code": "INV-011", "inventory_item_name": "Fresh Onions", "quantity": 100.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Spices & Masala", "inventory_item_code": "INV-006", "inventory_item_name": "Spices & Masala", "quantity": 50.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Cooking Oil", "inventory_item_code": "INV-007", "inventory_item_name": "Cooking Oil", "quantity": 40.0, "unit": "ml", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-018": { # Veg Biryani
+			"status": "Draft",
+			"is_unverified": True,
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Basmati Rice", "inventory_item_code": "INV-004", "inventory_item_name": "Basmati Rice", "quantity": 250.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Potatoes", "inventory_item_code": "INV-013", "inventory_item_name": "Potatoes", "quantity": 80.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Fresh Onions", "inventory_item_code": "INV-011", "inventory_item_name": "Fresh Onions", "quantity": 80.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Spices & Masala", "inventory_item_code": "INV-006", "inventory_item_name": "Spices & Masala", "quantity": 40.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Cooking Oil", "inventory_item_code": "INV-007", "inventory_item_name": "Cooking Oil", "quantity": 30.0, "unit": "ml", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-019": { # Jeera Rice
+			"status": "Draft",
+			"is_unverified": True,
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Basmati Rice", "inventory_item_code": "INV-004", "inventory_item_name": "Basmati Rice", "quantity": 200.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Cream & Butter", "inventory_item_code": "INV-003", "inventory_item_name": "Cream & Butter", "quantity": 30.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Spices & Masala", "inventory_item_code": "INV-006", "inventory_item_name": "Spices & Masala", "quantity": 20.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-020": { # Butter Naan
+			"status": "Draft",
+			"is_unverified": True,
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Maida", "inventory_item_code": "INV-005", "inventory_item_name": "Flour (Maida/Atta)", "quantity": 120.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Curd", "inventory_item_code": "", "inventory_item_name": "", "quantity": 20.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": False},
+						{"ingredient_name": "Butter", "inventory_item_code": "INV-003", "inventory_item_name": "Cream & Butter", "quantity": 15.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Sugar", "inventory_item_code": "INV-016", "inventory_item_name": "Refined Sugar", "quantity": 5.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+		"ITEM-021": { # Chocolate Brownie
+			"status": "Draft",
+			"is_unverified": True,
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Flour (Maida/Atta)", "inventory_item_code": "INV-005", "inventory_item_name": "Flour (Maida/Atta)", "quantity": 80.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Refined Sugar", "inventory_item_code": "INV-016", "inventory_item_name": "Refined Sugar", "quantity": 60.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Cream & Butter", "inventory_item_code": "INV-003", "inventory_item_name": "Cream & Butter", "quantity": 50.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Cocoa Powder", "inventory_item_code": "", "inventory_item_name": "", "quantity": 30.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": False},
+					]
+				}
+			}
+		},
+		"ITEM-022": { # Sweet Lassi
+			"status": "Draft",
+			"is_unverified": True,
+			"wastage_pct": 0.0,
+			"portions": {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": 0.0,
+					"ingredients": [
+						{"ingredient_name": "Curd", "inventory_item_code": "", "inventory_item_name": "", "quantity": 200.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": False},
+						{"ingredient_name": "Dairy Milk", "inventory_item_code": "INV-008", "inventory_item_name": "Dairy Milk", "quantity": 50.0, "unit": "ml", "wastage_pct": 0.0, "is_mapped": True},
+						{"ingredient_name": "Refined Sugar", "inventory_item_code": "INV-016", "inventory_item_name": "Refined Sugar", "quantity": 30.0, "unit": "g", "wastage_pct": 0.0, "is_mapped": True},
+					]
+				}
+			}
+		},
+	}
+
 	DEFAULT_RESTAURANT_INFO = {
 		"name": "IZEN BISTRO",
 		"tagline": "",
@@ -1065,16 +1464,50 @@ class RestaurantStore:
 					it["name"] = m_name
 					needs_save = True
 
-		# Ensure all items have their images and recipes
-		def_recipe_map = {m["item_id"]: m.get("recipe", {}) for m in DEFAULT_DATA["menu_items"] if m.get("recipe")}
+		# Ensure all items have their images, recipes, and structured recipe_details
 		for it in current_menu_items:
 			m_id = it.get("item_id")
 			if not it.get("image") and m_id in default_images:
 				it["image"] = default_images[m_id]
 				needs_save = True
-			if (not it.get("recipe")) and m_id in def_recipe_map:
-				it["recipe"] = copy.deepcopy(def_recipe_map[m_id])
-				needs_save = True
+			
+			rec_det = it.get("recipe_details")
+			if not rec_det or not isinstance(rec_det, dict) or not rec_det.get("portions"):
+				if hasattr(cls, "DEFAULT_DISH_RECIPES") and m_id in cls.DEFAULT_DISH_RECIPES:
+					it["recipe_details"] = copy.deepcopy(cls.DEFAULT_DISH_RECIPES[m_id])
+					needs_save = True
+				else:
+					it["recipe_details"] = {
+						"status": "Draft",
+						"is_unverified": True,
+						"wastage_pct": 0.0,
+						"portions": {
+							"Regular": {
+								"portion_name": "Regular",
+								"is_default": True,
+								"wastage_pct": 0.0,
+								"ingredients": []
+							}
+						}
+					}
+					needs_save = True
+
+			# Synchronize legacy recipe dictionary with default Approved portion
+			if it.get("recipe_details", {}).get("status") == "Approved":
+				reg_p = it["recipe_details"]["portions"].get("Regular") or next(iter(it["recipe_details"]["portions"].values()), None)
+				if reg_p:
+					clean_legacy = {}
+					for ing in reg_p.get("ingredients", []):
+						if ing.get("is_mapped") and ing.get("quantity"):
+							iv_match = next((iv for iv in data.get("inventory", []) if iv.get("item_code") == ing.get("inventory_item_code") or iv.get("name") == ing.get("ingredient_name")), None)
+							if iv_match:
+								target_u = iv_match.get("unit", "kg")
+								conv = cls.convert_quantity(float(ing.get("quantity", 0)), ing.get("unit", "g"), target_u)
+								clean_legacy[iv_match["name"]] = round(conv, 3)
+					if clean_legacy:
+						it["recipe"] = clean_legacy
+			else:
+				it["recipe"] = {}
 
 		# Add any missing default items (e.g. ITEM-011 through ITEM-022)
 		for def_item in DEFAULT_DATA["menu_items"]:
@@ -2210,6 +2643,10 @@ class RestaurantStore:
 				else:
 					ingredients_list.append(f"{ing_name} ({req_qty})")
 
+			rec = it.get("recipe_details") or {}
+			it["recipe_status"] = rec.get("status") or ("Approved" if it.get("recipe") else "Draft")
+			it["is_unverified"] = rec.get("is_unverified", it["recipe_status"] != "Approved")
+			it["portions_count"] = len(rec.get("portions", {}))
 			it["ingredients_summary"] = ", ".join(ingredients_list) if ingredients_list else "No stock required"
 			it["stock_status"] = stock_status
 			it["stock_warning"] = stock_warning
@@ -2375,6 +2812,367 @@ class RestaurantStore:
 
 		cls.save_data(data)
 		return res_item
+
+	# =========================================================================
+	# Recipe & Portion Management (Feature: Complete Recipe & Portion Integration)
+	# =========================================================================
+	@classmethod
+	def get_dish_recipe_definition(cls, item_id_or_name):
+		"""
+		Returns full recipe definition for a menu item including portions, ingredients,
+		wastage percentage, approval status, and inventory lookup mappings.
+		"""
+		data = cls.get_data()
+		menu_items = data.get("menu_items", [])
+		target = None
+		for it in menu_items:
+			if it.get("item_id") == item_id_or_name or str(it.get("name", "")).lower() == str(item_id_or_name).lower():
+				target = it
+				break
+		if not target:
+			frappe.throw(_("Menu item {0} not found").format(item_id_or_name))
+
+		rec = target.get("recipe_details")
+		if not rec or not isinstance(rec, dict) or not rec.get("portions"):
+			rec = {
+				"status": "Draft",
+				"is_unverified": True,
+				"wastage_pct": 0.0,
+				"portions": {
+					"Regular": {
+						"portion_name": "Regular",
+						"is_default": True,
+						"wastage_pct": 0.0,
+						"ingredients": []
+					}
+				}
+			}
+
+		inv_items = [
+			{
+				"item_code": iv.get("item_code"),
+				"name": iv.get("name"),
+				"unit": iv.get("unit", "kg"),
+				"stock_qty": iv.get("quantity", 0),
+				"location": iv.get("location", "Cold Storage")
+			}
+			for iv in data.get("inventory", [])
+		]
+
+		return {
+			"item_id": target.get("item_id"),
+			"name": target.get("name"),
+			"category": target.get("category"),
+			"price": target.get("price"),
+			"is_veg": target.get("is_veg"),
+			"image": target.get("image"),
+			"description": target.get("description"),
+			"recipe_details": rec,
+			"available_inventory": inv_items
+		}
+
+	@classmethod
+	def save_dish_recipe_definition(cls, item_id, recipe_data, approve=False):
+		"""
+		Saves portions, ingredients, units, wastage_pct and recipe status for a dish.
+		If approve is True or recipe_data status is 'Approved', marks status as Approved.
+		Updates the persistent RestaurantStore and syncs legacy recipe dict for POS/orders.
+		"""
+		data = cls.get_data()
+		menu_items = data.get("menu_items", [])
+		target = next((it for it in menu_items if it.get("item_id") == item_id), None)
+		if not target:
+			frappe.throw(_("Menu item {0} not found").format(item_id))
+
+		now_str = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
+		current_user = frappe.session.user if hasattr(frappe, "session") and frappe.session and frappe.session.user else "Administrator"
+
+		if isinstance(recipe_data, str):
+			try:
+				recipe_data = json.loads(recipe_data)
+			except Exception:
+				recipe_data = {}
+
+		raw_portions = recipe_data.get("portions") or {}
+		if not raw_portions:
+			raw_portions = {
+				"Regular": {
+					"portion_name": "Regular",
+					"is_default": True,
+					"wastage_pct": float(recipe_data.get("wastage_pct", 0) or 0),
+					"ingredients": recipe_data.get("ingredients", [])
+				}
+			}
+
+		inv_by_name = {iv.get("name").lower(): iv for iv in data.get("inventory", []) if iv.get("name")}
+		inv_by_code = {iv.get("item_code"): iv for iv in data.get("inventory", []) if iv.get("item_code")}
+
+		clean_portions = {}
+		has_any_ingredients = False
+
+		for p_key, p_val in raw_portions.items():
+			p_name = str(p_val.get("portion_name") or p_key).strip()
+			p_wastage = max(0.0, min(100.0, float(p_val.get("wastage_pct", 0) or 0)))
+			p_default = bool(p_val.get("is_default", False)) or (p_name.lower() == "regular")
+			
+			clean_ingredients = []
+			for ing in p_val.get("ingredients", []):
+				ing_name = str(ing.get("ingredient_name") or ing.get("name") or "").strip()
+				if not ing_name:
+					continue
+				
+				try:
+					qty = round(float(ing.get("quantity", 0)), 3)
+				except (ValueError, TypeError):
+					qty = 0.0
+
+				unit = str(ing.get("unit") or "g").strip().lower()
+				wastage_pct = max(0.0, min(100.0, float(ing.get("wastage_pct", 0) or 0)))
+
+				# Match with inventory item
+				inv_code = ing.get("inventory_item_code") or ""
+				inv_item = inv_by_code.get(inv_code) or inv_by_name.get(ing_name.lower())
+				if not inv_item and ing.get("inventory_item_name"):
+					inv_item = inv_by_name.get(str(ing.get("inventory_item_name")).lower())
+
+				is_mapped = bool(inv_item)
+				clean_ingredients.append({
+					"ingredient_name": ing_name,
+					"inventory_item_code": inv_item.get("item_code", "") if inv_item else "",
+					"inventory_item_name": inv_item.get("name", "") if inv_item else "",
+					"quantity": qty,
+					"unit": unit,
+					"wastage_pct": wastage_pct,
+					"is_mapped": is_mapped
+				})
+				has_any_ingredients = True
+
+			clean_portions[p_name] = {
+				"portion_name": p_name,
+				"is_default": p_default,
+				"wastage_pct": p_wastage,
+				"ingredients": clean_ingredients
+			}
+
+		if "Regular" not in clean_portions and clean_portions:
+			first_k = next(iter(clean_portions.keys()))
+			clean_portions[first_k]["is_default"] = True
+
+		desired_status = recipe_data.get("status") or ("Approved" if approve else "Draft")
+		if approve:
+			desired_status = "Approved"
+
+		if desired_status == "Approved" and not has_any_ingredients:
+			frappe.throw(_("Cannot approve recipe with no ingredients configured."))
+
+		is_approved = (desired_status == "Approved")
+		target["recipe_details"] = {
+			"status": desired_status,
+			"is_unverified": not is_approved,
+			"approved_at": now_str if is_approved else target.get("recipe_details", {}).get("approved_at"),
+			"approved_by": current_user if is_approved else target.get("recipe_details", {}).get("approved_by"),
+			"last_updated": now_str,
+			"wastage_pct": float(recipe_data.get("wastage_pct", 0) or 0),
+			"notes": str(recipe_data.get("notes") or "").strip(),
+			"portions": clean_portions
+		}
+
+		# Synchronize legacy recipe dict
+		if is_approved:
+			reg_p = clean_portions.get("Regular") or next(iter(clean_portions.values()), None)
+			if reg_p:
+				clean_legacy = {}
+				for ing in reg_p.get("ingredients", []):
+					if ing.get("is_mapped") and ing.get("quantity"):
+						iv_match = inv_by_code.get(ing.get("inventory_item_code")) or inv_by_name.get(ing.get("ingredient_name", "").lower())
+						if iv_match:
+							target_u = iv_match.get("unit", "kg")
+							conv = cls.convert_quantity(float(ing.get("quantity", 0)), ing.get("unit", "g"), target_u)
+							clean_legacy[iv_match["name"]] = round(conv, 3)
+				target["recipe"] = clean_legacy
+		else:
+			target["recipe"] = {}
+
+		cls.save_data(data)
+		return target
+
+	@classmethod
+	def approve_dish_recipe(cls, item_id):
+		"""
+		Approves recipe for a dish, validating ingredients and enabling inventory consumption.
+		"""
+		data = cls.get_data()
+		menu_items = data.get("menu_items", [])
+		target = next((it for it in menu_items if it.get("item_id") == item_id), None)
+		if not target:
+			frappe.throw(_("Menu item {0} not found").format(item_id))
+
+		rec = target.get("recipe_details")
+		if not rec or not rec.get("portions"):
+			frappe.throw(_("Cannot approve dish without a configured recipe."))
+
+		# Check if any portion has ingredients
+		has_ing = any(len(p.get("ingredients", [])) > 0 for p in rec.get("portions", {}).values())
+		if not has_ing:
+			frappe.throw(_("Cannot approve recipe with zero ingredients."))
+
+		return cls.save_dish_recipe_definition(item_id, rec, approve=True)
+
+	@classmethod
+	def get_recipe_dashboard_data(cls, category=None, status=None, search=None):
+		"""
+		Returns complete Recipe Management Dashboard payload:
+		- 6 KPI metrics (total dishes, approved, awaiting approval, draft, unmapped ingredients, incomplete recipes)
+		- category & status tallies
+		- list of all dishes with recipe status, portion list, ingredient breakdown, and mapping health
+		- inventory items list
+		"""
+		data = cls.get_data()
+		menu_items = data.get("menu_items", [])
+		inv_items = data.get("inventory", [])
+		inv_map = {iv["name"].lower(): iv for iv in inv_items if iv.get("name")}
+		inv_by_code = {iv["item_code"]: iv for iv in inv_items if iv.get("item_code")}
+
+		total_dishes = len(menu_items)
+		approved_count = 0
+		pending_count = 0
+		draft_count = 0
+		unmapped_ingredients_set = set()
+		incomplete_recipes_count = 0
+
+		dishes_data = []
+
+		for it in menu_items:
+			rec = it.get("recipe_details") or {}
+			st = rec.get("status") or ("Approved" if it.get("recipe") else "Draft")
+			is_unverified = rec.get("is_unverified", st != "Approved")
+			portions = rec.get("portions") or {}
+
+			if st == "Approved":
+				approved_count += 1
+			elif st == "Pending Approval":
+				pending_count += 1
+			else:
+				draft_count += 1
+
+			# Check completeness and unmapped ingredients
+			has_ingredients = False
+			is_incomplete = False
+			ingredients_summary_list = []
+			mapped_count = 0
+			unmapped_count = 0
+
+			for p_name, p_info in portions.items():
+				for ing in p_info.get("ingredients", []):
+					has_ingredients = True
+					ing_name = ing.get("ingredient_name", "")
+					qty = float(ing.get("quantity", 0))
+					unit = ing.get("unit", "")
+					
+					iv_match = inv_by_code.get(ing.get("inventory_item_code")) or inv_map.get(ing_name.lower())
+					if iv_match:
+						mapped_count += 1
+					else:
+						unmapped_count += 1
+						unmapped_ingredients_set.add(ing_name)
+
+					if qty <= 0 or not unit or not iv_match:
+						is_incomplete = True
+
+					ingredients_summary_list.append(f"{ing_name} ({qty} {unit})")
+
+			if not has_ingredients or is_incomplete:
+				incomplete_recipes_count += 1
+
+			dish_row = {
+				"item_id": it.get("item_id"),
+				"name": it.get("name"),
+				"category": it.get("category"),
+				"price": it.get("price"),
+				"formatted_price": f"₹{it.get('price', 0):,}",
+				"is_veg": it.get("is_veg"),
+				"image": it.get("image"),
+				"description": it.get("description"),
+				"available": it.get("available", True),
+				"recipe_status": st,
+				"is_unverified": is_unverified,
+				"approved_at": rec.get("approved_at"),
+				"approved_by": rec.get("approved_by"),
+				"portions": list(portions.keys()),
+				"portions_count": len(portions),
+				"has_ingredients": has_ingredients,
+				"mapped_count": mapped_count,
+				"unmapped_count": unmapped_count,
+				"is_incomplete": is_incomplete,
+				"ingredients_summary": ", ".join(ingredients_summary_list) if ingredients_summary_list else "No ingredients configured",
+				"recipe_details": rec
+			}
+
+			# Filters
+			if category and category != "All":
+				norm_f = category.replace("—", "-").replace("–", "-").strip().lower()
+				norm_c = it.get("category", "").replace("—", "-").replace("–", "-").strip().lower()
+				if norm_f != norm_c:
+					continue
+
+			if status and status != "All":
+				if status == "Approved" and st != "Approved":
+					continue
+				elif status == "Pending Approval" and st != "Pending Approval":
+					continue
+				elif status == "Draft" and st != "Draft":
+					continue
+				elif status == "Incomplete" and not is_incomplete:
+					continue
+
+			if search:
+				q = search.strip().lower()
+				m_name = q in it.get("name", "").lower()
+				m_cat = q in it.get("category", "").lower()
+				m_desc = q in it.get("description", "").lower()
+				m_ing = any(q in ing_str.lower() for ing_str in ingredients_summary_list)
+				if not (m_name or m_cat or m_desc or m_ing):
+					continue
+
+			dishes_data.append(dish_row)
+
+		# Category counts
+		standard_cats = ["Starters", "Soups", "Main Course – Veg", "Main Course – Non-Veg", "Rice & Biryani", "Breads", "Desserts", "Beverages"]
+		cat_counts = [{"name": "All", "count": total_dishes}]
+		for c in standard_cats:
+			norm_c = c.replace("—", "-").replace("–", "-").strip().lower()
+			cnt = sum(1 for it in menu_items if it.get("category", "").replace("—", "-").replace("–", "-").strip().lower() == norm_c)
+			cat_counts.append({"name": c, "count": cnt})
+
+		return {
+			"summary": {
+				"total_dishes": total_dishes,
+				"approved_recipes": approved_count,
+				"awaiting_approval": pending_count,
+				"draft_recipes": draft_count,
+				"unmapped_ingredients": len(unmapped_ingredients_set),
+				"incomplete_recipes": incomplete_recipes_count
+			},
+			"dishes": dishes_data,
+			"categories": cat_counts,
+			"statuses": [
+				{"name": "All", "count": total_dishes},
+				{"name": "Approved", "count": approved_count},
+				{"name": "Pending Approval", "count": pending_count},
+				{"name": "Draft", "count": draft_count},
+				{"name": "Incomplete", "count": incomplete_recipes_count}
+			],
+			"inventory_items": [
+				{
+					"item_code": iv.get("item_code"),
+					"name": iv.get("name"),
+					"unit": iv.get("unit", "kg"),
+					"quantity": iv.get("quantity", 0),
+					"location": iv.get("location", "Cold Storage")
+				}
+				for iv in inv_items
+			]
+		}
 
 	# =========================================================================
 	# Order Management (Strict Menu, Table & Inventory Integration)
@@ -3056,21 +3854,34 @@ class RestaurantStore:
 			enriched_items = []
 			ticket_ingredients = {}
 			unconfigured_dishes = []
+			unapproved_dishes = []
 
 			for it in t.get("items", []):
 				item_id_or_name = it.get("item_id") or it.get("name")
 				qty = int(it.get("qty", 1))
+				portion = it.get("portion", "Regular")
 				recipe_info = cls.get_item_recipe_requirements(
-					item_id_or_name, qty, inv_map=inv_lookup, menu=menu_lookup, data=data
+					item_id_or_name=item_id_or_name,
+					ordered_qty=qty,
+					portion=portion,
+					inv_map=inv_lookup,
+					menu=menu_lookup,
+					data=data,
 				)
 				it_copy = dict(it)
+				it_copy["portion"] = portion
 				it_copy["has_recipe"] = recipe_info["has_recipe"]
+				it_copy["is_approved"] = recipe_info.get("is_approved", False)
 				it_copy["recipe_status"] = recipe_info["recipe_status"]
+				it_copy["is_unverified"] = recipe_info.get("is_unverified", True)
 				it_copy["ingredients"] = recipe_info["ingredients"]
 
 				if not recipe_info["has_recipe"]:
 					unconfigured_dishes.append(it.get("name", "Unknown Dish"))
+				elif not recipe_info.get("is_approved", False):
+					unapproved_dishes.append(it.get("name", "Unknown Dish"))
 				else:
+					# Strictly tally confirmed ingredient requirements ONLY from approved recipes!
 					for ing in recipe_info["ingredients"]:
 						ing_name = ing["ingredient_name"]
 						if ing_name not in ticket_ingredients:
@@ -3100,6 +3911,8 @@ class RestaurantStore:
 			t["ingredient_consumption"] = consumption_list
 			t["has_unconfigured_recipes"] = len(unconfigured_dishes) > 0
 			t["unconfigured_dishes"] = unconfigured_dishes
+			t["has_unapproved_recipes"] = len(unapproved_dishes) > 0
+			t["unapproved_dishes"] = unapproved_dishes
 
 		confirmed_tickets = [t for t in active_tickets if t.get("status") == "Confirmed"]
 		preparing_tickets = [t for t in active_tickets if t.get("status") == "Preparing"]
@@ -3567,22 +4380,42 @@ class RestaurantStore:
 	def convert_quantity(cls, qty, from_unit, to_unit):
 		"""
 		Converts quantity between compatible units:
-		- kg <-> g
-		- ltr <-> ml
-		- pcs <-> pcs
+		- Mass: kg <-> g, gram, grams, gm, gms, kilogram, kilograms
+		- Volume: ltr <-> ml, milliliter, milliliters, litre, litres, l, liter
+		- Count: piece, pieces, pc, pcs, nos
+		- Spoons: tbsp (15g / 15ml), tsp (5g / 5ml)
 		"""
 		if not qty or from_unit == to_unit:
 			return qty
 		u_from = (from_unit or "").lower().strip()
 		u_to = (to_unit or "").lower().strip()
-		if u_from in ["kg", "kilogram", "kilograms"] and u_to in ["g", "gram", "grams"]:
-			return qty * 1000.0
-		if u_from in ["g", "gram", "grams"] and u_to in ["kg", "kilogram", "kilograms"]:
+		if u_from == u_to:
+			return qty
+
+		# Mass
+		if u_from in ["g", "gram", "grams", "gm", "gms"] and u_to in ["kg", "kilogram", "kilograms"]:
 			return qty / 1000.0
-		if u_from in ["ltr", "l", "liter", "litres"] and u_to in ["ml", "milliliter", "millilitres"]:
+		if u_from in ["kg", "kilogram", "kilograms"] and u_to in ["g", "gram", "grams", "gm", "gms"]:
 			return qty * 1000.0
-		if u_from in ["ml", "milliliter", "millilitres"] and u_to in ["ltr", "l", "liter", "litres"]:
+
+		# Volume
+		if u_from in ["ml", "milliliter", "milliliters", "millilitre", "millilitres"] and u_to in ["ltr", "l", "liter", "litres", "litre"]:
 			return qty / 1000.0
+		if u_from in ["ltr", "l", "liter", "litres", "litre"] and u_to in ["ml", "milliliter", "milliliters", "millilitre", "millilitres"]:
+			return qty * 1000.0
+
+		# Spoons
+		if u_from == "tbsp":
+			if u_to in ["g", "gm", "ml"]: return qty * 15.0
+			if u_to in ["kg", "ltr", "l", "litre"]: return qty * 0.015
+		if u_from == "tsp":
+			if u_to in ["g", "gm", "ml"]: return qty * 5.0
+			if u_to in ["kg", "ltr", "l", "litre"]: return qty * 0.005
+
+		# Count
+		if u_from in ["piece", "pieces", "pc", "pcs", "nos"] and u_to in ["piece", "pieces", "pc", "pcs", "nos"]:
+			return qty
+
 		return qty
 
 	@classmethod
@@ -3609,10 +4442,16 @@ class RestaurantStore:
 		return f"{qty} {unit}"
 
 	@classmethod
-	def get_item_recipe_requirements(cls, item_id_or_name, ordered_qty=1, inv_map=None, menu=None, data=None):
+	def get_item_recipe_requirements(cls, item_id_or_name, ordered_qty=1, portion="Regular", inv_map=None, menu=None, data=None):
 		"""
-		Computes detailed recipe ingredient requirements for an ordered dish.
-		Handles missing recipe gracefully with 'Recipe Not Configured'.
+		Computes detailed recipe ingredient requirements for an ordered dish and portion.
+		Enforces:
+		- Portion awareness (e.g. Regular, Half, Full).
+		- Unit conversion (g <-> kg, ml <-> ltr).
+		- Preparation wastage percentage calculation.
+		- Strict Approval Verification: Only 'Approved' recipes can participate in inventory deduction!
+		- Unapproved (Draft / Pending) recipes return is_unverified=True and can_deduct_inventory=False.
+		- Unmapped ingredients are flagged cleanly without duplicate inventory creation.
 		"""
 		if data is None and (inv_map is None or menu is None):
 			data = cls.get_data()
@@ -3623,7 +4462,9 @@ class RestaurantStore:
 				menu[it["name"].lower()] = it
 
 		if inv_map is None:
-			inv_map = {inv["name"]: inv for inv in data.get("inventory", [])}
+			inv_map = {inv["name"].lower(): inv for inv in data.get("inventory", []) if inv.get("name")}
+		
+		inv_by_code = {inv["item_code"]: inv for inv in data.get("inventory", []) if inv.get("item_code")}
 
 		# Find menu item
 		menu_item = menu.get(item_id_or_name) or menu.get(str(item_id_or_name).lower())
@@ -3637,50 +4478,121 @@ class RestaurantStore:
 			return {
 				"has_recipe": False,
 				"recipe_status": "Recipe Not Configured",
+				"is_approved": False,
+				"can_deduct_inventory": False,
+				"portion": portion or "Regular",
 				"ingredients": [],
 				"is_configured": False,
 			}
 
-		recipe = menu_item.get("recipe") or {}
-		if not recipe or not isinstance(recipe, dict) or len(recipe) == 0:
+		rec_details = menu_item.get("recipe_details") or {}
+		status = rec_details.get("status") or ("Approved" if menu_item.get("recipe") else "Draft")
+		is_approved = (status == "Approved")
+		can_deduct = is_approved
+
+		portions = rec_details.get("portions") or {}
+		# Select requested portion or fallback to Regular or first portion
+		p_data = portions.get(portion) or portions.get("Regular")
+		if not p_data and portions:
+			p_data = next(iter(portions.values()), None)
+
+		raw_ingredients = p_data.get("ingredients", []) if p_data else []
+		
+		# If no structured ingredients, fallback to legacy recipe dict if Approved
+		if not raw_ingredients and menu_item.get("recipe") and isinstance(menu_item.get("recipe"), dict):
+			raw_ingredients = [
+				{
+					"ingredient_name": ing_k,
+					"quantity": float(ing_v),
+					"unit": "kg",
+					"is_mapped": True
+				}
+				for ing_k, ing_v in menu_item.get("recipe").items()
+			]
+			status = "Approved"
+			is_approved = True
+			can_deduct = True
+
+		if not raw_ingredients:
 			return {
 				"has_recipe": False,
 				"recipe_status": "Recipe Not Configured",
+				"is_approved": False,
+				"can_deduct_inventory": False,
+				"portion": portion or "Regular",
 				"ingredients": [],
 				"is_configured": False,
 			}
 
 		ingredients = []
 		ordered_qty = max(1, int(ordered_qty))
-		for ing_name, per_serving_qty in recipe.items():
-			per_serving = float(per_serving_qty)
-			req_qty = round(per_serving * ordered_qty, 3)
-			inv_item = inv_map.get(ing_name)
-			unit = inv_item.get("unit", "kg") if inv_item else "kg"
-			item_code = inv_item.get("item_code", "") if inv_item else ""
-			avail_qty = inv_item.get("quantity", 0.0) if inv_item else 0.0
-			in_stock = avail_qty >= req_qty
-			missing = round(max(0.0, req_qty - avail_qty), 3)
+		portion_wastage = float(p_data.get("wastage_pct", 0) if p_data else 0)
+
+		for ing in raw_ingredients:
+			ing_name = ing.get("ingredient_name") or ing.get("name", "")
+			qty_per_portion = float(ing.get("quantity", 0))
+			unit = ing.get("unit", "g")
+			ing_wastage = float(ing.get("wastage_pct", 0) or portion_wastage)
+
+			net_req = round(qty_per_portion * ordered_qty, 3)
+			gross_req = round(net_req * (1.0 + ing_wastage / 100.0), 3)
+
+			# Inventory item lookup
+			inv_code = ing.get("inventory_item_code") or ""
+			inv_item = inv_by_code.get(inv_code) or inv_map.get(ing_name.lower())
+			if not inv_item and ing.get("inventory_item_name"):
+				inv_item = inv_map.get(str(ing.get("inventory_item_name")).lower())
+
+			if inv_item:
+				inv_unit = inv_item.get("unit", "kg")
+				avail_qty = float(inv_item.get("quantity", 0.0))
+				item_code = inv_item.get("item_code", "")
+				stock_deduct_qty = round(cls.convert_quantity(gross_req, unit, inv_unit), 3)
+				in_stock = avail_qty >= stock_deduct_qty
+				missing_stock = round(max(0.0, stock_deduct_qty - avail_qty), 3)
+				is_mapped = True
+				location = inv_item.get("location", "Cold Storage")
+			else:
+				inv_unit = unit
+				avail_qty = 0.0
+				item_code = ""
+				stock_deduct_qty = 0.0
+				in_stock = True # Not stock tracked
+				missing_stock = 0.0
+				is_mapped = False
+				location = "Unmapped"
 
 			ingredients.append({
 				"ingredient_name": ing_name,
 				"item_code": item_code,
-				"per_serving": per_serving,
-				"per_serving_display": cls.format_ingredient_qty(per_serving, unit),
-				"required_qty": req_qty,
+				"inventory_item_name": inv_item.get("name") if inv_item else "",
+				"per_serving": qty_per_portion,
+				"per_serving_unit": unit,
+				"per_serving_display": f"{qty_per_portion} {unit}",
+				"ordered_qty": ordered_qty,
+				"required_qty": gross_req,
 				"unit": unit,
-				"required_display": cls.format_ingredient_qty(req_qty, unit),
+				"required_display": f"{gross_req} {unit}",
+				"stock_deduct_qty": stock_deduct_qty,
+				"stock_unit": inv_unit,
 				"available_qty": avail_qty,
-				"available_display": f"{avail_qty} {unit}",
+				"available_display": f"{avail_qty} {inv_unit}" if is_mapped else "Unmapped",
 				"in_stock": in_stock,
-				"missing_qty": missing,
-				"missing_display": cls.format_ingredient_qty(missing, unit) if missing > 0 else "0",
-				"location": inv_item.get("location", "Storage") if inv_item else "",
+				"missing_qty": missing_stock,
+				"missing_display": f"{missing_stock} {inv_unit}" if missing_stock > 0 else "0",
+				"is_mapped": is_mapped,
+				"is_unverified": not is_approved,
+				"wastage_pct": ing_wastage,
+				"location": location,
 			})
 
 		return {
 			"has_recipe": True,
-			"recipe_status": "Configured",
+			"recipe_status": status,
+			"is_approved": is_approved,
+			"can_deduct_inventory": can_deduct,
+			"portion": portion or (p_data.get("portion_name") if p_data else "Regular"),
+			"is_unverified": not is_approved,
 			"ingredients": ingredients,
 			"is_configured": True,
 		}
@@ -3688,33 +4600,48 @@ class RestaurantStore:
 	@classmethod
 	def validate_order_ingredients(cls, data, items):
 		"""
-		Validates that sufficient inventory exists for all recipe ingredients in items.
-		Reports missing quantities explicitly and prevents negative stock.
+		Validates that sufficient inventory exists for all approved recipe ingredients in items.
+		Strictly applies only to approved recipes. Reports shortages clearly and prevents negative stock.
 		"""
 		menu = {it["item_id"]: it for it in data.get("menu_items", [])}
-		inv_map = {inv["name"]: inv for inv in data.get("inventory", [])}
+		for it in data.get("menu_items", []):
+			menu[it["name"].lower()] = it
+
+		inv_map = {inv["name"].lower(): inv for inv in data.get("inventory", []) if inv.get("name")}
+		inv_by_code = {inv["item_code"]: inv for inv in data.get("inventory", []) if inv.get("item_code")}
 
 		ingredient_needs = {}
 		for it in items:
-			item_id = it.get("item_id")
-			menu_item = menu.get(item_id)
-			if not menu_item:
-				for m in data.get("menu_items", []):
-					if m.get("name") == it.get("name"):
-						menu_item = m
-						break
-			if not menu_item:
-				continue
-			recipe = menu_item.get("recipe") or {}
+			item_id_or_name = it.get("item_id") or it.get("name")
 			qty = int(it.get("qty", 1))
-			for ing_name, per_unit in recipe.items():
-				total_req = round(float(per_unit) * qty, 3)
-				ingredient_needs[ing_name] = round(ingredient_needs.get(ing_name, 0.0) + total_req, 3)
+			portion = it.get("portion", "Regular")
+			req_info = cls.get_item_recipe_requirements(
+				item_id_or_name=item_id_or_name,
+				ordered_qty=qty,
+				portion=portion,
+				inv_map=inv_map,
+				menu=menu,
+				data=data,
+			)
+			# Only approved recipes participate in inventory validation and deduction
+			if not req_info.get("can_deduct_inventory"):
+				continue
+
+			for ing in req_info.get("ingredients", []):
+				if not ing.get("is_mapped"):
+					continue
+				inv_code = ing.get("item_code")
+				inv_item = inv_by_code.get(inv_code) or inv_map.get(ing.get("inventory_item_name", "").lower()) or inv_map.get(ing.get("ingredient_name", "").lower())
+				if not inv_item:
+					continue
+				deduct_qty = float(ing.get("stock_deduct_qty", 0.0))
+				ing_key = inv_item["name"]
+				ingredient_needs[ing_key] = round(ingredient_needs.get(ing_key, 0.0) + deduct_qty, 3)
 
 		shortages = []
 		for ing_name, total_needed in ingredient_needs.items():
-			inv_item = inv_map.get(ing_name)
-			avail = inv_item.get("quantity", 0.0) if inv_item else 0.0
+			inv_item = next((iv for iv in data.get("inventory", []) if iv.get("name") == ing_name), None)
+			avail = float(inv_item.get("quantity", 0.0)) if inv_item else 0.0
 			unit = inv_item.get("unit", "kg") if inv_item else "kg"
 			if avail < total_needed:
 				missing = round(total_needed - avail, 3)
@@ -3796,7 +4723,11 @@ class RestaurantStore:
 	def _deduct_inventory_for_order(cls, data, order, batch_id=None):
 		"""
 		Deducts inventory for order recipes exactly once upon confirmation.
-		Logs persistent Order Consumption movements with order/batch reference.
+		Enforces:
+		- Portion & unit-aware stock deduction.
+		- Only approved recipes participate in inventory deduction.
+		- Unmapped ingredients are skipped from physical deduction without duplication.
+		- Logs persistent Order Consumption movements with order/batch reference.
 		"""
 		if order.get("inventory_deducted") and batch_id is None:
 			return
@@ -3805,44 +4736,63 @@ class RestaurantStore:
 		for it in data.get("menu_items", []):
 			menu[it["name"].lower()] = it
 
-		inv_map = {inv["name"]: inv for inv in data.get("inventory", [])}
+		inv_map = {inv["name"].lower(): inv for inv in data.get("inventory", []) if inv.get("name")}
+		inv_by_code = {inv["item_code"]: inv for inv in data.get("inventory", []) if inv.get("item_code")}
 
 		consumed_log = []
 		ref_id = batch_id or order.get("order_id")
 		round_label = batch_id.split("-")[-1] if (batch_id and "-" in batch_id) else "Round 1"
 
 		for item in order.get("items", []):
-			menu_item = menu.get(item.get("item_id")) or menu.get(str(item.get("name", "")).lower())
-			if not menu_item:
-				continue
-			recipe = menu_item.get("recipe", {})
-			if not recipe:
-				continue
+			item_id_or_name = item.get("item_id") or item.get("name")
 			qty = int(item.get("qty", 1))
+			portion = item.get("portion", "Regular")
 
-			for ingredient, per_unit_qty in recipe.items():
-				total_needed = round(float(per_unit_qty) * qty, 3)
-				if ingredient in inv_map:
-					inv_map[ingredient]["quantity"] = round(
-						max(0.0, inv_map[ingredient]["quantity"] - total_needed), 3
-					)
-					inv_map[ingredient]["last_updated"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
-					cls._record_movement_internal(
-						data,
-						item_name=ingredient,
-						movement_type="Order Consumption",
-						qty=total_needed,
-						unit=inv_map[ingredient].get("unit", "kg"),
-						from_location=inv_map[ingredient].get("location", "Cold Storage"),
-						to_location="Kitchen",
-						reason=f"Order {order.get('order_id')} ({round_label}) prep for Table {order.get('table_no')}",
-						reference=ref_id,
-					)
-					consumed_log.append({
-						"ingredient": ingredient,
-						"qty": total_needed,
-						"unit": inv_map[ingredient].get("unit", "kg"),
-					})
+			req_info = cls.get_item_recipe_requirements(
+				item_id_or_name=item_id_or_name,
+				ordered_qty=qty,
+				portion=portion,
+				inv_map=inv_map,
+				menu=menu,
+				data=data,
+			)
+
+			# Only approved recipes participate in inventory deduction
+			if not req_info.get("can_deduct_inventory"):
+				continue
+
+			for ing in req_info.get("ingredients", []):
+				if not ing.get("is_mapped"):
+					continue
+				inv_code = ing.get("item_code")
+				inv_item = inv_by_code.get(inv_code) or inv_map.get(ing.get("inventory_item_name", "").lower()) or inv_map.get(ing.get("ingredient_name", "").lower())
+				if not inv_item:
+					continue
+				
+				deduct_qty = float(ing.get("stock_deduct_qty", 0.0))
+				if deduct_qty <= 0:
+					continue
+
+				inv_item["quantity"] = round(max(0.0, inv_item["quantity"] - deduct_qty), 3)
+				inv_item["last_updated"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
+				cls._record_movement_internal(
+					data,
+					item_name=inv_item["name"],
+					movement_type="Order Consumption",
+					qty=deduct_qty,
+					unit=inv_item.get("unit", "kg"),
+					from_location=inv_item.get("location", "Cold Storage"),
+					to_location="Kitchen",
+					reason=f"Order {order.get('order_id')} ({round_label}) prep for Table {order.get('table_no')}",
+					reference=ref_id,
+				)
+				consumed_log.append({
+					"ingredient": inv_item["name"],
+					"qty": deduct_qty,
+					"unit": inv_item.get("unit", "kg"),
+					"dish": item.get("name"),
+					"portion": portion,
+				})
 
 		order["inventory_deducted"] = True
 		if "consumed_ingredients" not in order:
@@ -3862,36 +4812,51 @@ class RestaurantStore:
 		for it in data.get("menu_items", []):
 			menu[it["name"].lower()] = it
 
-		inv_map = {inv["name"]: inv for inv in data.get("inventory", [])}
+		inv_map = {inv["name"].lower(): inv for inv in data.get("inventory", []) if inv.get("name")}
+		inv_by_code = {inv["item_code"]: inv for inv in data.get("inventory", []) if inv.get("item_code")}
 
-		# Reverse across all items
 		for item in order.get("items", []):
-			menu_item = menu.get(item.get("item_id")) or menu.get(str(item.get("name", "")).lower())
-			if not menu_item:
-				continue
-			recipe = menu_item.get("recipe", {})
-			if not recipe:
-				continue
+			item_id_or_name = item.get("item_id") or item.get("name")
 			qty = int(item.get("qty", 1))
+			portion = item.get("portion", "Regular")
 
-			for ingredient, per_unit_qty in recipe.items():
-				total_returned = round(float(per_unit_qty) * qty, 3)
-				if ingredient in inv_map:
-					inv_map[ingredient]["quantity"] = round(
-						inv_map[ingredient]["quantity"] + total_returned, 3
-					)
-					inv_map[ingredient]["last_updated"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
-					cls._record_movement_internal(
-						data,
-						item_name=ingredient,
-						movement_type="Order Cancellation Reversal",
-						qty=total_returned,
-						unit=inv_map[ingredient].get("unit", "kg"),
-						from_location="Kitchen",
-						to_location=inv_map[ingredient].get("location", "Cold Storage"),
-						reason=f"Cancelled order {order.get('order_id')} stock restoration",
-						reference=order.get("order_id"),
-					)
+			req_info = cls.get_item_recipe_requirements(
+				item_id_or_name=item_id_or_name,
+				ordered_qty=qty,
+				portion=portion,
+				inv_map=inv_map,
+				menu=menu,
+				data=data,
+			)
+
+			if not req_info.get("can_deduct_inventory"):
+				continue
+
+			for ing in req_info.get("ingredients", []):
+				if not ing.get("is_mapped"):
+					continue
+				inv_code = ing.get("item_code")
+				inv_item = inv_by_code.get(inv_code) or inv_map.get(ing.get("inventory_item_name", "").lower()) or inv_map.get(ing.get("ingredient_name", "").lower())
+				if not inv_item:
+					continue
+				
+				return_qty = float(ing.get("stock_deduct_qty", 0.0))
+				if return_qty <= 0:
+					continue
+
+				inv_item["quantity"] = round(inv_item["quantity"] + return_qty, 3)
+				inv_item["last_updated"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
+				cls._record_movement_internal(
+					data,
+					item_name=inv_item["name"],
+					movement_type="Order Cancellation Reversal",
+					qty=return_qty,
+					unit=inv_item.get("unit", "kg"),
+					from_location="Kitchen",
+					to_location=inv_item.get("location", "Cold Storage"),
+					reason=f"Cancelled order {order.get('order_id')} stock restoration",
+					reference=order.get("order_id"),
+				)
 
 		order["inventory_deducted"] = False
 		for b in order.get("batches", []):
