@@ -2422,10 +2422,12 @@ class RestaurantStore:
 		weekly_values = base_weekly + [today_revenue]
 		weekly_total = sum(weekly_values)
 
-		yesterday_base = base_weekly[-1] if base_weekly else 61200
-		if today_revenue > 0:
+		yesterday_base = base_weekly[-1] if base_weekly else 0
+		if today_revenue > 0 and yesterday_base > 0:
 			diff_pct = round(((today_revenue - yesterday_base) / yesterday_base) * 100, 1)
 			revenue_growth = f"{'+' if diff_pct >= 0 else ''}{diff_pct}%"
+		elif today_revenue > 0 and yesterday_base == 0:
+			revenue_growth = "+100%"
 		else:
 			revenue_growth = "0%"
 
