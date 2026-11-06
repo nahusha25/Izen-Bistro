@@ -119,6 +119,11 @@ class KitchenDisplaySystem {
 							<span class="clock-digits">--:--:--</span>
 						</div>
 
+						<button type="button" class="kds-btn-tool" id="btn-kds-kitchen-stock" title="${__('View kitchen stock and transfer from warehouse')}">
+							<i class="fa fa-cubes"></i>
+							<span>${__('Kitchen Stock')}</span>
+						</button>
+
 						<button type="button" class="kds-btn-tool active-toggle" id="btn-kds-sound" title="${__('Toggle audible kitchen bell on new ticket')}">
 							<i class="fa fa-volume-up"></i>
 							<span class="sound-label">${__('Sound ON')}</span>
@@ -293,6 +298,29 @@ class KitchenDisplaySystem {
 			e.stopPropagation();
 			let ticket_id = $(this).closest('.kds-ticket-card').data('order-id');
 			me.show_ingredient_details_dialog(ticket_id);
+		});
+
+		// 8. Kitchen Stock and Warehouse Transfers Modal Click
+		this.container.on('click', '#btn-kds-kitchen-stock', function () {
+			me.show_kitchen_stock_dialog();
+		});
+
+		// 9. Inline Transfer Action on Ticket
+		this.container.on('click', '.btn-inline-transfer', function (e) {
+			e.stopPropagation();
+			let orderId = $(this).data('order-id');
+			let ticket = null;
+			if (me.data && me.data.columns) {
+				for (let col of ['confirmed', 'preparing', 'ready']) {
+					ticket = (me.data.columns[col] || []).find(t => t.order_id === orderId);
+					if (ticket) break;
+				}
+			}
+			if (ticket) {
+				me.show_ticket_stock_prep_dialog(ticket);
+			} else {
+				me.show_kitchen_stock_dialog();
+			}
 		});
 	}
 
@@ -543,7 +571,21 @@ class KitchenDisplaySystem {
 		// Action Button by Column
 		let actionBtnHtml = '';
 		if (colType === 'confirmed') {
+			let stockWarning = order.needs_kitchen_transfer ? `
+				<div class="ticket-stock-warning" style="background: #fffbeb; border: 1px solid #fde68a; color: #b45309; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; margin-bottom: 8px; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
+					<span><i class="fa fa-exclamation-circle"></i> ${__('Needs Kitchen Stock')}</span>
+					<button type="button" class="btn btn-xs btn-default btn-inline-transfer" data-order-id="${order.order_id}" style="padding: 1px 6px; font-size: 0.7rem; font-weight: 700; color: #b45309; border-color: #f59e0b; background: #fff;">
+						<i class="fa fa-arrow-right"></i> ${__('Transfer')}
+					</button>
+				</div>
+			` : `
+				<div class="ticket-stock-ready" style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; margin-bottom: 8px; font-weight: 600;">
+					<i class="fa fa-check-circle"></i> ${__('Kitchen Stock Ready')}
+				</div>
+			`;
+
 			actionBtnHtml = `
+				${stockWarning}
 				<button type="button" class="btn-kds-action btn-start-prep" data-order-id="${order.order_id}" data-next-status="Preparing">
 					<i class="fa fa-fire"></i> ${__('Start Preparing')}
 				</button>
@@ -604,6 +646,20 @@ class KitchenDisplaySystem {
 
 	update_ticket_status(order_id, next_status) {
 		let me = this;
+		let ticket = null;
+		if (this.data && this.data.columns) {
+			for (let col of ['confirmed', 'preparing', 'ready']) {
+				ticket = (this.data.columns[col] || []).find(t => t.order_id === order_id);
+				if (ticket) break;
+			}
+		}
+
+		// Intercept Start Preparing if kitchen stock is missing
+		if (next_status === 'Preparing' && ticket && ticket.needs_kitchen_transfer) {
+			me.show_ticket_stock_prep_dialog(ticket);
+			return;
+		}
+
 		frappe.call({
 			method: 'restaurant_management.restaurant_management.page.restaurant_kitchen_display.restaurant_kitchen_display.update_order_status',
 			args: {
@@ -613,7 +669,7 @@ class KitchenDisplaySystem {
 			callback: function (r) {
 				if (r.message) {
 					let actionLabels = {
-						'Preparing': __('started preparing in kitchen'),
+						'Preparing': __('started preparing in kitchen (kitchen stock consumed)'),
 						'Ready': __('marked ready for pickup'),
 						'Served': __('marked served & routed to billing')
 					};
@@ -684,9 +740,15 @@ class KitchenDisplaySystem {
 						<td rowspan="${it.ingredients.length}" style="vertical-align: middle; text-align: center; font-weight: 700; background: #fafafa;">${it.qty}</td>
 					` : '';
 					
-					let statusBadge = ing.in_stock 
-						? `<span class="badge badge-success" style="background: #ecfdf5; color: #047857; font-weight: 600; padding: 3px 8px; border-radius: 4px;"><i class="fa fa-check"></i> In Stock</span>`
-						: `<span class="badge badge-danger" style="background: #fef2f2; color: #b91c1c; font-weight: 600; padding: 3px 8px; border-radius: 4px;"><i class="fa fa-times"></i> Shortage (${ing.missing_display})</span>`;
+					let inKitchen = ing.in_kitchen_stock;
+					let stockUnit = ing.stock_unit || ing.unit;
+					let statusBadge = inKitchen
+						? `<span class="badge badge-success" style="background: #ecfdf5; color: #047857; font-weight: 700; padding: 3px 8px; border-radius: 4px;"><i class="fa fa-check"></i> Ready</span>`
+						: `<span class="badge badge-danger" style="background: #fef2f2; color: #b91c1c; font-weight: 700; padding: 3px 8px; border-radius: 4px;"><i class="fa fa-times"></i> Shortage (${ing.kitchen_missing_display || (ing.kitchen_missing_qty + ' ' + stockUnit)})</span>`;
+
+					let actionCell = inKitchen 
+						? `<span class="text-muted small">--</span>`
+						: `<button type="button" class="btn btn-xs btn-primary btn-dialog-transfer" data-ticket-id="${ticket.order_id}" data-item="${frappe.utils.escape_html(ing.ingredient_name)}" data-code="${ing.item_code}" data-unit="${stockUnit}" data-needed="${ing.kitchen_missing_qty}" data-warehouse="${ing.warehouse_stock}" style="font-weight: 700; padding: 2px 8px;"><i class="fa fa-arrow-right"></i> ${__('Transfer')}</button>`;
 
 					tableRows += `
 						<tr>
@@ -697,8 +759,10 @@ class KitchenDisplaySystem {
 							</td>
 							<td style="text-align: right; color: #64748b;">${ing.per_serving_display}</td>
 							<td style="text-align: right; font-weight: 700; color: #1e293b;">${ing.required_display}</td>
-							<td style="text-align: right;">${ing.available_display}</td>
+							<td style="text-align: right; font-weight: 700; color: #4338ca;">${ing.kitchen_display || (ing.kitchen_stock + ' ' + stockUnit)}</td>
+							<td style="text-align: right; color: #64748b;">${ing.warehouse_display || (ing.warehouse_stock + ' ' + stockUnit)}</td>
 							<td style="text-align: center;">${statusBadge}</td>
+							<td style="text-align: center;">${actionCell}</td>
 						</tr>
 					`;
 				});
@@ -788,8 +852,10 @@ class KitchenDisplaySystem {
 								<th>${__('Ingredient Name')}</th>
 								<th style="text-align: right;">${__('Per Serving')}</th>
 								<th style="text-align: right;">${__('Required Total')}</th>
-								<th style="text-align: right;">${__('Available Stock')}</th>
-								<th style="text-align: center;">${__('Inventory Availability')}</th>
+								<th style="text-align: right;">${__('Kitchen Stock')}</th>
+								<th style="text-align: right;">${__('Warehouse Stock')}</th>
+								<th style="text-align: center;">${__('Kitchen Status')}</th>
+								<th style="text-align: center;">${__('Action')}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -823,7 +889,432 @@ class KitchenDisplaySystem {
 			}
 		});
 
+		d.fields_dict.details_html.$wrapper.find('.btn-dialog-transfer').on('click', function () {
+			let itemName = $(this).data('item');
+			let itemCode = $(this).data('code');
+			let unit = $(this).data('unit');
+			let needed = parseFloat($(this).data('needed'));
+			let wStock = parseFloat($(this).data('warehouse'));
+
+			frappe.prompt([
+				{
+					fieldname: 'qty',
+					fieldtype: 'Float',
+					label: __('Quantity to Transfer ({0})', [unit]),
+					reqd: 1,
+					default: needed,
+					description: __('Required: {0} {1} | Warehouse available: {2} {1}', [needed, unit, wStock, unit])
+				},
+				{
+					fieldname: 'staff_name',
+					fieldtype: 'Data',
+					label: __('Staff Member'),
+					default: frappe.session.user_fullname || frappe.session.user || 'Head Chef'
+				}
+			], function (values) {
+				frappe.call({
+					method: 'restaurant_management.restaurant_management.page.restaurant_kitchen_display.restaurant_kitchen_display.transfer_warehouse_to_kitchen',
+					args: {
+						item_name: itemName,
+						item_code: itemCode,
+						qty: values.qty,
+						staff_name: values.staff_name,
+						reason: `Direct Transfer for Ticket ${ticket.order_id}`
+					},
+					callback: function (r) {
+						if (r.message && r.message.success) {
+							frappe.show_alert({ message: r.message.message, indicator: 'green' });
+							d.hide();
+							me.fetch_data(false);
+						}
+					}
+				});
+			}, __('Transfer {0} to Kitchen', [itemName]), __('Confirm Transfer'));
+		});
+
 		d.show();
+	}
+
+	show_ticket_stock_prep_dialog(ticket) {
+		let me = this;
+		let shortages = (ticket.ingredient_consumption || []).filter(c => !c.in_kitchen_stock);
+		if (!shortages.length) {
+			// No shortage, proceed to prep
+			frappe.call({
+				method: 'restaurant_management.restaurant_management.page.restaurant_kitchen_display.restaurant_kitchen_display.update_order_status',
+				args: { order_id: ticket.order_id, status: 'Preparing' },
+				callback: function (r) {
+					if (r.message) {
+						frappe.show_alert({ message: __('Started preparing {0}', [ticket.order_id]), indicator: 'green' });
+						me.fetch_data(false);
+					}
+				}
+			});
+			return;
+		}
+
+		let rows = shortages.map(s => {
+			let stockUnit = s.stock_unit || s.unit;
+			let reqDisp = s.stock_required_display ? `${s.required_display} (${s.stock_required_display})` : s.required_display;
+			return `
+			<tr>
+				<td style="font-weight: 700;">${frappe.utils.escape_html(s.ingredient_name)}</td>
+				<td style="text-align: right; font-weight: 700; color: #1e293b;">${reqDisp}</td>
+				<td style="text-align: right; color: #dc2626; font-weight: 700;">${s.kitchen_stock} ${stockUnit}</td>
+				<td style="text-align: right; color: #16a34a; font-weight: 700;">${s.warehouse_stock} ${stockUnit}</td>
+				<td style="text-align: right; font-weight: 800; color: #d97706;">${s.kitchen_missing_qty} ${stockUnit}</td>
+			</tr>
+			`;
+		}).join('');
+
+		let html = `
+			<div style="padding: 4px;">
+				<div class="alert alert-warning" style="background: #fffbeb; border: 1px solid #fef3c7; color: #92400e; padding: 10px 14px; border-radius: 6px; margin-bottom: 14px;">
+					<i class="fa fa-exclamation-triangle"></i>
+					<strong>${__('Kitchen Stock Required Before Cooking')}</strong>
+					<div style="font-size: 0.85rem; margin-top: 4px;">
+						${__('The kitchen does not have enough stock to prepare this ticket. Confirm transfer from warehouse storage to kitchen below.')}
+					</div>
+				</div>
+
+				<table class="table table-bordered" style="width: 100%; font-size: 0.85rem; margin-bottom: 14px;">
+					<thead style="background: #f1f5f9;">
+						<tr>
+							<th>${__('Ingredient')}</th>
+							<th style="text-align: right;">${__('Required')}</th>
+							<th style="text-align: right;">${__('In Kitchen')}</th>
+							<th style="text-align: right;">${__('In Warehouse')}</th>
+							<th style="text-align: right;">${__('Transfer Needed')}</th>
+						</tr>
+					</thead>
+					<tbody>${rows}</tbody>
+				</table>
+			</div>
+		`;
+
+		let d = new frappe.ui.Dialog({
+			title: __('Transfer Required Ingredients & Start Preparing ({0})', [ticket.display_order_id || ticket.order_id]),
+			size: 'large',
+			fields: [{ fieldtype: 'HTML', fieldname: 'html', options: html }],
+			primary_action_label: __('Transfer Stock & Start Preparing'),
+			primary_action: function () {
+				d.hide();
+				// Transfer each shortage in sequence then start prep
+				let promises = shortages.map(s => {
+					let transferQty = s.kitchen_missing_qty;
+					if (s.warehouse_stock < transferQty) transferQty = s.warehouse_stock;
+					return new Promise((resolve, reject) => {
+						frappe.call({
+							method: 'restaurant_management.restaurant_management.page.restaurant_kitchen_display.restaurant_kitchen_display.transfer_warehouse_to_kitchen',
+							args: {
+								item_name: s.ingredient_name,
+								item_code: s.item_code,
+								qty: transferQty,
+								reason: `Transferred for ${ticket.order_id} food prep`
+							},
+							callback: function (r) {
+								if (r.message && r.message.success) resolve();
+								else reject();
+							}
+						});
+					});
+				});
+
+				Promise.all(promises).then(() => {
+					frappe.call({
+						method: 'restaurant_management.restaurant_management.page.restaurant_kitchen_display.restaurant_kitchen_display.update_order_status',
+						args: { order_id: ticket.order_id, status: 'Preparing' },
+						callback: function (r) {
+							if (r.message) {
+								frappe.show_alert({
+									message: __('Transferred stock to kitchen and started preparing {0}!', [ticket.order_id]),
+									indicator: 'green'
+								});
+								me.fetch_data(false);
+							}
+						}
+					});
+				}).catch(() => {
+					me.fetch_data(false);
+				});
+			},
+			secondary_action_label: __('Manage Kitchen Stock'),
+			secondary_action: function () {
+				d.hide();
+				me.show_kitchen_stock_dialog();
+			}
+		});
+		d.show();
+	}
+
+	show_kitchen_stock_dialog() {
+		let me = this;
+		let d = new frappe.ui.Dialog({
+			title: __('Kitchen Stock & Warehouse Transfers'),
+			size: 'extra-large',
+			fields: [
+				{
+					fieldtype: 'HTML',
+					fieldname: 'stock_html'
+				}
+			],
+			primary_action_label: __('Close'),
+			primary_action: function () {
+				d.hide();
+				me.fetch_data(false);
+			}
+		});
+
+		function loadSummary() {
+			frappe.call({
+				method: 'restaurant_management.restaurant_management.page.restaurant_kitchen_display.restaurant_kitchen_display.get_kitchen_stock_summary',
+				callback: function (r) {
+					if (r.message) {
+						renderStockUI(r.message);
+					}
+				}
+			});
+		}
+
+		function renderStockUI(data) {
+			let items = data.items || [];
+			let movements = data.movements || [];
+
+			let itemOptions = items.map(i => `<option value="${frappe.utils.escape_html(i.name)}" data-unit="${i.unit}" data-warehouse="${i.warehouse_stock}" data-kitchen="${i.kitchen_stock}">${frappe.utils.escape_html(i.name)} (${i.item_code}) — Warehouse: ${i.warehouse_stock} ${i.unit}</option>`).join('');
+
+			let rows = items.map(i => {
+				let kBadge = i.kitchen_stock > 0 
+					? `<span class="badge badge-success" style="background: #ecfdf5; color: #047857; font-weight: 700; padding: 4px 8px; border-radius: 4px;">${i.kitchen_stock} ${i.unit}</span>`
+					: `<span class="badge badge-danger" style="background: #fef2f2; color: #b91c1c; font-weight: 700; padding: 4px 8px; border-radius: 4px;">0 ${i.unit} (Empty)</span>`;
+
+				let wBadge = `<span style="font-weight: 700; color: #1e293b;">${i.warehouse_stock} ${i.unit}</span>`;
+
+				return `
+					<tr>
+						<td style="font-weight: 700; color: #4f46e5;">${frappe.utils.escape_html(i.item_code)}</td>
+						<td>
+							<div style="font-weight: 700; color: #0f172a;">${frappe.utils.escape_html(i.name)}</div>
+							<div style="font-size: 0.75rem; color: #64748b;">${frappe.utils.escape_html(i.category)} &bull; ${frappe.utils.escape_html(i.location)}</div>
+						</td>
+						<td style="text-align: right;">${wBadge}</td>
+						<td style="text-align: right;">${kBadge}</td>
+						<td style="text-align: right; font-weight: 600; color: #64748b;">${i.quantity} ${i.unit}</td>
+						<td style="text-align: center;">
+							<button type="button" class="btn btn-xs btn-primary btn-quick-transfer" data-item="${frappe.utils.escape_html(i.name)}" data-unit="${i.unit}" data-warehouse="${i.warehouse_stock}" style="font-weight: 700; padding: 2px 8px;">
+								<i class="fa fa-arrow-right"></i> ${__('Transfer to Kitchen')}
+							</button>
+							${i.kitchen_stock > 0 ? `
+								<button type="button" class="btn btn-xs btn-default btn-quick-return" data-item="${frappe.utils.escape_html(i.name)}" data-unit="${i.unit}" data-kitchen="${i.kitchen_stock}" style="font-weight: 600; padding: 2px 8px; margin-left: 4px;">
+									<i class="fa fa-undo"></i> ${__('Return')}
+								</button>
+							` : ''}
+						</td>
+					</tr>
+				`;
+			}).join('');
+
+			let movRows = movements.map(m => `
+				<tr>
+					<td style="font-size: 0.8rem; color: #64748b;">${m.timestamp}</td>
+					<td style="font-weight: 700;">${frappe.utils.escape_html(m.item_name)}</td>
+					<td><span class="badge" style="background: #eff6ff; color: #1d4ed8; font-weight: 600; padding: 3px 6px;">${m.movement_type}</span></td>
+					<td style="text-align: right; font-weight: 700;">${m.qty} ${m.unit}</td>
+					<td>${frappe.utils.escape_html(m.from_location)} &rarr; ${frappe.utils.escape_html(m.to_location)}</td>
+					<td><span style="font-size: 0.8rem; color: #475569;">${frappe.utils.escape_html(m.user || 'Chef')}</span></td>
+					<td style="font-size: 0.8rem; color: #64748b;">${frappe.utils.escape_html(m.reason || '')}</td>
+				</tr>
+			`).join('');
+
+			let html = `
+				<div class="kds-kitchen-stock-container" style="padding: 4px;">
+					<!-- Top Transfer Form -->
+					<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+						<div style="font-weight: 800; font-size: 0.95rem; margin-bottom: 10px; color: #0f172a; display: flex; align-items: center; justify-content: space-between;">
+							<span><i class="fa fa-exchange" style="color: #4f46e5;"></i> ${__('Warehouse to Kitchen Stock Movement')}</span>
+							<span style="font-size: 0.8rem; color: #64748b; font-weight: 500;">${__('Stock moves from warehouse storage to kitchen counter')}</span>
+						</div>
+						<div class="row" style="margin-bottom: 0;">
+							<div class="col-sm-4">
+								<label style="font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 4px;">${__('Select Ingredient')}</label>
+								<select class="form-control input-sm" id="kds-trans-item">${itemOptions}</select>
+							</div>
+							<div class="col-sm-2">
+								<label style="font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 4px;">${__('Transfer Qty')}</label>
+								<input type="number" step="0.1" min="0.1" class="form-control input-sm" id="kds-trans-qty" placeholder="1.0" value="1.0">
+							</div>
+							<div class="col-sm-3">
+								<label style="font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 4px;">${__('Staff Member')}</label>
+								<input type="text" class="form-control input-sm" id="kds-trans-staff" value="${frappe.session.user_fullname || frappe.session.user || 'Head Chef'}">
+							</div>
+							<div class="col-sm-3" style="display: flex; align-items: flex-end;">
+								<button type="button" class="btn btn-sm btn-primary btn-block" id="btn-exec-transfer" style="font-weight: 700; height: 30px;">
+									<i class="fa fa-check"></i> ${__('Confirm Transfer')}
+								</button>
+							</div>
+						</div>
+					</div>
+
+					<!-- Navigation Tabs -->
+					<ul class="nav nav-tabs" style="margin-bottom: 12px;">
+						<li class="active"><a data-toggle="tab" href="#tab-kds-stock-inventory" style="font-weight: 700;"><i class="fa fa-cubes"></i> ${__('Current Stock (Kitchen vs Warehouse)')}</a></li>
+						<li><a data-toggle="tab" href="#tab-kds-stock-movements" style="font-weight: 700;"><i class="fa fa-history"></i> ${__('Movement History')}</a></li>
+					</ul>
+
+					<div class="tab-content">
+						<div id="tab-kds-stock-inventory" class="tab-pane active">
+							<div style="overflow-x: auto; max-height: 380px;">
+								<table class="table table-bordered table-hover" style="font-size: 0.85rem; margin-bottom: 0;">
+									<thead style="background: #f1f5f9; position: sticky; top: 0; z-index: 2;">
+										<tr>
+											<th>${__('Code')}</th>
+											<th>${__('Ingredient Name & Location')}</th>
+											<th style="text-align: right;">${__('Warehouse Stock')}</th>
+											<th style="text-align: right;">${__('Kitchen Stock')}</th>
+											<th style="text-align: right;">${__('Total Restaurant Stock')}</th>
+											<th style="text-align: center;">${__('Actions')}</th>
+										</tr>
+									</thead>
+									<tbody>${rows}</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div id="tab-kds-stock-movements" class="tab-pane">
+							<div style="overflow-x: auto; max-height: 380px;">
+								<table class="table table-bordered table-striped" style="font-size: 0.8rem; margin-bottom: 0;">
+									<thead style="background: #f1f5f9; position: sticky; top: 0; z-index: 2;">
+										<tr>
+											<th>${__('Date & Time')}</th>
+											<th>${__('Item Name')}</th>
+											<th>${__('Movement Type')}</th>
+											<th style="text-align: right;">${__('Quantity')}</th>
+											<th>${__('Source &rarr; Destination')}</th>
+											<th>${__('Staff Member')}</th>
+											<th>${__('Notes / Reason')}</th>
+										</tr>
+									</thead>
+									<tbody>${movRows.length ? movRows : `<tr><td colspan="7" class="text-center text-muted" style="padding: 20px;">${__('No movements recorded yet.')}</td></tr>`}</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			`;
+
+			d.fields_dict.stock_html.$wrapper.html(html);
+
+			// Bind Transfer Execution
+			d.fields_dict.stock_html.$wrapper.find('#btn-exec-transfer').on('click', function () {
+				let itemName = $('#kds-trans-item').val();
+				let qty = parseFloat($('#kds-trans-qty').val());
+				let staff = $('#kds-trans-staff').val();
+
+				if (!itemName || isNaN(qty) || qty <= 0) {
+					frappe.msgprint(__('Please select an item and enter a valid transfer quantity (> 0).'));
+					return;
+				}
+
+				frappe.call({
+					method: 'restaurant_management.restaurant_management.page.restaurant_kitchen_display.restaurant_kitchen_display.transfer_warehouse_to_kitchen',
+					args: {
+						item_name: itemName,
+						qty: qty,
+						staff_name: staff,
+						reason: 'KDS Manual Transfer to Kitchen'
+					},
+					callback: function (r) {
+						if (r.message && r.message.success) {
+							frappe.show_alert({
+								message: r.message.message || __('Transferred successfully'),
+								indicator: 'green'
+							});
+							loadSummary();
+						}
+					}
+				});
+			});
+
+			// Quick Transfer button in table
+			d.fields_dict.stock_html.$wrapper.find('.btn-quick-transfer').on('click', function () {
+				let itemName = $(this).data('item');
+				let unit = $(this).data('unit');
+				let wStock = parseFloat($(this).data('warehouse'));
+
+				frappe.prompt([
+					{
+						fieldname: 'qty',
+						fieldtype: 'Float',
+						label: __('Quantity to Transfer ({0})', [unit]),
+						reqd: 1,
+						default: 1.0,
+						description: __('Available in warehouse: {0} {1}', [wStock, unit])
+					},
+					{
+						fieldname: 'staff_name',
+						fieldtype: 'Data',
+						label: __('Staff Member'),
+						default: frappe.session.user_fullname || frappe.session.user || 'Head Chef'
+					}
+				], function (values) {
+					frappe.call({
+						method: 'restaurant_management.restaurant_management.page.restaurant_kitchen_display.restaurant_kitchen_display.transfer_warehouse_to_kitchen',
+						args: {
+							item_name: itemName,
+							qty: values.qty,
+							staff_name: values.staff_name
+						},
+						callback: function (r) {
+							if (r.message && r.message.success) {
+								frappe.show_alert({ message: r.message.message, indicator: 'green' });
+								loadSummary();
+							}
+						}
+					});
+				}, __('Transfer {0} to Kitchen', [itemName]), __('Confirm Transfer'));
+			});
+
+			// Quick Return button in table
+			d.fields_dict.stock_html.$wrapper.find('.btn-quick-return').on('click', function () {
+				let itemName = $(this).data('item');
+				let unit = $(this).data('unit');
+				let kStock = parseFloat($(this).data('kitchen'));
+
+				frappe.prompt([
+					{
+						fieldname: 'qty',
+						fieldtype: 'Float',
+						label: __('Quantity to Return ({0})', [unit]),
+						reqd: 1,
+						default: Math.min(1.0, kStock),
+						description: __('Available in kitchen: {0} {1}', [kStock, unit])
+					},
+					{
+						fieldname: 'staff_name',
+						fieldtype: 'Data',
+						label: __('Staff Member'),
+						default: frappe.session.user_fullname || frappe.session.user || 'Kitchen Staff'
+					}
+				], function (values) {
+					frappe.call({
+						method: 'restaurant_management.restaurant_management.page.restaurant_kitchen_display.restaurant_kitchen_display.transfer_kitchen_to_warehouse',
+						args: {
+							item_name: itemName,
+							qty: values.qty,
+							staff_name: values.staff_name
+						},
+						callback: function (r) {
+							if (r.message && r.message.success) {
+								frappe.show_alert({ message: r.message.message, indicator: 'green' });
+								loadSummary();
+							}
+						}
+					});
+				}, __('Return {0} to Warehouse', [itemName]), __('Confirm Return'));
+			});
+		}
+
+		d.show();
+		loadSummary();
 	}
 
 }

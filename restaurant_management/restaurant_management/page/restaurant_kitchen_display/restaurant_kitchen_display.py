@@ -27,6 +27,34 @@ def update_order_status(order_id, status):
 
 
 @frappe.whitelist()
+def get_kitchen_stock_summary(category=None, search=None):
+	"""
+	Returns inventory items separated by warehouse and kitchen stock with recent movements.
+	"""
+	return RestaurantStore.get_kitchen_stock_summary(category=category, search=search)
+
+
+@frappe.whitelist()
+def transfer_warehouse_to_kitchen(item_name=None, item_code=None, qty=0, staff_name=None, reason=""):
+	"""
+	Transfers ingredients from warehouse storage to kitchen for active preparation.
+	"""
+	return RestaurantStore.transfer_warehouse_to_kitchen(
+		item_name=item_name, item_code=item_code, qty=qty, staff_name=staff_name, reason=reason
+	)
+
+
+@frappe.whitelist()
+def transfer_kitchen_to_warehouse(item_name=None, item_code=None, qty=0, staff_name=None, reason=""):
+	"""
+	Transfers unused ingredients from kitchen back to warehouse storage.
+	"""
+	return RestaurantStore.transfer_kitchen_to_warehouse(
+		item_name=item_name, item_code=item_code, qty=qty, staff_name=staff_name, reason=reason
+	)
+
+
+@frappe.whitelist()
 def reset_demo_data():
 	"""
 	Resets demo data to baseline.

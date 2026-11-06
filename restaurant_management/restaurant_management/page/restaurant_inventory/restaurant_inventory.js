@@ -355,6 +355,10 @@ class RestaurantInventoryView {
 						<td><span class="ri-loc-tag"><i class="fa fa-archive"></i> ${frappe.utils.escape_html(i.location || "Dry Storage")}</span></td>
 						<td>
 							<div class="font-weight-bold">${i.formatted_qty}</div>
+							<div class="text-muted small" style="font-size: 0.73rem; white-space: nowrap; margin-top: 2px;">
+								<span title="Warehouse storage stock" style="color: #475569;"><i class="fa fa-archive"></i> WH: <strong>${i.warehouse_stock != null ? i.warehouse_stock : i.quantity} ${i.unit}</strong></span> &bull; 
+								<span title="Kitchen prep stock" style="color: #6366f1;"><i class="fa fa-cutlery"></i> Kit: <strong>${i.kitchen_stock != null ? i.kitchen_stock : 0} ${i.unit}</strong></span>
+							</div>
 						</td>
 						<td>${i.formatted_cost}</td>
 						<td><span class="font-weight-bold">${i.formatted_stock_value}</span></td>
@@ -362,6 +366,7 @@ class RestaurantInventoryView {
 						<td><span class="ri-badge ${badgeClass}"><i class="fa fa-circle"></i> ${i.stock_status}</span></td>
 						<td>
 							<div class="ri-action-btns">
+								<button class="ri-row-btn btn-action-kitchen-transfer text-primary" title="${__('Transfer to Kitchen')}" style="color: #6366f1 !important; border-color: #c7d2fe !important; background: #eef2ff;"><i class="fa fa-cutlery"></i></button>
 								<button class="ri-row-btn btn-in btn-action-in" title="${__('Stock In')}"><i class="fa fa-plus"></i></button>
 								<button class="ri-row-btn btn-out btn-action-out" title="${__('Stock Out')}"><i class="fa fa-minus"></i></button>
 								<button class="ri-row-btn btn-adj btn-action-adj" title="${__('Adjust Count')}"><i class="fa fa-sliders"></i></button>
@@ -455,6 +460,11 @@ class RestaurantInventoryView {
 		$container.find(".btn-action-adj").on("click", function () {
 			const iname = $(this).closest("tr").data("item-name");
 			me.showStockAdjustDialog(iname);
+		});
+
+		$container.find(".btn-action-kitchen-transfer").on("click", function () {
+			const iname = $(this).closest("tr").data("item-name");
+			me.showKitchenTransferDialog(iname);
 		});
 
 		$container.find(".btn-action-transfer").on("click", function () {
@@ -1239,6 +1249,79 @@ class RestaurantInventoryView {
 						if (!r.exc) {
 							frappe.show_alert({
 								message: __("Stock adjustment saved!"),
+								indicator: "green",
+							});
+							d.hide();
+							me.refresh();
+						}
+					},
+				});
+			},
+		});
+
+		d.show();
+	}
+
+	showKitchenTransferDialog(defaultItem) {
+		const me = this;
+		const options = this.getItemOptions();
+		const items = this.data.items || [];
+		const targetItem = items.find(i => i.name === defaultItem) || items[0] || {};
+
+		const d = new frappe.ui.Dialog({
+			title: __("Warehouse &rarr; Kitchen Stock Transfer"),
+			fields: [
+				{
+					fieldname: "item_name",
+					label: __("Inventory Item"),
+					fieldtype: "Select",
+					options: options,
+					default: defaultItem || (options[0] ? options[0].value : ""),
+					reqd: 1,
+					change: function () {
+						const selectedName = d.get_value("item_name");
+						const it = items.find(i => i.name === selectedName);
+						if (it) {
+							d.set_df_property("qty", "description", __("Available in warehouse: {0} {1} | Currently in kitchen: {2} {1}", [it.warehouse_stock != null ? it.warehouse_stock : it.quantity, it.unit, it.kitchen_stock != null ? it.kitchen_stock : 0]));
+						}
+					}
+				},
+				{
+					fieldname: "qty",
+					label: __("Quantity to Transfer to Kitchen"),
+					fieldtype: "Float",
+					default: 1.0,
+					reqd: 1,
+					description: __("Available in warehouse: {0} {1} | Currently in kitchen: {2} {1}", [targetItem.warehouse_stock != null ? targetItem.warehouse_stock : targetItem.quantity, targetItem.unit, targetItem.kitchen_stock != null ? targetItem.kitchen_stock : 0])
+				},
+				{
+					fieldname: "staff_name",
+					label: __("Staff Member"),
+					fieldtype: "Data",
+					default: frappe.session.user_fullname || frappe.session.user || "Head Chef",
+					reqd: 1,
+				},
+				{
+					fieldname: "reason",
+					label: __("Notes / Reason"),
+					fieldtype: "Data",
+					default: "Replenishing kitchen stock from warehouse",
+				},
+			],
+			primary_action_label: __("Transfer to Kitchen"),
+			primary_action: function (values) {
+				frappe.call({
+					method: "restaurant_management.restaurant_management.page.restaurant_inventory.restaurant_inventory.transfer_warehouse_to_kitchen",
+					args: {
+						item_name: values.item_name,
+						qty: values.qty,
+						staff_name: values.staff_name,
+						reason: values.reason
+					},
+					callback: function (r) {
+						if (!r.exc && r.message && r.message.success) {
+							frappe.show_alert({
+								message: r.message.message || __("Transferred to kitchen successfully!"),
 								indicator: "green",
 							});
 							d.hide();

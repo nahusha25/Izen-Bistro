@@ -279,35 +279,35 @@ DEFAULT_DATA = {
 	],
 	"inventory": [
 		# Meat & Poultry
-		{"item_code": "INV-001", "name": "Chicken", "category": "Meat & Poultry", "quantity": 25.0, "unit": "kg", "reorder_level": 5.0, "location": "Cold Storage", "cost_price": 240.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-001", "name": "Chicken", "category": "Meat & Poultry", "quantity": 25.0, "warehouse_stock": 25.0, "kitchen_stock": 0.0, "unit": "kg", "reorder_level": 5.0, "location": "Cold Storage", "cost_price": 240.0, "last_updated": "2026-11-03 10:00:00"},
 		# Dairy Products
-		{"item_code": "INV-002", "name": "Paneer", "category": "Dairy Products", "quantity": 15.0, "unit": "kg", "reorder_level": 3.0, "location": "Cold Storage", "cost_price": 320.0, "last_updated": "2026-11-03 10:00:00"},
-		{"item_code": "INV-003", "name": "Cream & Butter", "category": "Dairy Products", "quantity": 12.0, "unit": "kg", "reorder_level": 2.5, "location": "Cold Storage", "cost_price": 450.0, "last_updated": "2026-11-03 10:00:00"},
-		{"item_code": "INV-008", "name": "Dairy Milk", "category": "Dairy Products", "quantity": 18.0, "unit": "ltr", "reorder_level": 4.0, "location": "Cold Storage", "cost_price": 62.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-002", "name": "Paneer", "category": "Dairy Products", "quantity": 15.0, "warehouse_stock": 15.0, "kitchen_stock": 0.0, "unit": "kg", "reorder_level": 3.0, "location": "Cold Storage", "cost_price": 320.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-003", "name": "Cream & Butter", "category": "Dairy Products", "quantity": 12.0, "warehouse_stock": 12.0, "kitchen_stock": 0.0, "unit": "kg", "reorder_level": 2.5, "location": "Cold Storage", "cost_price": 450.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-008", "name": "Dairy Milk", "category": "Dairy Products", "quantity": 18.0, "warehouse_stock": 18.0, "kitchen_stock": 0.0, "unit": "ltr", "reorder_level": 4.0, "location": "Cold Storage", "cost_price": 62.0, "last_updated": "2026-11-03 10:00:00"},
 		# Grains & Rice
-		{"item_code": "INV-004", "name": "Basmati Rice", "category": "Grains & Rice", "quantity": 40.0, "unit": "kg", "reorder_level": 10.0, "location": "Dry Storage", "cost_price": 95.0, "last_updated": "2026-11-03 10:00:00"},
-		{"item_code": "INV-005", "name": "Flour (Maida/Atta)", "category": "Grains & Rice", "quantity": 35.0, "unit": "kg", "reorder_level": 8.0, "location": "Dry Storage", "cost_price": 42.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-004", "name": "Basmati Rice", "category": "Grains & Rice", "quantity": 40.0, "warehouse_stock": 40.0, "kitchen_stock": 0.0, "unit": "kg", "reorder_level": 10.0, "location": "Dry Storage", "cost_price": 95.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-005", "name": "Flour (Maida/Atta)", "category": "Grains & Rice", "quantity": 35.0, "warehouse_stock": 35.0, "kitchen_stock": 0.0, "unit": "kg", "reorder_level": 8.0, "location": "Dry Storage", "cost_price": 42.0, "last_updated": "2026-11-03 10:00:00"},
 		# Pulses & Dal
-		{"item_code": "INV-009", "name": "Black Lentils (Urad)", "category": "Pulses & Dal", "quantity": 25.0, "unit": "kg", "reorder_level": 5.0, "location": "Dry Storage", "cost_price": 130.0, "last_updated": "2026-11-03 10:00:00"},
-		{"item_code": "INV-010", "name": "Yellow Moong Dal", "category": "Pulses & Dal", "quantity": 20.0, "unit": "kg", "reorder_level": 4.0, "location": "Dry Storage", "cost_price": 115.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-009", "name": "Black Lentils (Urad)", "category": "Pulses & Dal", "quantity": 25.0, "warehouse_stock": 25.0, "kitchen_stock": 0.0, "unit": "kg", "reorder_level": 5.0, "location": "Dry Storage", "cost_price": 130.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-010", "name": "Yellow Moong Dal", "category": "Pulses & Dal", "quantity": 20.0, "warehouse_stock": 20.0, "kitchen_stock": 0.0, "unit": "kg", "reorder_level": 4.0, "location": "Dry Storage", "cost_price": 115.0, "last_updated": "2026-11-03 10:00:00"},
 		# Vegetables
-		{"item_code": "INV-011", "name": "Fresh Onions", "category": "Vegetables", "quantity": 40.0, "unit": "kg", "reorder_level": 8.0, "location": "Fresh Produce Storage", "cost_price": 35.0, "last_updated": "2026-11-03 10:00:00"},
-		{"item_code": "INV-012", "name": "Ripe Tomatoes", "category": "Vegetables", "quantity": 30.0, "unit": "kg", "reorder_level": 6.0, "location": "Fresh Produce Storage", "cost_price": 40.0, "last_updated": "2026-11-03 10:00:00"},
-		{"item_code": "INV-013", "name": "Potatoes", "category": "Vegetables", "quantity": 35.0, "unit": "kg", "reorder_level": 7.0, "location": "Fresh Produce Storage", "cost_price": 30.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-011", "name": "Fresh Onions", "category": "Vegetables", "quantity": 40.0, "warehouse_stock": 40.0, "kitchen_stock": 0.0, "unit": "kg", "reorder_level": 8.0, "location": "Fresh Produce Storage", "cost_price": 35.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-012", "name": "Ripe Tomatoes", "category": "Vegetables", "quantity": 30.0, "warehouse_stock": 30.0, "kitchen_stock": 0.0, "unit": "kg", "reorder_level": 6.0, "location": "Fresh Produce Storage", "cost_price": 40.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-013", "name": "Potatoes", "category": "Vegetables", "quantity": 35.0, "warehouse_stock": 35.0, "kitchen_stock": 0.0, "unit": "kg", "reorder_level": 7.0, "location": "Fresh Produce Storage", "cost_price": 30.0, "last_updated": "2026-11-03 10:00:00"},
 		# Fruits
-		{"item_code": "INV-014", "name": "Fresh Lemons", "category": "Fruits", "quantity": 12.0, "unit": "kg", "reorder_level": 2.5, "location": "Fresh Produce Storage", "cost_price": 90.0, "last_updated": "2026-11-03 10:00:00"},
-		{"item_code": "INV-015", "name": "Fresh Mint & Coriander", "category": "Fruits", "quantity": 5.0, "unit": "kg", "reorder_level": 1.0, "location": "Fresh Produce Storage", "cost_price": 50.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-014", "name": "Fresh Lemons", "category": "Fruits", "quantity": 12.0, "warehouse_stock": 12.0, "kitchen_stock": 0.0, "unit": "kg", "reorder_level": 2.5, "location": "Fresh Produce Storage", "cost_price": 90.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-015", "name": "Fresh Mint & Coriander", "category": "Fruits", "quantity": 5.0, "warehouse_stock": 5.0, "kitchen_stock": 0.0, "unit": "kg", "reorder_level": 1.0, "location": "Fresh Produce Storage", "cost_price": 50.0, "last_updated": "2026-11-03 10:00:00"},
 		# Spices & Masala
-		{"item_code": "INV-006", "name": "Spices & Masala", "category": "Spices & Masala", "quantity": 8.0, "unit": "kg", "reorder_level": 1.5, "location": "Dry Storage", "cost_price": 580.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-006", "name": "Spices & Masala", "category": "Spices & Masala", "quantity": 8.0, "warehouse_stock": 8.0, "kitchen_stock": 0.0, "unit": "kg", "reorder_level": 1.5, "location": "Dry Storage", "cost_price": 580.0, "last_updated": "2026-11-03 10:00:00"},
 		# Cooking Essentials
-		{"item_code": "INV-007", "name": "Cooking Oil", "category": "Cooking Essentials", "quantity": 20.0, "unit": "ltr", "reorder_level": 5.0, "location": "Dry Storage", "cost_price": 145.0, "last_updated": "2026-11-03 10:00:00"},
-		{"item_code": "INV-016", "name": "Refined Sugar", "category": "Cooking Essentials", "quantity": 25.0, "unit": "kg", "reorder_level": 5.0, "location": "Dry Storage", "cost_price": 48.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-007", "name": "Cooking Oil", "category": "Cooking Essentials", "quantity": 20.0, "warehouse_stock": 20.0, "kitchen_stock": 0.0, "unit": "ltr", "reorder_level": 5.0, "location": "Dry Storage", "cost_price": 145.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-016", "name": "Refined Sugar", "category": "Cooking Essentials", "quantity": 25.0, "warehouse_stock": 25.0, "kitchen_stock": 0.0, "unit": "kg", "reorder_level": 5.0, "location": "Dry Storage", "cost_price": 48.0, "last_updated": "2026-11-03 10:00:00"},
 		# Beverages
-		{"item_code": "INV-017", "name": "Assam CTC Tea", "category": "Beverages", "quantity": 10.0, "unit": "kg", "reorder_level": 2.0, "location": "Dry Storage", "cost_price": 340.0, "last_updated": "2026-11-03 10:00:00"},
-		{"item_code": "INV-018", "name": "Filter Coffee Powder", "category": "Beverages", "quantity": 6.0, "unit": "kg", "reorder_level": 1.5, "location": "Dry Storage", "cost_price": 480.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-017", "name": "Assam CTC Tea", "category": "Beverages", "quantity": 10.0, "warehouse_stock": 10.0, "kitchen_stock": 0.0, "unit": "kg", "reorder_level": 2.0, "location": "Dry Storage", "cost_price": 340.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-018", "name": "Filter Coffee Powder", "category": "Beverages", "quantity": 6.0, "warehouse_stock": 6.0, "kitchen_stock": 0.0, "unit": "kg", "reorder_level": 1.5, "location": "Dry Storage", "cost_price": 480.0, "last_updated": "2026-11-03 10:00:00"},
 		# Packaging Materials
-		{"item_code": "INV-019", "name": "Meal Delivery Boxes", "category": "Packaging Materials", "quantity": 250.0, "unit": "pcs", "reorder_level": 50.0, "location": "Dry Storage", "cost_price": 12.0, "last_updated": "2026-11-03 10:00:00"},
-		{"item_code": "INV-020", "name": "Paper Carry Bags", "category": "Packaging Materials", "quantity": 400.0, "unit": "pcs", "reorder_level": 80.0, "location": "Dry Storage", "cost_price": 6.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-019", "name": "Meal Delivery Boxes", "category": "Packaging Materials", "quantity": 250.0, "warehouse_stock": 250.0, "kitchen_stock": 0.0, "unit": "pcs", "reorder_level": 50.0, "location": "Dry Storage", "cost_price": 12.0, "last_updated": "2026-11-03 10:00:00"},
+		{"item_code": "INV-020", "name": "Paper Carry Bags", "category": "Packaging Materials", "quantity": 400.0, "warehouse_stock": 400.0, "kitchen_stock": 0.0, "unit": "pcs", "reorder_level": 80.0, "location": "Dry Storage", "cost_price": 6.0, "last_updated": "2026-11-03 10:00:00"},
 	],
 	"tables": [
 		# Main Dining Hall (12 Tables)
@@ -1537,6 +1537,27 @@ class RestaurantStore:
 				new_item["last_updated"] = "2026-11-03 10:00:00"
 				inv_items.append(new_item)
 				inv_name_map[name] = new_item
+				needs_save = True
+
+		# Harmonize warehouse_stock and kitchen_stock on all inventory items
+		for curr in inv_items:
+			if "warehouse_stock" not in curr or curr["warehouse_stock"] is None:
+				if "kitchen_stock" in curr and curr["kitchen_stock"] is not None:
+					curr["warehouse_stock"] = max(0.0, round(float(curr.get("quantity", 0.0)) - float(curr.get("kitchen_stock", 0.0)), 3))
+				else:
+					curr["warehouse_stock"] = float(curr.get("quantity", 0.0))
+					curr["kitchen_stock"] = 0.0
+				needs_save = True
+			if "kitchen_stock" not in curr or curr["kitchen_stock"] is None:
+				curr["kitchen_stock"] = 0.0
+				needs_save = True
+
+			# Ensure numerical precision & sync total quantity
+			curr["warehouse_stock"] = round(float(curr.get("warehouse_stock", 0.0)), 3)
+			curr["kitchen_stock"] = round(float(curr.get("kitchen_stock", 0.0)), 3)
+			expected_qty = round(curr["warehouse_stock"] + curr["kitchen_stock"], 3)
+			if curr.get("quantity") != expected_qty:
+				curr["quantity"] = expected_qty
 				needs_save = True
 
 		if not data.get("suppliers"):
@@ -3360,8 +3381,9 @@ class RestaurantStore:
 			],
 		}
 
-		# Deduct stock exactly once on confirmation
-		cls._deduct_inventory_for_order(data, order, batch_id=f"{order_id}-R1")
+		# Deduct kitchen stock if order starts directly in Preparing, Ready, Served, Billed or Paid
+		if st in ["Preparing", "Ready", "Served", "Billed", "Paid"]:
+			cls._deduct_inventory_for_order(data, order, batch_id=f"{order_id}-R1")
 
 		data.setdefault("orders", []).insert(0, order)
 
@@ -3484,13 +3506,14 @@ class RestaurantStore:
 		# Check stock availability for new items only
 		cls.validate_order_ingredients(data, new_order_items)
 
-		# Deduct inventory ONLY for the new items
-		cls._deduct_inventory_for_order(data, {
-			"order_id": target_order.get("order_id"),
-			"table_no": target_order.get("table_no"),
-			"items": new_order_items,
-			"inventory_deducted": False,
-		}, batch_id=batch_id)
+		# Deduct inventory ONLY for the new items if order is actively preparing or served
+		if target_order.get("status") in ["Preparing", "Ready", "Served"]:
+			cls._deduct_inventory_for_order(data, {
+				"order_id": target_order.get("order_id"),
+				"table_no": target_order.get("table_no"),
+				"items": new_order_items,
+				"inventory_deducted": False,
+			}, batch_id=batch_id)
 
 		now_dt = frappe.utils.now_datetime()
 		created_at_str = now_dt.strftime("%Y-%m-%d %H:%M:%S")
@@ -3898,25 +3921,53 @@ class RestaurantStore:
 								"item_code": ing["item_code"],
 								"required_qty": 0.0,
 								"unit": ing["unit"],
+								"stock_required_qty": 0.0,
+								"stock_unit": ing.get("stock_unit", ing["unit"]),
 								"available_qty": ing["available_qty"],
 								"available_display": ing["available_display"],
+								"warehouse_stock": ing.get("warehouse_stock", 0.0),
+								"warehouse_display": ing.get("warehouse_display", ""),
+								"kitchen_stock": ing.get("kitchen_stock", 0.0),
+								"kitchen_display": ing.get("kitchen_display", ""),
 								"location": ing.get("location", ""),
 							}
 						ticket_ingredients[ing_name]["required_qty"] = round(
 							ticket_ingredients[ing_name]["required_qty"] + ing["required_qty"], 3
 						)
+						ticket_ingredients[ing_name]["stock_required_qty"] = round(
+							ticket_ingredients[ing_name]["stock_required_qty"] + ing.get("stock_deduct_qty", 0.0), 3
+						)
 
 				enriched_items.append(it_copy)
 
 			consumption_list = []
+			all_kitchen_ready = True
 			for ing in ticket_ingredients.values():
 				ing["required_display"] = cls.format_ingredient_qty(ing["required_qty"], ing["unit"])
-				ing["in_stock"] = ing["available_qty"] >= ing["required_qty"]
-				ing["missing_qty"] = round(max(0.0, ing["required_qty"] - ing["available_qty"]), 3)
+				stock_unit = ing.get("stock_unit", ing["unit"])
+				req_stock = float(ing.get("stock_required_qty", 0.0))
+				avail_stock = float(ing.get("available_qty", 0.0))
+				k_stock = float(ing.get("kitchen_stock", 0.0))
+				w_stock = float(ing.get("warehouse_stock", 0.0))
+
+				ing["in_stock"] = avail_stock >= req_stock
+				ing["missing_qty"] = round(max(0.0, req_stock - avail_stock), 3)
+
+				# Check kitchen stock availability against inventory stock required quantity
+				in_k = k_stock >= req_stock
+				if not in_k:
+					all_kitchen_ready = False
+				ing["in_kitchen_stock"] = in_k
+				ing["kitchen_missing_qty"] = round(max(0.0, req_stock - k_stock), 3)
+				ing["can_transfer_from_warehouse"] = w_stock >= ing["kitchen_missing_qty"]
+				ing["stock_required_display"] = f"{req_stock} {stock_unit}"
+				ing["kitchen_missing_display"] = f"{ing['kitchen_missing_qty']} {stock_unit}"
 				consumption_list.append(ing)
 
 			t["items"] = enriched_items
 			t["ingredient_consumption"] = consumption_list
+			t["kitchen_stock_ready"] = all_kitchen_ready if consumption_list else True
+			t["needs_kitchen_transfer"] = not t["kitchen_stock_ready"]
 			t["has_unconfigured_recipes"] = len(unconfigured_dishes) > 0
 			t["unconfigured_dishes"] = unconfigured_dishes
 			t["has_unapproved_recipes"] = len(unapproved_dishes) > 0
@@ -3991,6 +4042,16 @@ class RestaurantStore:
 			"Paid": "badge-positive",
 			"Cancelled": "badge-neutral",
 		}
+
+		# Handle kitchen food preparation stock deduction and cancellation reversal
+		if new_status in ["Preparing", "Ready", "Served"]:
+			if target_batch and not target_batch.get("inventory_deducted"):
+				cls._deduct_inventory_for_order(data, target_order, batch_id=target_batch.get("batch_id"))
+			elif target_order and not target_order.get("inventory_deducted"):
+				cls._deduct_inventory_for_order(data, target_order)
+		elif new_status == "Cancelled":
+			if target_order.get("inventory_deducted"):
+				cls._reverse_inventory_for_order(data, target_order)
 
 		if target_batch:
 			target_batch["status"] = new_status
@@ -4554,19 +4615,27 @@ class RestaurantStore:
 			if inv_item:
 				inv_unit = inv_item.get("unit", "kg")
 				avail_qty = float(inv_item.get("quantity", 0.0))
+				w_stock = float(inv_item.get("warehouse_stock", avail_qty))
+				k_stock = float(inv_item.get("kitchen_stock", 0.0))
 				item_code = inv_item.get("item_code", "")
 				stock_deduct_qty = round(cls.convert_quantity(gross_req, unit, inv_unit), 3)
 				in_stock = avail_qty >= stock_deduct_qty
 				missing_stock = round(max(0.0, stock_deduct_qty - avail_qty), 3)
+				in_kitchen_stock = k_stock >= stock_deduct_qty
+				kitchen_missing = round(max(0.0, stock_deduct_qty - k_stock), 3)
 				is_mapped = True
 				location = inv_item.get("location", "Cold Storage")
 			else:
 				inv_unit = unit
 				avail_qty = 0.0
+				w_stock = 0.0
+				k_stock = 0.0
 				item_code = ""
 				stock_deduct_qty = 0.0
 				in_stock = True # Not stock tracked
 				missing_stock = 0.0
+				in_kitchen_stock = True
+				kitchen_missing = 0.0
 				is_mapped = False
 				location = "Unmapped"
 
@@ -4585,6 +4654,13 @@ class RestaurantStore:
 				"stock_unit": inv_unit,
 				"available_qty": avail_qty,
 				"available_display": f"{avail_qty} {inv_unit}" if is_mapped else "Unmapped",
+				"warehouse_stock": w_stock,
+				"warehouse_display": f"{w_stock} {inv_unit}" if is_mapped else "Unmapped",
+				"kitchen_stock": k_stock,
+				"kitchen_display": f"{k_stock} {inv_unit}" if is_mapped else "Unmapped",
+				"in_kitchen_stock": in_kitchen_stock,
+				"kitchen_missing_qty": kitchen_missing,
+				"kitchen_missing_display": f"{kitchen_missing} {inv_unit}" if kitchen_missing > 0 else "0",
 				"in_stock": in_stock,
 				"missing_qty": missing_stock,
 				"missing_display": f"{missing_stock} {inv_unit}" if missing_stock > 0 else "0",
@@ -4728,17 +4804,27 @@ class RestaurantStore:
 		return inventory
 
 	@classmethod
-	def _deduct_inventory_for_order(cls, data, order, batch_id=None):
+	def _deduct_inventory_for_order(cls, data, order, batch_id=None, staff_name=None):
 		"""
-		Deducts inventory for order recipes exactly once upon confirmation.
+		Deducts kitchen stock for order recipes upon food preparation.
 		Enforces:
-		- Portion & unit-aware stock deduction.
+		- Strictly consumes from kitchen_stock, NEVER directly from warehouse_stock.
+		- Validates that sufficient kitchen_stock is available; prevents preparation if insufficient.
+		- Idempotent: runs exactly once per order or batch round.
 		- Only approved recipes participate in inventory deduction.
-		- Unmapped ingredients are skipped from physical deduction without duplication.
-		- Logs persistent Order Consumption movements with order/batch reference.
+		- Logs persistent 'Kitchen Usage' movements with order/batch reference.
 		"""
 		if order.get("inventory_deducted") and batch_id is None:
 			return
+
+		target_batch = None
+		if batch_id:
+			for b in order.get("batches", []):
+				if b.get("batch_id") == batch_id:
+					target_batch = b
+					break
+			if target_batch and target_batch.get("inventory_deducted"):
+				return
 
 		menu = {it["item_id"]: it for it in data.get("menu_items", [])}
 		for it in data.get("menu_items", []):
@@ -4747,11 +4833,10 @@ class RestaurantStore:
 		inv_map = {inv["name"].lower(): inv for inv in data.get("inventory", []) if inv.get("name")}
 		inv_by_code = {inv["item_code"]: inv for inv in data.get("inventory", []) if inv.get("item_code")}
 
-		consumed_log = []
-		ref_id = batch_id or order.get("order_id")
-		round_label = batch_id.split("-")[-1] if (batch_id and "-" in batch_id) else "Round 1"
+		items_to_deduct = target_batch.get("items", []) if target_batch else order.get("items", [])
+		deduction_plan = []
 
-		for item in order.get("items", []):
+		for item in items_to_deduct:
 			item_id_or_name = item.get("item_id") or item.get("name")
 			qty = int(item.get("qty", 1))
 			portion = item.get("portion", "Regular")
@@ -4765,7 +4850,6 @@ class RestaurantStore:
 				data=data,
 			)
 
-			# Only approved recipes participate in inventory deduction
 			if not req_info.get("can_deduct_inventory"):
 				continue
 
@@ -4776,42 +4860,89 @@ class RestaurantStore:
 				inv_item = inv_by_code.get(inv_code) or inv_map.get(ing.get("inventory_item_name", "").lower()) or inv_map.get(ing.get("ingredient_name", "").lower())
 				if not inv_item:
 					continue
-				
+
 				deduct_qty = float(ing.get("stock_deduct_qty", 0.0))
 				if deduct_qty <= 0:
 					continue
 
-				inv_item["quantity"] = round(max(0.0, inv_item["quantity"] - deduct_qty), 3)
-				inv_item["last_updated"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
-				cls._record_movement_internal(
-					data,
-					item_name=inv_item["name"],
-					movement_type="Order Consumption",
-					qty=deduct_qty,
-					unit=inv_item.get("unit", "kg"),
-					from_location=inv_item.get("location", "Cold Storage"),
-					to_location="Kitchen",
-					reason=f"Order {order.get('order_id')} ({round_label}) prep for Table {order.get('table_no')}",
-					reference=ref_id,
-				)
-				consumed_log.append({
-					"ingredient": inv_item["name"],
-					"qty": deduct_qty,
+				deduction_plan.append((inv_item, deduct_qty, item.get("name"), portion))
+
+		# Check aggregated kitchen stock availability before mutating
+		aggregated_needs = {}
+		for inv_item, deduct_qty, dish_name, portion in deduction_plan:
+			code = inv_item.get("item_code") or inv_item.get("name")
+			aggregated_needs[code] = aggregated_needs.get(code, 0.0) + deduct_qty
+
+		kitchen_shortages = []
+		for code, total_needed in aggregated_needs.items():
+			inv_item = inv_by_code.get(code) or inv_map.get(str(code).lower())
+			if not inv_item:
+				continue
+			k_avail = float(inv_item.get("kitchen_stock", 0.0))
+			w_avail = float(inv_item.get("warehouse_stock", 0.0))
+			if k_avail < total_needed:
+				kitchen_shortages.append({
+					"item_name": inv_item["name"],
+					"required": total_needed,
+					"kitchen_available": k_avail,
+					"warehouse_available": w_avail,
 					"unit": inv_item.get("unit", "kg"),
-					"dish": item.get("name"),
-					"portion": portion,
+					"shortage": round(total_needed - k_avail, 3),
 				})
 
+		if kitchen_shortages:
+			lines = [_("Insufficient kitchen stock for food preparation:")]
+			for s in kitchen_shortages:
+				lines.append(
+					_("• {item_name}: requires {required} {unit}, but only {kitchen_available} {unit} available in kitchen (Warehouse has {warehouse_available} {unit}). Please transfer at least {shortage} {unit} from warehouse to kitchen.").format(**s)
+				)
+			frappe.throw("\n".join(lines))
+
+		# Deduct strictly from kitchen_stock, leaving warehouse_stock intact!
+		ref_id = batch_id or order.get("order_id")
+		round_label = batch_id.split("-")[-1] if (batch_id and "-" in batch_id) else "Round 1"
+		consumed_log = []
+
+		for inv_item, deduct_qty, dish_name, portion in deduction_plan:
+			k_stock = float(inv_item.get("kitchen_stock", 0.0))
+			w_stock = float(inv_item.get("warehouse_stock", 0.0))
+			inv_item["kitchen_stock"] = round(max(0.0, k_stock - deduct_qty), 3)
+			inv_item["quantity"] = round(w_stock + inv_item["kitchen_stock"], 3)
+			inv_item["last_updated"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
+
+			cls._record_movement_internal(
+				data,
+				item_name=inv_item["name"],
+				movement_type="Kitchen Usage",
+				qty=deduct_qty,
+				unit=inv_item.get("unit", "kg"),
+				from_location="Kitchen",
+				to_location="Kitchen Consumption",
+				reason=f"Order {order.get('order_id')} ({round_label}) kitchen prep for Table {order.get('table_no')}",
+				reference=ref_id,
+				user=staff_name or frappe.session.user or "Kitchen Staff",
+			)
+			consumed_log.append({
+				"ingredient": inv_item["name"],
+				"qty": deduct_qty,
+				"unit": inv_item.get("unit", "kg"),
+				"dish": dish_name,
+				"portion": portion,
+			})
+
+		if target_batch:
+			target_batch["inventory_deducted"] = True
 		order["inventory_deducted"] = True
 		if "consumed_ingredients" not in order:
 			order["consumed_ingredients"] = []
 		order["consumed_ingredients"].extend(consumed_log)
 
 	@classmethod
-	def _reverse_inventory_for_order(cls, data, order):
+	def _reverse_inventory_for_order(cls, data, order, staff_name=None):
 		"""
-		Reverses inventory deduction once when order is cancelled.
-		Logs persistent Order Cancellation Reversal movements with order reference.
+		Reverses kitchen stock deduction once when order is cancelled.
+		Restores stock back to kitchen_stock (leaves warehouse_stock intact).
+		Logs persistent 'Kitchen Usage Reversal' movements.
 		"""
 		if not order.get("inventory_deducted"):
 			return
@@ -4852,18 +4983,23 @@ class RestaurantStore:
 				if return_qty <= 0:
 					continue
 
-				inv_item["quantity"] = round(inv_item["quantity"] + return_qty, 3)
+				w_stock = float(inv_item.get("warehouse_stock", 0.0))
+				k_stock = float(inv_item.get("kitchen_stock", 0.0))
+				inv_item["kitchen_stock"] = round(k_stock + return_qty, 3)
+				inv_item["quantity"] = round(w_stock + inv_item["kitchen_stock"], 3)
 				inv_item["last_updated"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
+
 				cls._record_movement_internal(
 					data,
 					item_name=inv_item["name"],
-					movement_type="Order Cancellation Reversal",
+					movement_type="Kitchen Usage Reversal",
 					qty=return_qty,
 					unit=inv_item.get("unit", "kg"),
-					from_location="Kitchen",
-					to_location=inv_item.get("location", "Cold Storage"),
-					reason=f"Cancelled order {order.get('order_id')} stock restoration",
+					from_location="Kitchen Consumption",
+					to_location="Kitchen",
+					reason=f"Cancelled order {order.get('order_id')} kitchen stock restoration",
 					reference=order.get("order_id"),
+					user=staff_name or frappe.session.user or "Administrator",
 				)
 
 		order["inventory_deducted"] = False
@@ -4938,6 +5074,12 @@ class RestaurantStore:
 			p_item["formatted_stock_value"] = f"₹{item_val:,.2f}"
 			p_item["formatted_qty"] = f"{qty:g} {item.get('unit', '')}"
 			p_item["formatted_cost"] = f"₹{cost:,.2f}"
+			w_stock = float(item.get("warehouse_stock", qty))
+			k_stock = float(item.get("kitchen_stock", 0.0))
+			p_item["warehouse_stock"] = w_stock
+			p_item["kitchen_stock"] = k_stock
+			p_item["formatted_warehouse_stock"] = f"{w_stock:g} {item.get('unit', '')}"
+			p_item["formatted_kitchen_stock"] = f"{k_stock:g} {item.get('unit', '')}"
 			processed_items.append(p_item)
 
 		# Filter items
@@ -4999,7 +5141,9 @@ class RestaurantStore:
 		if qty_val <= 0:
 			frappe.throw(_("Quantity must be greater than zero."))
 
-		item["quantity"] = round(item.get("quantity", 0) + qty_val, 3)
+		item["warehouse_stock"] = round(float(item.get("warehouse_stock", item.get("quantity", 0))) + qty_val, 3)
+		item["kitchen_stock"] = float(item.get("kitchen_stock", 0.0))
+		item["quantity"] = round(item["warehouse_stock"] + item["kitchen_stock"], 3)
 		if location:
 			item["location"] = location
 		item["last_updated"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
@@ -5044,7 +5188,14 @@ class RestaurantStore:
 				)
 			)
 
-		item["quantity"] = round(current_qty - qty_val, 3)
+		w_curr = float(item.get("warehouse_stock", current_qty))
+		if w_curr >= qty_val:
+			item["warehouse_stock"] = round(w_curr - qty_val, 3)
+		else:
+			rem = qty_val - w_curr
+			item["warehouse_stock"] = 0.0
+			item["kitchen_stock"] = max(0.0, round(float(item.get("kitchen_stock", 0.0)) - rem, 3))
+		item["quantity"] = round(item["warehouse_stock"] + float(item.get("kitchen_stock", 0.0)), 3)
 		item["last_updated"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
 
 		mov = cls._record_movement_internal(
@@ -5081,7 +5232,10 @@ class RestaurantStore:
 
 		old_qty = item.get("quantity", 0)
 		delta = round(n_qty - old_qty, 3)
-		item["quantity"] = n_qty
+		k_stock = float(item.get("kitchen_stock", 0.0))
+		item["warehouse_stock"] = max(0.0, round(n_qty - k_stock, 3))
+		item["kitchen_stock"] = k_stock
+		item["quantity"] = round(item["warehouse_stock"] + item["kitchen_stock"], 3)
 		item["last_updated"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
 
 		mov = cls._record_movement_internal(
@@ -5097,6 +5251,204 @@ class RestaurantStore:
 		)
 		cls.save_data(data)
 		return {"item": item, "movement": mov, "delta": delta}
+
+	@classmethod
+	def transfer_warehouse_to_kitchen(cls, item_name=None, item_code=None, qty=0, staff_name=None, reason=""):
+		"""
+		Transfers a specified quantity of an inventory item from Warehouse storage to Kitchen.
+		Reduces warehouse_stock and increases kitchen_stock by qty.
+		Validates:
+		- Item exists.
+		- qty > 0.
+		- qty <= available warehouse_stock.
+		Records immutable movement entry:
+		- movement_type: 'Warehouse to Kitchen Transfer'
+		- from_location: item.location (e.g. Cold Storage, Dry Storage)
+		- to_location: 'Kitchen'
+		- user: staff member
+		"""
+		data = cls.get_data()
+		inv_items = data.get("inventory", [])
+
+		target_item = None
+		if item_code:
+			target_item = next((i for i in inv_items if i.get("item_code") == item_code), None)
+		if not target_item and item_name:
+			target_item = next((i for i in inv_items if i.get("name", "").lower() == str(item_name).strip().lower()), None)
+		if not target_item and item_name:
+			target_item = next((i for i in inv_items if i.get("item_code") == item_name), None)
+
+		if not target_item:
+			frappe.throw(_("Inventory item '{0}' not found.").format(item_name or item_code))
+
+		try:
+			qty_val = round(float(qty), 3)
+		except (ValueError, TypeError):
+			frappe.throw(_("Invalid transfer quantity."))
+
+		if qty_val <= 0:
+			frappe.throw(_("Transfer quantity must be greater than zero."))
+
+		avail_warehouse = float(target_item.get("warehouse_stock", 0.0))
+		if qty_val > avail_warehouse:
+			frappe.throw(
+				_("Cannot transfer {0} {1} of '{2}'. Available warehouse stock is only {3} {1}.").format(
+					qty_val, target_item.get("unit", "kg"), target_item["name"], avail_warehouse
+				)
+			)
+
+		# Execute transfer: warehouse reduces, kitchen increases
+		target_item["warehouse_stock"] = round(avail_warehouse - qty_val, 3)
+		target_item["kitchen_stock"] = round(float(target_item.get("kitchen_stock", 0.0)) + qty_val, 3)
+		target_item["quantity"] = round(target_item["warehouse_stock"] + target_item["kitchen_stock"], 3)
+		target_item["last_updated"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
+
+		from_loc = target_item.get("location", "Warehouse Storage")
+		mov = cls._record_movement_internal(
+			data,
+			item_name=target_item["name"],
+			movement_type="Warehouse to Kitchen Transfer",
+			qty=qty_val,
+			unit=target_item.get("unit", "kg"),
+			from_location=from_loc,
+			to_location="Kitchen",
+			reason=reason or f"Transferred from {from_loc} to Kitchen for food preparation",
+			reference="W2K-TRANSFER",
+			user=staff_name or frappe.session.user or "Kitchen Staff",
+		)
+
+		cls.save_data(data)
+		return {
+			"success": True,
+			"item": target_item,
+			"movement": mov,
+			"message": _("Transferred {0} {1} of {2} to Kitchen successfully.").format(
+				qty_val, target_item.get("unit", "kg"), target_item["name"]
+			),
+		}
+
+	@classmethod
+	def transfer_kitchen_to_warehouse(cls, item_name=None, item_code=None, qty=0, staff_name=None, reason=""):
+		"""
+		Transfers unused stock from Kitchen back to Warehouse storage.
+		Reduces kitchen_stock and increases warehouse_stock.
+		Validates qty <= available kitchen_stock.
+		"""
+		data = cls.get_data()
+		inv_items = data.get("inventory", [])
+
+		target_item = None
+		if item_code:
+			target_item = next((i for i in inv_items if i.get("item_code") == item_code), None)
+		if not target_item and item_name:
+			target_item = next((i for i in inv_items if i.get("name", "").lower() == str(item_name).strip().lower()), None)
+		if not target_item and item_name:
+			target_item = next((i for i in inv_items if i.get("item_code") == item_name), None)
+
+		if not target_item:
+			frappe.throw(_("Inventory item '{0}' not found.").format(item_name or item_code))
+
+		try:
+			qty_val = round(float(qty), 3)
+		except (ValueError, TypeError):
+			frappe.throw(_("Invalid transfer quantity."))
+
+		if qty_val <= 0:
+			frappe.throw(_("Transfer quantity must be greater than zero."))
+
+		avail_kitchen = float(target_item.get("kitchen_stock", 0.0))
+		if qty_val > avail_kitchen:
+			frappe.throw(
+				_("Cannot return {0} {1} of '{2}'. Available kitchen stock is only {3} {1}.").format(
+					qty_val, target_item.get("unit", "kg"), target_item["name"], avail_kitchen
+				)
+			)
+
+		to_loc = target_item.get("location", "Warehouse Storage")
+		target_item["kitchen_stock"] = round(avail_kitchen - qty_val, 3)
+		target_item["warehouse_stock"] = round(float(target_item.get("warehouse_stock", 0.0)) + qty_val, 3)
+		target_item["quantity"] = round(target_item["warehouse_stock"] + target_item["kitchen_stock"], 3)
+		target_item["last_updated"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
+
+		mov = cls._record_movement_internal(
+			data,
+			item_name=target_item["name"],
+			movement_type="Kitchen Return",
+			qty=qty_val,
+			unit=target_item.get("unit", "kg"),
+			from_location="Kitchen",
+			to_location=to_loc,
+			reason=reason or f"Returned from Kitchen to {to_loc}",
+			reference="K2W-RETURN",
+			user=staff_name or frappe.session.user or "Kitchen Staff",
+		)
+
+		cls.save_data(data)
+		return {
+			"success": True,
+			"item": target_item,
+			"movement": mov,
+			"message": _("Returned {0} {1} of {2} to Warehouse successfully.").format(
+				qty_val, target_item.get("unit", "kg"), target_item["name"]
+			),
+		}
+
+	@classmethod
+	def get_kitchen_stock_summary(cls, category=None, search=None):
+		"""
+		Returns inventory items with separated warehouse_stock and kitchen_stock,
+		along with recent kitchen stock movements.
+		"""
+		data = cls.get_data()
+		inv_items = data.get("inventory", [])
+		movements = data.get("stock_movements", [])
+
+		results = []
+		for item in inv_items:
+			if category and category != "All" and item.get("category") != category:
+				continue
+			if search:
+				q = search.strip().lower()
+				if q not in item.get("name", "").lower() and q not in item.get("item_code", "").lower():
+					continue
+
+			w_stock = float(item.get("warehouse_stock", 0.0))
+			k_stock = float(item.get("kitchen_stock", 0.0))
+			total_qty = float(item.get("quantity", 0.0))
+			reorder = float(item.get("reorder_level", 0.0))
+
+			results.append({
+				"item_code": item.get("item_code", ""),
+				"name": item.get("name", ""),
+				"category": item.get("category", ""),
+				"unit": item.get("unit", "kg"),
+				"location": item.get("location", "Warehouse Storage"),
+				"warehouse_stock": w_stock,
+				"kitchen_stock": k_stock,
+				"quantity": total_qty,
+				"reorder_level": reorder,
+				"low_kitchen_stock": k_stock <= 0,
+				"low_warehouse_stock": w_stock <= reorder,
+				"formatted_warehouse": f"{w_stock} {item.get('unit', 'kg')}",
+				"formatted_kitchen": f"{k_stock} {item.get('unit', 'kg')}",
+				"formatted_total": f"{total_qty} {item.get('unit', 'kg')}",
+			})
+
+		kitchen_movements = []
+		for m in reversed(movements):
+			if (m.get("to_location") == "Kitchen" or 
+				m.get("from_location") == "Kitchen" or 
+				m.get("movement_type") in ["Warehouse to Kitchen Transfer", "Kitchen Return", "Kitchen Usage", "Kitchen Usage Reversal"]):
+				kitchen_movements.append(m)
+			if len(kitchen_movements) >= 50:
+				break
+
+		return {
+			"items": results,
+			"movements": kitchen_movements,
+			"total_items": len(results),
+			"low_kitchen_count": sum(1 for r in results if r["low_kitchen_stock"]),
+		}
 
 	@classmethod
 	def perform_stock_transfer(cls, item_name, qty, from_location, to_location, reason=""):
@@ -5359,7 +5711,11 @@ class RestaurantStore:
 			iname = it.get("item_name")
 			if iname in inv_map:
 				inv_item = inv_map[iname]
-				inv_item["quantity"] = round(inv_item.get("quantity", 0) + it.get("qty", 0), 3)
+				w_stock = float(inv_item.get("warehouse_stock", inv_item.get("quantity", 0)))
+				k_stock = float(inv_item.get("kitchen_stock", 0.0))
+				inv_item["warehouse_stock"] = round(w_stock + it.get("qty", 0), 3)
+				inv_item["kitchen_stock"] = k_stock
+				inv_item["quantity"] = round(inv_item["warehouse_stock"] + inv_item["kitchen_stock"], 3)
 				inv_item["last_updated"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
 				cls._record_movement_internal(
 					data,
