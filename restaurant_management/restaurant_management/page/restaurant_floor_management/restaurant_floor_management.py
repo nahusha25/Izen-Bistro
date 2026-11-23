@@ -59,6 +59,59 @@ def add_items_to_order(order_id=None, table_no=None, items=None, notes=""):
 
 
 @frappe.whitelist()
+def seat_walk_in(table_no, customer="", customer_mobile="", guests=0, notes=""):
+	"""
+	Seats a walk-in party at the table without affecting any existing reservations.
+	"""
+	return RestaurantStore.seat_walk_in(
+		table_no=table_no,
+		customer=customer,
+		customer_mobile=customer_mobile,
+		guests=guests,
+		notes=notes,
+	)
+
+
+@frappe.whitelist()
+def checkin_reservation(table_no, booking_ref, notes=""):
+	"""
+	Checks in an existing reservation by exact booking reference.
+	Validates table assignment and eligibility on server.
+	"""
+	return RestaurantStore.checkin_reservation(
+		table_no=table_no,
+		booking_ref=booking_ref,
+		notes=notes,
+	)
+
+
+@frappe.whitelist()
+def release_table(table_no):
+	"""
+	Releases the current seated visit on a table and marks it Available.
+	Never cancels future reservations.
+	"""
+	return RestaurantStore.release_table(table_no=table_no)
+
+
+@frappe.whitelist()
+def get_table_qr(table_no):
+	"""
+	Returns printable QR details and SVG for a table stand.
+	"""
+	return RestaurantStore.get_table_qr(table_no=table_no)
+
+
+@frappe.whitelist()
+def cancel_reservation(booking_ref, reason=""):
+	"""
+	Explicitly cancels a specific reservation by booking reference.
+	"""
+	from restaurant_management.restaurant_management.services.reservation_service import ReservationService
+	return ReservationService.cancel_reservation(booking_ref=booking_ref)
+
+
+@frappe.whitelist()
 def update_table_status(
 	table_no,
 	status,
@@ -67,11 +120,10 @@ def update_table_status(
 	guests=0,
 	reservation_time="",
 	notes="",
+	booking_ref="",
 ):
 	"""
-	Updates the state of a specific table (Seat, Reserve, or Release/Vacate)
-	in the centralized shared RestaurantStore. Updates are immediately visible
-	across the Restaurant Dashboard, Orders, and KDS.
+	Updates table status (backward-compatible wrapper).
 	"""
 	return RestaurantStore.update_table_status(
 		table_no=table_no,
@@ -81,6 +133,7 @@ def update_table_status(
 		guests=guests,
 		reservation_time=reservation_time,
 		notes=notes,
+		booking_ref=booking_ref,
 	)
 
 
@@ -122,6 +175,22 @@ def download_bill_pdf(order_id):
 	Downloads customer-facing bill and receipt PDF.
 	"""
 	return RestaurantStore.download_bill_pdf(order_id)
+
+
+@frappe.whitelist()
+def mark_waiter_handled(table_no):
+	"""
+	Marks a table's waiter call as handled.
+	"""
+	return RestaurantStore.mark_waiter_handled(table_no=table_no)
+
+
+@frappe.whitelist()
+def mark_bill_handled(table_no):
+	"""
+	Marks a table's bill request as handled.
+	"""
+	return RestaurantStore.mark_bill_handled(table_no=table_no)
 
 
 @frappe.whitelist()

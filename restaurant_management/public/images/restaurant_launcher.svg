@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="14" fill="#0f172a"/>
+  <!-- Top decorative accent -->
+  <path d="M 0 14 C 0 6.27 6.27 0 14 0 L 50 0 C 57.73 0 64 6.27 64 14 L 64 18 L 0 18 Z" fill="#1e3a8a"/>
+  <!-- Crossed fork and knife / utensils -->
+  <g transform="translate(14, 16)" fill="#ffffff">
+    <!-- Fork -->
+    <path d="M8 2 C8 2 7 7 10 11 L10 28 C10 29 11 30 12 30 C13 30 14 29 14 28 L14 11 C17 7 16 2 16 2 L14 2 L14 8 L13 8 L13 2 L11 2 L11 8 L10 8 L10 2 Z" transform="rotate(-30 12 16)"/>
+    <!-- Knife -->
+    <path d="M22 2 C18 6 18 12 20 15 L20 28 C20 29 21 30 22 30 C23 30 24 29 24 28 L24 2 C24 2 23 2 22 2 Z" transform="rotate(30 22 16)"/>
+  </g>
+</svg>

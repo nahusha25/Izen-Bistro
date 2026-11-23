@@ -69,7 +69,7 @@ class RestaurantDashboard {
 		let me = this;
 		this.refresh_interval = setInterval(() => {
 			me.fetch_data(true);
-		}, 10000);
+		}, 2500);
 	}
 
 	stop_auto_refresh() {
@@ -133,6 +133,19 @@ class RestaurantDashboard {
 						</div>
 					</div>
 				</header>
+
+				<!-- Live Customer Service Alerts Banner -->
+				<section class="rm-section-block" id="dash-live-alerts-section" style="display: none; margin-bottom: 1.25rem;">
+					<div class="rm-section-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.65rem;">
+						<span class="rm-section-title" style="color: #0f172a; font-weight: 800; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+							<span class="rm-pulse-dot" style="background: #ef4444; width: 10px; height: 10px; border-radius: 50%; display: inline-block;"></span>
+							<i class="fa fa-bell text-danger"></i> ${__("Active Table Alerts & Requests")}
+						</span>
+						<span class="rm-section-hint" id="dash-alerts-count" style="font-size: 0.82rem; color: #64748b; font-weight: 600;">${__("Real-time guest requests from table QR orders")}</span>
+					</div>
+					<div class="rm-dashboard-alerts-grid" id="dash-alerts-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.85rem;">
+					</div>
+				</section>
 
 				<!-- Quick Actions Navigation Bar -->
 				<section class="rm-section-block">
@@ -487,6 +500,15 @@ class RestaurantDashboard {
 			if (action) {
 				me.handle_quick_action(action);
 			}
+		});
+
+		// Live Alert buttons click handlers
+		this.container.on('click', '.btn-dash-goto-floor', function () {
+			frappe.set_route('restaurant-floor-management');
+		});
+
+		this.container.on('click', '.btn-dash-goto-billing', function () {
+			frappe.set_route('restaurant-billing-payments');
 		});
 	}
 
@@ -850,12 +872,77 @@ class RestaurantDashboard {
 			}
 		}
 
+		this.render_alerts(data.alerts);
 		this.render_kpis(data.kpis);
 		this.render_sales_chart(data.sales_analytics);
 		this.render_table_status(data.table_status);
 		this.render_kitchen_queue(data.kitchen_queue);
 		this.render_popular_dishes(data.popular_dishes);
 		this.render_recent_orders(data.recent_orders);
+	}
+
+	render_alerts(alerts) {
+		const $section = $('#dash-live-alerts-section');
+		const $grid = $('#dash-alerts-grid');
+		if (!alerts || !alerts.length) {
+			$section.hide();
+			$grid.empty();
+			return;
+		}
+
+		let html = '';
+		alerts.forEach(al => {
+			if (al.type === 'waiter') {
+				html += `
+					<div class="rm-dash-alert-card rm-dash-alert-waiter" data-table="${al.table_no}" data-type="waiter" style="background: #fffbeb; border: 1.5px solid #f59e0b; border-left: 5px solid #d97706; border-radius: 8px; padding: 12px 14px; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.15); display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+						<div style="display: flex; align-items: center; gap: 10px;">
+							<div style="background: #fef3c7; color: #b45309; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+								<i class="fa fa-bell"></i>
+							</div>
+							<div>
+								<div style="font-weight: 800; color: #92400e; font-size: 0.95rem;">
+									Table ${al.table_no}: Waiter Assistance Requested
+								</div>
+								<div style="font-size: 0.8rem; color: #b45309; margin-top: 2px;">
+									<i class="fa fa-clock-o"></i> Requested at <strong>${al.time_str || al.requested_at}</strong>
+								</div>
+							</div>
+						</div>
+						<div style="display: flex; gap: 6px; flex-shrink: 0;">
+							<button type="button" class="btn btn-xs btn-default btn-dash-goto-floor" data-table="${al.table_no}" style="font-size: 0.75rem; font-weight: 700; color: #92400e; border-color: #fcd34d;">
+								<i class="fa fa-th-large"></i> ${__('Floor')}
+							</button>
+						</div>
+					</div>
+				`;
+			} else if (al.type === 'bill') {
+				html += `
+					<div class="rm-dash-alert-card rm-dash-alert-bill" data-table="${al.table_no}" data-type="bill" style="background: #eff6ff; border: 1.5px solid #3b82f6; border-left: 5px solid #2563eb; border-radius: 8px; padding: 12px 14px; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15); display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+						<div style="display: flex; align-items: center; gap: 10px;">
+							<div style="background: #dbeafe; color: #1e40af; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+								<i class="fa fa-file-text-o"></i>
+							</div>
+							<div>
+								<div style="font-weight: 800; color: #1e40af; font-size: 0.95rem;">
+									Table ${al.table_no}: Bill Requested by Guest
+								</div>
+								<div style="font-size: 0.8rem; color: #1d4ed8; margin-top: 2px;">
+									<i class="fa fa-clock-o"></i> Requested at <strong>${al.time_str || al.requested_at}</strong>
+								</div>
+							</div>
+						</div>
+						<div style="display: flex; gap: 6px; flex-shrink: 0;">
+							<button type="button" class="btn btn-xs btn-default btn-dash-goto-billing" data-table="${al.table_no}" data-order-id="${al.order_id || ''}" style="font-size: 0.75rem; font-weight: 700; color: #1e40af; border-color: #bfdbfe;">
+								<i class="fa fa-credit-card"></i> ${__('Billing')}
+							</button>
+						</div>
+					</div>
+				`;
+			}
+		});
+
+		$grid.html(html);
+		$section.show();
 	}
 
 	render_kpis(kpis) {

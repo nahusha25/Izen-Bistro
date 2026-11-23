@@ -31,6 +31,44 @@ frappe.pages['restaurant-floor-management'].on_page_load = function (wrapper) {
 		}
 	}, 'fa fa-refresh');
 
+	page.add_menu_item(__('Configure QR Customer Base URL'), function () {
+		frappe.call({
+			method: 'restaurant_management.restaurant_management.services.restaurant_store.api_get_customer_base_url',
+			callback: function (r) {
+				let currentUrl = r.message || 'http://192.168.0.7:8001';
+				frappe.prompt(
+					[
+						{
+							fieldname: 'customer_base_url',
+							fieldtype: 'Data',
+							label: __('Customer Base URL (Wi-Fi / Host URL)'),
+							default: currentUrl,
+							description: __('Base URL encoded in table QR stands and printed links (e.g. http://192.168.0.7:8001)'),
+							reqd: 1
+						}
+					],
+					function (values) {
+						frappe.call({
+							method: 'restaurant_management.restaurant_management.services.restaurant_store.api_set_customer_base_url',
+							args: { base_url: values.customer_base_url },
+							callback: function (res) {
+								frappe.show_alert({
+									message: __('Customer Base URL updated to {0}', [res.message]),
+									indicator: 'green'
+								});
+								if (wrapper.floor_mgmt) {
+									wrapper.floor_mgmt.refresh();
+								}
+							}
+						});
+					},
+					__('Configure Customer Base URL'),
+					__('Save Configuration')
+				);
+			}
+		});
+	});
+
 	page.add_menu_item(__('Reset Demo Tables'), function () {
 		frappe.confirm(
 			__('Are you sure you want to reset all tables back to the initial demo state?'),
@@ -58,6 +96,13 @@ frappe.pages['restaurant-floor-management'].on_page_load = function (wrapper) {
 frappe.pages['restaurant-floor-management'].on_page_show = function (wrapper) {
 	if (wrapper.floor_mgmt) {
 		wrapper.floor_mgmt.refresh();
+		wrapper.floor_mgmt.start_auto_refresh();
+	}
+};
+
+frappe.pages['restaurant-floor-management'].on_page_hide = function (wrapper) {
+	if (wrapper.floor_mgmt) {
+		wrapper.floor_mgmt.stop_auto_refresh();
 	}
 };
 
@@ -90,6 +135,39 @@ class FloorManagement {
 	init() {
 		this.render_skeleton();
 		this.fetch_data();
+		this.start_auto_refresh();
+	}
+
+	start_auto_refresh() {
+		this.stop_auto_refresh();
+		let me = this;
+		this.refresh_interval = setInterval(() => {
+			if ($('.modal.show:visible').length > 0 || me.is_dragging) return;
+			me.fetch_data_silent();
+		}, 2500);
+	}
+
+	stop_auto_refresh() {
+		if (this.refresh_interval) {
+			clearInterval(this.refresh_interval);
+			this.refresh_interval = null;
+		}
+	}
+
+	fetch_data_silent() {
+		let me = this;
+		frappe.call({
+			method: 'restaurant_management.restaurant_management.page.restaurant_floor_management.restaurant_floor_management.get_floor_data',
+			callback: function (r) {
+				if (r.message) {
+					me.data = r.message;
+					if (r.message.menu_items) {
+						me.menu_items = r.message.menu_items;
+					}
+					me.render_all();
+				}
+			}
+		});
 	}
 
 	render_skeleton() {
@@ -416,9 +494,63 @@ class FloorManagement {
 		});
 
 		// 8. Selected Table Detail Panel Actions
-		this.container.on('click', '.btn-panel-seat', function () {
+		this.container.on('click', '.btn-panel-seat, .btn-panel-seat-walkin', function () {
 			let table = me.get_table(me.selected_table_no);
 			if (table) me.open_table_dialog(table, 'seat');
+		});
+
+		this.container.on('click', '.btn-panel-reserve', function () {
+			let table = me.get_table(me.selected_table_no);
+			if (table) me.open_table_dialog(table, 'reserve');
+		});
+
+		this.container.on('click', '.btn-panel-checkin-next', function () {
+			let table = me.get_table(me.selected_table_no);
+			let booking_ref = $(this).data('ref') || (table && table.next_reservation ? table.next_reservation.booking_ref : '');
+			if (table && booking_ref) {
+				let guest_name = (table.next_reservation && table.next_reservation.customer_name) ? table.next_reservation.customer_name : __('Guest');
+				let res_time = (table.next_reservation && table.next_reservation.booking_time) ? table.next_reservation.booking_time : '';
+				frappe.confirm(
+					__('Check in reservation {0} for {1} ({2}) at Table {3}?', [booking_ref, guest_name, res_time, table.table_no]),
+					function () {
+						me.checkin_reservation(table.table_no, booking_ref);
+					}
+				);
+			}
+		});
+
+		this.container.on('click', '.btn-checkin-res', function () {
+			let table_no = $(this).data('table');
+			let booking_ref = $(this).data('ref');
+			let guest_name = $(this).data('name') || __('Guest');
+			let res_time = $(this).data('time') || '';
+			if (table_no && booking_ref) {
+				frappe.confirm(
+					__('Check in reservation {0} for {1} ({2}) at Table {3}?', [booking_ref, guest_name, res_time, table_no]),
+					function () {
+						me.checkin_reservation(table_no, booking_ref);
+					}
+				);
+			}
+		});
+
+		this.container.on('click', '.btn-cancel-res', function () {
+			let booking_ref = $(this).data('ref');
+			let guest_name = $(this).data('name') || __('Guest');
+			let res_time = $(this).data('time') || '';
+			if (booking_ref) {
+				frappe.confirm(
+					__('Are you sure you want to cancel reservation {0} for {1} at {2}? This will release the reservation without affecting any other bookings.', [booking_ref, guest_name, res_time]),
+					function () {
+						me.cancel_reservation(booking_ref);
+					}
+				);
+			}
+		});
+
+		this.container.on('click', '.btn-panel-release', function () {
+			let table = me.get_table(me.selected_table_no);
+			if (table) me.confirm_release_table(table.table_no);
 		});
 
 		this.container.on('click', '.btn-panel-seat-reserved', function () {
@@ -468,6 +600,67 @@ class FloorManagement {
 				me.open_customer_history_dialog(cust_id || mobile);
 			}
 		});
+
+		this.container.on('click', '.btn-panel-qr', function () {
+			let table = me.get_table(me.selected_table_no);
+			if (table) {
+				me.open_table_qr_dialog(table.table_no);
+			}
+		});
+
+		this.container.on('click', '.btn-mark-waiter-handled', function (e) {
+			e.stopPropagation();
+			let table_no = $(this).data('table');
+			if (!table_no) return;
+			frappe.call({
+				method: 'restaurant_management.restaurant_management.page.restaurant_floor_management.restaurant_floor_management.mark_waiter_handled',
+				args: { table_no: table_no },
+				callback: function (r) {
+					if (r.message && r.message.success) {
+						frappe.show_alert({ message: __('Waiter request for Table {0} marked handled', [table_no]), indicator: 'green' });
+						me.fetch_data();
+					}
+				}
+			});
+		});
+
+		this.container.on('click', '.btn-mark-bill-handled', function (e) {
+			e.stopPropagation();
+			let table_no = $(this).data('table');
+			if (!table_no) return;
+			frappe.call({
+				method: 'restaurant_management.restaurant_management.page.restaurant_floor_management.restaurant_floor_management.mark_bill_handled',
+				args: { table_no: table_no },
+				callback: function (r) {
+					if (r.message && r.message.success) {
+						frappe.show_alert({ message: __('Bill request for Table {0} marked handled', [table_no]), indicator: 'blue' });
+						me.fetch_data();
+					}
+				}
+			});
+		});
+
+		this.container.on('click', '.btn-view-requested-bill', function (e) {
+			e.stopPropagation();
+			let order_id = $(this).data('order-id');
+			if (order_id) {
+				me.open_receipt_dialog(order_id);
+			} else {
+				let table = me.get_table(me.selected_table_no);
+				if (table && table.order_id) {
+					me.open_receipt_dialog(table.order_id);
+				} else {
+					frappe.msgprint(__('No active order ticket found for this table.'));
+				}
+			}
+		});
+
+		this.container.on('click', '.live-request-pill', function () {
+			let table_no = $(this).data('table');
+			if (table_no) {
+				me.select_table(table_no);
+			}
+		});
 	}
 
 	refresh() {
@@ -504,9 +697,65 @@ class FloorManagement {
 		if (!this.data) return;
 		this.container.find('.floor-last-updated').text(frappe.datetime.now_time());
 		this.render_summary(this.data.summary);
+		this.render_live_requests_banner(this.data.tables);
 		this.render_area_tabs(this.data.areas);
 		this.render_2d_floor_plan();
 		this.render_detail_panel();
+	}
+
+	render_live_requests_banner(tables) {
+		let activeRequests = [];
+		(tables || []).forEach(t => {
+			if (t.waiter_request) {
+				activeRequests.push({
+					table_no: t.table_no,
+					type: 'waiter',
+					label: __('Table {0}: Waiter Call ({1})', [t.table_no, t.waiter_request.time_str || '']),
+					icon: 'fa-bell',
+					color: '#b45309',
+					bg: '#fef3c7',
+					border: '#f59e0b'
+				});
+			}
+			if (t.bill_request) {
+				activeRequests.push({
+					table_no: t.table_no,
+					type: 'bill',
+					label: __('Table {0}: Bill Requested ({1})', [t.table_no, t.bill_request.time_str || '']),
+					icon: 'fa-file-text-o',
+					color: '#1d4ed8',
+					bg: '#eff6ff',
+					border: '#3b82f6'
+				});
+			}
+		});
+
+		let $bar = $('#floor-live-requests-bar');
+		if (!$bar.length) {
+			$bar = $('<div id="floor-live-requests-bar" class="floor-live-requests-bar" style="margin-bottom: 12px; display: none;"></div>').insertBefore('.floor-controls-bar');
+		}
+
+		if (activeRequests.length === 0) {
+			$bar.hide().empty();
+			return;
+		}
+
+		let pillsHtml = activeRequests.map(r => `
+			<span class="live-request-pill" data-table="${r.table_no}" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; background: ${r.bg}; color: ${r.color}; border: 1px solid ${r.border}; cursor: pointer; margin-right: 8px;">
+				<i class="fa ${r.icon}"></i> ${r.label}
+			</span>
+		`).join('');
+
+		$bar.html(`
+			<div style="background: #ffffff; border-radius: 8px; border: 1.5px solid #e2e8f0; padding: 8px 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+				<span style="font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #dc2626; display: flex; align-items: center; gap: 6px;">
+					<span class="pulse-dot" style="background: #dc2626; width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span> ${__('Active Guest Requests')}:
+				</span>
+				<div style="display: flex; gap: 6px; flex-wrap: wrap;">
+					${pillsHtml}
+				</div>
+			</div>
+		`).show();
 	}
 
 	render_summary(summary) {
@@ -1138,6 +1387,11 @@ class FloorManagement {
 
 		// Uniform luxury architectural tabletop status content across ALL areas
 		let statusContentHtml = '';
+		let nextResBadge = '';
+		if (table.next_reservation) {
+			nextResBadge = `<div class="plaque-next-res" title="${__('Next reservation at {0} ({1} guests)', [table.next_reservation.booking_time, table.next_reservation.party_size])}"><i class="fa fa-clock-o"></i> Next: ${table.next_reservation.booking_time}</div>`;
+		}
+
 		if (table.status === 'Occupied') {
 			let namePart = table.customer ? table.customer.split(' ')[0] : __('Occupied');
 			let guestsCount = table.guests || table.capacity || 2;
@@ -1145,6 +1399,7 @@ class FloorManagement {
 				<span class="plaque-id">${table.table_no}</span>
 				<span class="plaque-cap">${table.capacity} ${__('Seats')}</span>
 				<span class="status-occ-label"><i class="fa fa-user"></i> ${namePart} (${guestsCount})</span>
+				${nextResBadge}
 			`;
 		} else if (table.status === 'Reserved') {
 			statusContentHtml = `
@@ -1157,10 +1412,19 @@ class FloorManagement {
 				<span class="plaque-id">${table.table_no}</span>
 				<span class="plaque-cap">${table.capacity} ${__('Seats')}</span>
 				<span class="status-avail-label"><span class="presence-dot"></span> ${__('Available')}</span>
+				${nextResBadge}
 			`;
 		}
 
 		let selectedBadgeHtml = isSelected ? `<span class="t2d-selected-badge"><i class="fa fa-check"></i> ${__('Selected')}</span>` : '';
+
+		let requestBadgeHtml = '';
+		if (table.waiter_request) {
+			requestBadgeHtml += `<span class="badge-waiter-request" title="${__('Waiter Call at {0}', [table.waiter_request.time_str || ''])}"><i class="fa fa-bell"></i></span>`;
+		}
+		if (table.bill_request) {
+			requestBadgeHtml += `<span class="badge-bill-request" title="${__('Bill Requested at {0}', [table.bill_request.time_str || ''])}"><i class="fa fa-file-text-o"></i></span>`;
+		}
 
 		// If Main Dining Hall, use the sleek architectural plaque directly aligned with the CAD drawing
 		if (this.current_area === 'Main Dining Hall') {
@@ -1171,6 +1435,7 @@ class FloorManagement {
 					 style="left: ${coords.x}px; top: ${coords.y}px; ${sizeStyle} ${opacityStyle}">
 					
 					${selectedBadgeHtml}
+					${requestBadgeHtml}
 
 					<!-- Architectural Tabletop Plaque -->
 					<div class="table-plaque">
@@ -1192,6 +1457,7 @@ class FloorManagement {
 				 style="left: ${coords.x}px; top: ${coords.y}px; ${opacityStyle}">
 				
 				${selectedBadgeHtml}
+				${requestBadgeHtml}
 
 				${chairsHtml}
 
@@ -1385,6 +1651,7 @@ class FloorManagement {
 		let bodyHtml = '';
 		let actionsHtml = '';
 
+		// 1. Current Physical Occupancy Section
 		if (table.status === 'Occupied') {
 			let custName = table.customer || __('Guest Party');
 			let mobileHtml = table.customer_mobile ? `
@@ -1416,12 +1683,68 @@ class FloorManagement {
 				</div>
 			`;
 
-			bodyHtml = `
+			let bookingBadgeHtml = table.current_booking_ref ? `
+				<div class="detail-info-row">
+					<span class="detail-info-label">${__('Booking Ref')}</span>
+					<span class="detail-info-val" style="font-weight: 700; color: #ea580c; font-family: monospace;">
+						<i class="fa fa-ticket"></i> ${table.current_booking_ref}
+					</span>
+				</div>
+			` : `
+				<div class="detail-info-row">
+					<span class="detail-info-label">${__('Seating Type')}</span>
+					<span class="detail-info-val" style="font-weight: 600; color: #059669;">
+						<i class="fa fa-walking"></i> ${__('Walk-in Guests')}
+					</span>
+				</div>
+			`;
+
+			let waiterAlertHtml = table.waiter_request ? `
+				<div class="table-request-banner waiter-request-banner" style="background: #fef3c7; border: 1.5px solid #f59e0b; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.15);">
+					<div>
+						<div style="font-weight: 800; color: #92400e; font-size: 0.88rem; display: flex; align-items: center; gap: 6px;">
+							<i class="fa fa-bell" style="color: #d97706;"></i> <span>${__('Waiter Assistance Requested')}</span>
+						</div>
+						<div style="font-size: 0.74rem; color: #b45309; margin-top: 2px;">
+							${__('Requested at')} <strong>${table.waiter_request.time_str || table.waiter_request.requested_at}</strong>
+						</div>
+					</div>
+					<button type="button" class="btn btn-xs btn-primary btn-mark-waiter-handled" data-table="${table.table_no}" style="background: #d97706; border-color: #d97706; font-weight: 700; padding: 4px 10px;">
+						<i class="fa fa-check"></i> ${__('Mark handled')}
+					</button>
+				</div>
+			` : '';
+
+			let billAlertHtml = table.bill_request ? `
+				<div class="table-request-banner bill-request-banner" style="background: #eff6ff; border: 1.5px solid #3b82f6; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);">
+					<div>
+						<div style="font-weight: 800; color: #1e40af; font-size: 0.88rem; display: flex; align-items: center; gap: 6px;">
+							<i class="fa fa-file-text-o" style="color: #2563eb;"></i> <span>${__('Bill Requested by Guest')}</span>
+						</div>
+						<div style="font-size: 0.74rem; color: #1d4ed8; margin-top: 2px;">
+							${__('Requested at')} <strong>${table.bill_request.time_str || table.bill_request.requested_at}</strong>
+						</div>
+					</div>
+					<div style="display: flex; gap: 6px;">
+						<button type="button" class="btn btn-xs btn-default btn-view-requested-bill" data-order-id="${table.order_id || (table.bill_request && table.bill_request.order_id) || ''}" style="color: #1e40af; border-color: #93c5fd; font-weight: 700; padding: 4px 8px;">
+							<i class="fa fa-eye"></i> ${__('View Bill')}
+						</button>
+						<button type="button" class="btn btn-xs btn-primary btn-mark-bill-handled" data-table="${table.table_no}" style="background: #2563eb; border-color: #2563eb; font-weight: 700; padding: 4px 10px;">
+							<i class="fa fa-check"></i> ${__('Done')}
+						</button>
+					</div>
+				</div>
+			` : '';
+
+			bodyHtml += `
 				<div class="detail-info-card card-occupied">
+					${waiterAlertHtml}
+					${billAlertHtml}
 					<div class="detail-guest-title">
 						<span><i class="fa fa-user-circle" style="color: #ef4444;"></i> ${custName}</span>
 						${table.customer_id ? `<span class="badge badge-light" style="font-size: 0.72rem;">${table.customer_id}</span>` : ''}
 					</div>
+					${bookingBadgeHtml}
 					${mobileHtml}
 					<div class="detail-info-row">
 						<span class="detail-info-label">${__('Seated Guests')}</span>
@@ -1432,6 +1755,10 @@ class FloorManagement {
 						<span class="detail-info-val"><i class="fa fa-clock-o"></i> ${table.seated_time || __('Active')}</span>
 					</div>
 					${orderInfoHtml}
+					<div class="detail-info-row" style="background: #f8fafc; border-radius: 6px; padding: 5px 8px; margin: 6px 0; border: 1.5px dashed #cbd5e1;">
+						<span class="detail-info-label" style="font-weight: 700; color: #1e3a8a;"><i class="fa fa-qrcode"></i> ${__('Visit Passcode')}</span>
+						<span class="detail-info-val" style="font-size: 1.15rem; font-weight: 900; color: #1e3a8a; letter-spacing: 2px; font-family: monospace;">${table.visit_code || '----'}</span>
+					</div>
 					${table.notes ? `
 						<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed #cbd5e1; font-size: 0.78rem; color: #475569; font-style: italic;">
 							"${table.notes}"
@@ -1451,83 +1778,36 @@ class FloorManagement {
 					</button>
 				</div>
 				<div class="actions-row-2">
-					<button type="button" class="btn-action-secondary btn-panel-details">
-						<i class="fa fa-info-circle"></i> ${__('View Details')}
+					<button type="button" class="btn-action-secondary btn-panel-release" style="color: #dc2626; border-color: #fca5a5;">
+						<i class="fa fa-sign-out"></i> ${__('Release Table')}
 					</button>
 					<button type="button" class="btn-action-secondary btn-panel-transfer" title="${__('Transfer seating and orders to another table')}">
 						<i class="fa fa-exchange"></i> ${__('Transfer Table')}
 					</button>
 				</div>
-				${table.order_id ? `
-					<div class="actions-row-2">
+				<div class="actions-row-2">
+					<button type="button" class="btn-action-secondary btn-panel-qr" title="${__('Preview or Print Table QR Stand Card')}">
+						<i class="fa fa-qrcode"></i> ${__('Table QR Stand')}
+					</button>
+					${table.order_id ? `
 						<button type="button" class="btn-action-secondary btn-panel-bill" title="${__('Print Bill / Receipt')}">
 							<i class="fa fa-print"></i> ${__('Bill / Receipt')}
 						</button>
-					</div>
-				` : `
-					<div class="actions-row-2">
+					` : `
 						<button type="button" class="btn-action-secondary btn-panel-cust-history" data-cust-id="${table.customer_id || ''}" data-mobile="${table.customer_mobile || ''}">
 							<i class="fa fa-history"></i> ${__('Guest History')}
 						</button>
-					</div>
-				`}
-			`;
-
-		} else if (table.status === 'Reserved') {
-			let custName = table.customer || __('Reserved Guest');
-			let mobileHtml = table.customer_mobile ? `
-				<div class="detail-info-row">
-					<span class="detail-info-label">${__('Mobile')}</span>
-					<span class="detail-info-val">+91 ${table.customer_mobile}</span>
+					`}
 				</div>
-			` : '';
-
-			bodyHtml = `
-				<div class="detail-info-card card-reserved">
-					<div class="detail-guest-title">
-						<span><i class="fa fa-bookmark" style="color: #d97706;"></i> ${custName}</span>
-						${table.customer_id ? `<span class="badge badge-light" style="font-size: 0.72rem;">${table.customer_id}</span>` : ''}
-					</div>
-					${mobileHtml}
-					<div class="detail-info-row">
-						<span class="detail-info-label">${__('Reservation Time')}</span>
-						<span class="detail-info-val" style="color: #d97706; font-weight: 700;">
-							<i class="fa fa-calendar-check-o"></i> ${table.reservation_time || __('Today')}
-						</span>
-					</div>
-					<div class="detail-info-row">
-						<span class="detail-info-label">${__('Party Size')}</span>
-						<span class="detail-info-val">${table.guests || table.capacity} ${__('Guests')}</span>
-					</div>
-					${table.notes ? `
-						<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed #fde68a; font-size: 0.78rem; color: #92400e; font-style: italic;">
-							"${table.notes}"
-						</div>
-					` : ''}
-				</div>
-			`;
-
-			actionsHtml = `
-				<div class="actions-row-2">
-					<button type="button" class="btn-action-primary btn-panel-seat-reserved">
-						<i class="fa fa-check"></i> ${__('Seat Guests (Check-in)')}
-					</button>
-					<button type="button" class="btn-action-secondary btn-panel-order" title="${__('Start POS Order for Table')}">
-						<i class="fa fa-cutlery"></i> ${__('Start Order')}
-					</button>
-				</div>
-				<button type="button" class="btn-action-secondary btn-panel-details">
-					<i class="fa fa-bookmark"></i> ${__('View Reservation')}
-				</button>
 			`;
 
 		} else {
 			// Available Table
-			bodyHtml = `
+			bodyHtml += `
 				<div class="detail-info-card card-available">
-					<div style="display: flex; align-items: center; gap: 8px; color: #334155; font-weight: 700; font-size: 0.95rem; margin-bottom: 0.5rem;">
-						<i class="fa fa-check-circle" style="color: #64748b; font-size: 1.1rem;"></i>
-						<span>${__('Ready for Guests')}</span>
+					<div style="display: flex; align-items: center; gap: 8px; color: #166534; font-weight: 700; font-size: 0.95rem; margin-bottom: 0.5rem;">
+						<i class="fa fa-check-circle" style="color: #16a34a; font-size: 1.1rem;"></i>
+						<span>${__('Available now • Ready for guests')}</span>
 					</div>
 					<div class="detail-info-row">
 						<span class="detail-info-label">${__('Capacity')}</span>
@@ -1545,16 +1825,69 @@ class FloorManagement {
 			`;
 
 			actionsHtml = `
-				<button type="button" class="btn-action-primary btn-panel-order" style="background: #ea580c; border-color: #ea580c; margin-bottom: 0.5rem;">
-					<i class="fa fa-cutlery"></i> ${__('Start Order')}
-				</button>
 				<div class="actions-row-2">
-					<button type="button" class="btn-action-secondary btn-panel-seat">
-						<i class="fa fa-user-plus"></i> ${__('Seat Guests')}
+					<button type="button" class="btn-action-primary btn-panel-seat-walkin" style="background: #059669; border-color: #059669;">
+						<i class="fa fa-user-plus"></i> ${__('Seat Walk-in')}
 					</button>
-					<button type="button" class="btn-action-secondary btn-panel-details">
-						<i class="fa fa-info-circle"></i> ${__('View Details / Reserve')}
+					${table.next_reservation ? `
+						<button type="button" class="btn-action-primary btn-panel-checkin-next" data-ref="${table.next_reservation.booking_ref}" style="background: #ea580c; border-color: #ea580c;">
+							<i class="fa fa-check"></i> ${__('Check In')} (${table.next_reservation.booking_time})
+						</button>
+					` : `
+						<button type="button" class="btn-action-secondary btn-panel-reserve">
+							<i class="fa fa-bookmark"></i> ${__('Reserve Table')}
+						</button>
+					`}
+				</div>
+				<div class="actions-row-2">
+					<button type="button" class="btn-action-secondary btn-panel-qr" title="${__('Preview or Print Table QR Stand Card')}">
+						<i class="fa fa-qrcode"></i> ${__('Table QR Stand')}
 					</button>
+					<button type="button" class="btn-action-secondary btn-panel-order" style="border-color: #cbd5e1;">
+						<i class="fa fa-cutlery"></i> ${__('Start Order')}
+					</button>
+				</div>
+			`;
+		}
+
+		// 2. Upcoming Reservations Section (Separately displayed!)
+		let upcomingList = table.upcoming_reservations || [];
+		if (upcomingList.length > 0) {
+			let resCards = upcomingList.map(r => `
+				<div class="upcoming-res-card" style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 0.75rem; margin-bottom: 0.6rem;">
+					<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+						<span style="font-weight: 800; font-size: 0.95rem; color: #9a3412;"><i class="fa fa-clock-o"></i> ${r.booking_time}</span>
+						<span style="font-family: monospace; font-size: 0.75rem; font-weight: 700; color: #ea580c; background: #ffedd5; padding: 2px 6px; border-radius: 4px;">${r.booking_ref}</span>
+					</div>
+					<div style="font-size: 0.85rem; font-weight: 600; color: #0f172a; margin-bottom: 0.2rem;">
+						<i class="fa fa-user-circle"></i> ${r.customer_name} &bull; <span style="color: #475569;">${r.party_size} ${__('Guests')}</span>
+					</div>
+					${r.customer_mobile ? `<div style="font-size: 0.78rem; color: #64748b; margin-bottom: 0.35rem;"><i class="fa fa-phone"></i> +91 ${r.customer_mobile}</div>` : ''}
+					${r.notes ? `<div style="font-size: 0.75rem; font-style: italic; color: #78350f; margin-bottom: 0.4rem;">"${r.notes}"</div>` : ''}
+					<div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+						<button type="button" class="btn btn-xs btn-primary btn-checkin-res" data-table="${table.table_no}" data-ref="${r.booking_ref}" data-time="${r.booking_time}" data-name="${r.customer_name}" style="background: #ea580c; border-color: #ea580c; font-weight: 600;">
+							<i class="fa fa-check"></i> ${__('Check In')}
+						</button>
+						<button type="button" class="btn btn-xs btn-default btn-cancel-res" data-table="${table.table_no}" data-ref="${r.booking_ref}" data-name="${r.customer_name}" data-time="${r.booking_time}" style="color: #ef4444; font-weight: 600;">
+							<i class="fa fa-times"></i> ${__('Cancel')}
+						</button>
+					</div>
+				</div>
+			`).join('');
+
+			bodyHtml += `
+				<div class="detail-reservations-section" style="margin-top: 1rem;">
+					<div style="font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+						<span><i class="fa fa-calendar-check-o" style="color: #ea580c;"></i> ${__('Upcoming Bookings Today')}</span>
+						<span class="badge badge-light" style="font-weight: 700; color: #ea580c; background: #fff7ed; border: 1px solid #fed7aa;">${upcomingList.length}</span>
+					</div>
+					${resCards}
+				</div>
+			`;
+		} else {
+			bodyHtml += `
+				<div style="margin-top: 0.85rem; padding: 0.5rem 0.75rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 6px;">
+					<i class="fa fa-calendar-o"></i> ${__('No upcoming reservations for this table today.')}
 				</div>
 			`;
 		}
@@ -1679,9 +2012,9 @@ class FloorManagement {
 	confirm_release_table(table_no) {
 		let me = this;
 		frappe.confirm(
-			__('Are you sure you want to release Table {0} and mark it Available?', [table_no]),
+			__('Are you sure you want to release Table {0} and close the current visit? All future reservations will be preserved.', [table_no]),
 			function () {
-				me.submit_table_update(table_no, 'Available');
+				me.release_table(table_no);
 			}
 		);
 	}
@@ -1733,6 +2066,7 @@ class FloorManagement {
 						${table.customer_id ? `<span class="badge badge-light" style="font-size: 0.72rem;">${table.customer_id}</span>` : ''}
 					</div>
 					${table.customer_mobile ? `<div><strong>${__('Mobile:')}</strong> +91 ${table.customer_mobile}</div>` : ''}
+					${table.reservation_id ? `<div><strong>${__('Booking Ref:')}</strong> <span style="font-family: monospace; color: #ea580c; font-weight: 700;">${table.reservation_id}</span></div>` : ''}
 					<div><strong>${__('Reservation Time:')}</strong> ${table.reservation_time || __('Today')}</div>
 					<div><strong>${__('Party Size:')}</strong> ${table.guests || table.capacity} guests</div>
 					${table.notes ? `<div style="margin-top: 0.4rem; font-style: italic;">"${table.notes}"</div>` : ''}
@@ -1750,7 +2084,20 @@ class FloorManagement {
 			let is_reserve = (action_type === 'reserve');
 			let title_label = is_reserve
 				? __('Reserve Table {0} ({1})', [table.table_no, table.area])
-				: __('Seat Guests at Table {0} ({1})', [table.table_no, table.area]);
+				: __('Seat Walk-in Guests at Table {0} ({1})', [table.table_no, table.area]);
+
+			if (table.next_reservation) {
+				fields.push({
+					fieldtype: 'HTML',
+					fieldname: 'upcoming_notice_html',
+					options: `
+						<div class="alert alert-warning" style="background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; padding: 0.6rem 0.75rem; border-radius: 6px; margin-bottom: 0.75rem; font-size: 0.82rem;">
+							<i class="fa fa-clock-o"></i> <strong>${__('Upcoming Confirmed Reservation:')}</strong> ${table.next_reservation.booking_time} for <strong>${table.next_reservation.customer_name}</strong> (${table.next_reservation.party_size} ${__('guests')}).<br>
+							<span style="font-size: 0.76rem; color: #b45309;">${__('Seating this walk-in party will preserve all upcoming reservations on this table.')}</span>
+						</div>
+					`
+				});
+			}
 
 			let cust_options = [''];
 			(this.data.customers || []).forEach(c => {
@@ -1818,7 +2165,7 @@ class FloorManagement {
 			let d = new frappe.ui.Dialog({
 				title: title_label,
 				fields: fields,
-				primary_action_label: is_reserve ? __('Confirm Reservation') : __('Occupy Table (Seat Guests)'),
+				primary_action_label: is_reserve ? __('Confirm Reservation') : __('Occupy Table (Seat Walk-in)'),
 				primary_action: function (values) {
 					if (!values) return;
 					let clean_mobile = (values.customer_mobile || '').replace(/\D/g, '');
@@ -1838,16 +2185,25 @@ class FloorManagement {
 					}
 
 					d.hide();
-					let status = is_reserve ? 'Reserved' : 'Occupied';
-					me.submit_table_update(
-						table.table_no,
-						status,
-						clean_name,
-						clean_mobile,
-						values.guests_count,
-						values.reservation_time || '',
-						values.notes || ''
-					);
+					if (is_reserve) {
+						me.submit_table_update(
+							table.table_no,
+							'Reserved',
+							clean_name,
+							clean_mobile,
+							values.guests_count,
+							values.reservation_time || '',
+							values.notes || ''
+						);
+					} else {
+						me.seat_walk_in(
+							table.table_no,
+							clean_name,
+							clean_mobile,
+							values.guests_count,
+							values.notes || ''
+						);
+					}
 				}
 			});
 
@@ -2180,6 +2536,99 @@ class FloorManagement {
 		});
 	}
 
+	seat_walk_in(table_no, customer, customer_mobile, guests, notes) {
+		let me = this;
+		frappe.call({
+			method: 'restaurant_management.restaurant_management.page.restaurant_floor_management.restaurant_floor_management.seat_walk_in',
+			args: {
+				table_no: table_no,
+				customer: customer || '',
+				customer_mobile: customer_mobile || '',
+				guests: guests || 0,
+				notes: notes || ''
+			},
+			freeze: true,
+			freeze_message: __('Seating walk-in party...'),
+			callback: function (r) {
+				if (r.message) {
+					me.data = r.message;
+					me.selected_table_no = table_no;
+					me.render_all();
+					frappe.show_alert({
+						message: __('Table {0} seated for walk-in party (all reservations preserved).', [table_no]),
+						indicator: 'green'
+					});
+				}
+			}
+		});
+	}
+
+	checkin_reservation(table_no, booking_ref) {
+		let me = this;
+		frappe.call({
+			method: 'restaurant_management.restaurant_management.page.restaurant_floor_management.restaurant_floor_management.checkin_reservation',
+			args: {
+				table_no: table_no,
+				booking_ref: booking_ref
+			},
+			freeze: true,
+			freeze_message: __('Checking in reservation {0}...', [booking_ref]),
+			callback: function (r) {
+				if (r.message) {
+					me.data = r.message;
+					me.selected_table_no = table_no;
+					me.render_all();
+					frappe.show_alert({
+						message: __('Reservation {0} checked in at Table {1}.', [booking_ref, table_no]),
+						indicator: 'green'
+					});
+				}
+			}
+		});
+	}
+
+	release_table(table_no) {
+		let me = this;
+		frappe.call({
+			method: 'restaurant_management.restaurant_management.page.restaurant_floor_management.restaurant_floor_management.release_table',
+			args: {
+				table_no: table_no
+			},
+			freeze: true,
+			freeze_message: __('Releasing table {0}...', [table_no]),
+			callback: function (r) {
+				if (r.message) {
+					me.data = r.message;
+					me.selected_table_no = table_no;
+					me.render_all();
+					frappe.show_alert({
+						message: __('Table {0} released and marked Available (future reservations preserved).', [table_no]),
+						indicator: 'green'
+					});
+				}
+			}
+		});
+	}
+
+	cancel_reservation(booking_ref) {
+		let me = this;
+		frappe.call({
+			method: 'restaurant_management.restaurant_management.page.restaurant_floor_management.restaurant_floor_management.cancel_reservation',
+			args: {
+				booking_ref: booking_ref
+			},
+			freeze: true,
+			freeze_message: __('Cancelling reservation {0}...', [booking_ref]),
+			callback: function (r) {
+				me.fetch_data();
+				frappe.show_alert({
+					message: __('Reservation {0} cancelled.', [booking_ref]),
+					indicator: 'orange'
+				});
+			}
+		});
+	}
+
 	// =========================================================================
 	// Customer History Modal
 	// =========================================================================
@@ -2334,26 +2783,30 @@ class FloorManagement {
 				let b = r.message;
 				let itemsHtml = (b.items || []).map(it => `
 					<tr>
-						<td style="padding: 4px 0;">${it.dish}</td>
+						<td style="padding: 4px 0;">${it.name || it.dish || ''}</td>
 						<td style="padding: 4px 0; text-align: center;">${it.qty}</td>
-						<td style="padding: 4px 0; text-align: right;">${it.rate}</td>
-						<td style="padding: 4px 0; text-align: right; font-weight: 600;">${it.amount}</td>
+						<td style="padding: 4px 0; text-align: right;">${it.rate || it.formatted_price || it.price || ''}</td>
+						<td style="padding: 4px 0; text-align: right; font-weight: 600;">${it.amount || it.formatted_amount || ''}</td>
 					</tr>
 				`).join('');
 
-				let html = `
+				let html = b.receipt_html ? `
+					<div class="receipt-printable-container" style="max-width: 460px; margin: 0 auto;">
+						${b.receipt_html}
+					</div>
+				` : `
 					<div class="receipt-printable-container" style="max-width: 360px; margin: 0 auto; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 1.25rem; font-family: monospace; font-size: 0.85rem; color: #0f172a;">
 						<div style="text-align: center; border-bottom: 1px dashed #cbd5e1; padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
-							<div style="font-size: 1.15rem; font-weight: 800; letter-spacing: 0.05em;">${b.restaurant_name}</div>
-							<div style="font-size: 0.75rem; color: #64748b;">${b.address}</div>
-							<div style="font-size: 0.75rem; color: #64748b;">GSTIN: ${b.gstin} &bull; Ph: ${b.phone}</div>
+							<div style="font-size: 1.15rem; font-weight: 800; letter-spacing: 0.05em;">${b.restaurant_name || (b.restaurant && b.restaurant.name) || 'IZEN BISTRO'}</div>
+							<div style="font-size: 0.75rem; color: #64748b;">${b.address || (b.restaurant && b.restaurant.address) || ''}</div>
+							<div style="font-size: 0.75rem; color: #64748b;">GSTIN: ${b.gstin || (b.restaurant && b.restaurant.gstin) || ''} &bull; Ph: ${b.phone || (b.restaurant && b.restaurant.phone) || ''}</div>
 						</div>
 						<div style="font-size: 0.8rem; margin-bottom: 0.75rem;">
 							<div style="display: flex; justify-content: space-between;"><span>${__('Bill No:')}</span><strong>${b.bill_no}</strong></div>
 							<div style="display: flex; justify-content: space-between;"><span>${__('Order Ref:')}</span><span>${b.order_id}</span></div>
-							<div style="display: flex; justify-content: space-between;"><span>${__('Date & Time:')}</span><span>${b.date_time}</span></div>
+							<div style="display: flex; justify-content: space-between;"><span>${__('Date & Time:')}</span><span>${b.date_time || `${b.date || ''} ${b.time || ''}`}</span></div>
 							<div style="display: flex; justify-content: space-between;"><span>${__('Table:')}</span><strong>${b.table_no} (${b.area})</strong></div>
-							<div style="display: flex; justify-content: space-between;"><span>${__('Guest:')}</span><strong>${b.customer}</strong></div>
+							<div style="display: flex; justify-content: space-between;"><span>${__('Guest:')}</span><strong>${b.customer_name || b.customer || 'Guest'}</strong></div>
 							${b.customer_mobile ? `<div style="display: flex; justify-content: space-between;"><span>${__('Mobile:')}</span><span>+91 ${b.customer_mobile}</span></div>` : ''}
 						</div>
 						<table style="width: 100%; border-top: 1px dashed #cbd5e1; border-bottom: 1px dashed #cbd5e1; margin-bottom: 0.75rem; font-size: 0.8rem;">
@@ -2370,12 +2823,12 @@ class FloorManagement {
 							</tbody>
 						</table>
 						<div style="font-size: 0.82rem; margin-bottom: 0.75rem;">
-							<div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>Subtotal:</span><span>${b.subtotal}</span></div>
-							<div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>CGST (2.5%):</span><span>${b.cgst}</span></div>
-							<div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>SGST (2.5%):</span><span>${b.sgst}</span></div>
-							<div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>Service Charge (5%):</span><span>${b.service_charge}</span></div>
+							<div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>Subtotal:</span><span>${b.formatted_subtotal || b.subtotal}</span></div>
+							<div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>CGST (2.5%):</span><span>${b.formatted_cgst || b.cgst}</span></div>
+							<div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>SGST (2.5%):</span><span>${b.formatted_sgst || b.sgst}</span></div>
+							<div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>Service Charge (5%):</span><span>${b.formatted_service_charge || b.service_charge || '₹0'}</span></div>
 							<div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1rem; border-top: 1px solid #0f172a; padding-top: 4px; margin-top: 4px;">
-								<span>TOTAL:</span><span>${b.grand_total}</span>
+								<span>TOTAL:</span><span>${b.formatted_total || b.grand_total || b.total}</span>
 							</div>
 						</div>
 						<div style="text-align: center; border-top: 1px dashed #cbd5e1; padding-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
@@ -2419,6 +2872,175 @@ class FloorManagement {
 			existing_table: table,
 			on_success: function (newOrder) {
 				me.refresh();
+			}
+		});
+	}
+
+	// =========================================================================
+	// Table Stand QR Code Preview & Print Modal
+	// =========================================================================
+	open_table_qr_dialog(table_no) {
+		let me = this;
+		frappe.call({
+			method: 'restaurant_management.restaurant_management.page.restaurant_floor_management.restaurant_floor_management.get_table_qr',
+			args: { table_no: table_no },
+			freeze: true,
+			freeze_message: __('Generating Table QR Card...'),
+			callback: function (r) {
+				if (!r.message) return;
+				let qrData = r.message;
+				let is_seated = qrData.is_seated;
+
+				let d = new frappe.ui.Dialog({
+					title: __('Table {0} QR Stand Card', [table_no]),
+					fields: [
+						{
+							fieldtype: 'HTML',
+							fieldname: 'qr_card_html'
+						}
+					],
+					primary_action_label: __('Print Table Stand'),
+					primary_action: function () {
+						let printContents = d.$wrapper.find('.qr-stand-card').prop('outerHTML');
+						let printWin = window.open('', '_blank', 'width=600,height=750');
+						if (printWin) {
+							printWin.document.write(`
+								<!DOCTYPE html>
+								<html>
+								<head>
+									<title>Table ${table_no} Stand Card - Izen Bistro</title>
+									<style>
+										@page { size: auto; margin: 15mm; }
+										* { box-sizing: border-box; }
+										body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; margin: 0; padding: 20px; background: #ffffff; }
+										.qr-stand-card { border: 2px solid #0f172a; border-radius: 16px; padding: 24px; max-width: 380px; margin: 0 auto; box-shadow: none; background: #ffffff; }
+										.qr-header-brand { font-size: 20px; font-weight: 800; color: #0f172a; letter-spacing: 1px; }
+										.qr-table-title { font-size: 26px; font-weight: 900; color: #1e3a8a; margin: 10px 0; }
+										.qr-svg-wrap { margin: 16px auto; width: 220px; height: 220px; background: #ffffff; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+										.qr-svg-wrap svg { width: 100% !important; height: 100% !important; display: block !important; aspect-ratio: 1 / 1 !important; }
+										.qr-instructions { font-size: 13px; color: #334155; margin-top: 10px; line-height: 1.4; }
+										.qr-passcode-box { background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 8px; padding: 8px 12px; margin-top: 12px; }
+										.qr-passcode-code { font-size: 22px; font-weight: 800; color: #1e3a8a; letter-spacing: 3px; font-family: monospace; }
+										@media print { .no-print { display: none !important; } }
+										.no-print { display: none !important; }
+									</style>
+								</head>
+								<body onload="if (!window.noAutoPrint) { window.print(); }">
+									${printContents}
+								</body>
+								</html>
+							`);
+							printWin.document.close();
+						}
+					}
+				});
+
+				let html = `
+					<div class="qr-stand-modal-wrap" style="text-align: center; padding: 10px;">
+						<style>
+							.qr-stand-modal-wrap .qr-svg-wrap {
+								margin: 16px auto;
+								width: 220px;
+								height: 220px;
+								background: #ffffff;
+								display: flex;
+								align-items: center;
+								justify-content: center;
+								border-radius: 8px;
+								box-sizing: border-box;
+							}
+							.qr-stand-modal-wrap .qr-svg-wrap svg {
+								width: 100% !important;
+								height: 100% !important;
+								display: block !important;
+								aspect-ratio: 1 / 1 !important;
+							}
+						</style>
+						<div class="qr-stand-card" style="border: 2px solid #0f172a; border-radius: 16px; padding: 24px; max-width: 380px; margin: 0 auto; background: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.06); box-sizing: border-box;">
+							<div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
+								<div style="width: 32px; height: 32px; border-radius: 8px; background: #0f172a; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-family: Georgia, serif; font-size: 14px;">IB</div>
+								<span class="qr-header-brand" style="font-size: 18px; font-weight: 800; color: #0f172a; letter-spacing: 1px;">IZEN BISTRO</span>
+							</div>
+							<div style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Nagarbhavi, Bengaluru</div>
+
+							<div class="qr-table-title" style="font-size: 24px; font-weight: 900; color: #1e3a8a; margin: 12px 0 4px 0;">
+								TABLE ${table_no}
+							</div>
+							<div style="font-size: 12px; color: #64748b; font-weight: 500;">
+								${qrData.area || 'Main Dining Hall'} • Capacity ${qrData.capacity || 4} Guests
+							</div>
+
+							<div class="qr-svg-wrap" style="margin: 16px auto; width: 220px; height: 220px; background: #ffffff; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 8px;">
+								${qrData.qr_svg || '<div style="color: #94a3b8;">QR Code</div>'}
+							</div>
+
+							<div class="qr-instructions" style="font-size: 12px; color: #334155; line-height: 1.4;">
+								Scan with your phone camera to view our digital menu & order directly from your table.
+							</div>
+
+							<div style="margin-top: 8px; font-size: 11px; color: #64748b; word-break: break-all;">
+								<a href="${qrData.table_url}" target="_blank" style="color: #1e3a8a; text-decoration: underline;">${qrData.table_url}</a>
+							</div>
+
+							${is_seated && qrData.visit_code ? `
+								<div class="qr-passcode-box" style="background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 8px; padding: 8px 12px; margin-top: 14px;">
+									<div style="font-size: 11px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Active Visit Passcode</div>
+									<div class="qr-passcode-code" style="font-size: 22px; font-weight: 900; color: #1e3a8a; letter-spacing: 3px; font-family: monospace;">${qrData.visit_code}</div>
+									<div style="font-size: 10px; color: #64748b;">Give this 4-digit code to seated guests to unlock ordering</div>
+								</div>
+							` : `
+								<div style="background: #f1f5f9; border-radius: 6px; padding: 6px 10px; margin-top: 12px; font-size: 11px; color: #475569;">
+									<i class="fa fa-info-circle"></i> Permanent Table Stand. When guests are seated, a 4-digit visit passcode will be generated.
+								</div>
+							`}
+						</div>
+
+						<div class="no-print" style="margin-top: 14px; font-size: 11px; color: #64748b; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; max-width: 380px; margin-left: auto; margin-right: auto;">
+							<div style="display: flex; align-items: center; gap: 6px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+								<i class="fa fa-wifi" style="color: #2563eb;"></i>
+								<span>Customer Base URL: <strong class="customer-base-url-text" style="color: #0f172a;">${qrData.customer_base_url || 'http://192.168.0.7:8001'}</strong></span>
+							</div>
+							<button type="button" class="btn btn-default btn-xs btn-config-base-url-modal" style="font-weight: 600; padding: 2px 8px; margin-left: 8px; flex-shrink: 0;">
+								<i class="fa fa-pencil"></i> ${__('Edit')}
+							</button>
+						</div>
+					</div>
+				`;
+
+				d.fields_dict.qr_card_html.$wrapper.html(html);
+
+				d.$wrapper.on('click', '.btn-config-base-url-modal', function () {
+					frappe.prompt(
+						[
+							{
+								fieldname: 'customer_base_url',
+								fieldtype: 'Data',
+								label: __('Customer Base URL (Wi-Fi / Host URL)'),
+								default: qrData.customer_base_url || 'http://192.168.0.7:8001',
+								description: __('Base URL encoded in table QR stands and printed links (e.g. http://192.168.0.7:8001)'),
+								reqd: 1
+							}
+						],
+						function (values) {
+							frappe.call({
+								method: 'restaurant_management.restaurant_management.services.restaurant_store.api_set_customer_base_url',
+								args: { base_url: values.customer_base_url },
+								callback: function (res) {
+									frappe.show_alert({
+										message: __('Customer Base URL updated to {0}', [res.message]),
+										indicator: 'green'
+									});
+									d.hide();
+									me.open_table_qr_dialog(table_no);
+								}
+							});
+						},
+						__('Configure Customer Base URL'),
+						__('Save Configuration')
+					);
+				});
+
+				d.show();
 			}
 		});
 	}

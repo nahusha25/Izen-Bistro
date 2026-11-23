@@ -1,0 +1,23 @@
+{
+ "app": "restaurant_management",
+ "creation": "2026-11-02 14:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon": "utensils",
+ "icon_type": "App",
+ "idx": 1,
+ "label": "Restaurant",
+ "link": "/desk/restaurant-dashboard?sidebar=Restaurant%20Management",
+ "link_to": "Restaurant Management",
+ "link_type": "External",
+ "logo_url": "/assets/restaurant_management/images/restaurant_launcher.svg",
+ "modified": "2026-11-23 16:30:00.000000",
+ "modified_by": "Administrator",
+ "name": "Restaurant",
+ "owner": "Administrator",
+ "parent_icon": "",
+ "restrict_removal": 0,
+ "roles": [],
+ "standard": 1
+}

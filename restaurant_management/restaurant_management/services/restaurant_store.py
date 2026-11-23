@@ -6,6 +6,8 @@ import os
 import copy
 import re
 import datetime
+import secrets
+import io
 import frappe
 from frappe import _
 
@@ -1240,7 +1242,73 @@ class RestaurantStore:
 		"gstin": "",
 		"fssai": "",
 		"website": "",
+		"customer_base_url": "http://192.168.0.7:8001",
 	}
+
+	@classmethod
+	def get_customer_base_url(cls):
+		"""
+		Returns the configured customer base URL used for QR code generation and customer links.
+		Priority:
+		1. frappe.conf.get("customer_base_url") (site_config.json / common_site_config.json)
+		2. restaurant_info.customer_base_url in persistent store
+		3. data.customer_base_url in persistent store
+		4. Fallback: http://restaurant.local:8001 (or current site url)
+		"""
+		try:
+			if frappe.conf and frappe.conf.get("customer_base_url"):
+				url = str(frappe.conf.get("customer_base_url")).strip().rstrip("/")
+				if url:
+					return url
+		except Exception:
+			pass
+
+		try:
+			info = cls.get_restaurant_info()
+			if info and info.get("customer_base_url"):
+				url = str(info.get("customer_base_url")).strip().rstrip("/")
+				if url:
+					return url
+		except Exception:
+			pass
+
+		try:
+			data = cls.get_data()
+			if data.get("customer_base_url"):
+				url = str(data.get("customer_base_url")).strip().rstrip("/")
+				if url:
+					return url
+		except Exception:
+			pass
+
+		site_url = frappe.utils.get_url()
+		if "8000" in site_url and "restaurant.local" in site_url:
+			site_url = site_url.replace(":8000", ":8001")
+		elif "restaurant.local" in site_url and ":8001" not in site_url:
+			site_url = "http://restaurant.local:8001"
+		return site_url.rstrip("/")
+
+	@classmethod
+	def set_customer_base_url(cls, base_url):
+		"""
+		Configures the customer base URL across persistent store and site config.
+		"""
+		cleaned_url = (base_url or "").strip().rstrip("/")
+		if not cleaned_url:
+			cleaned_url = "http://192.168.0.7:8001"
+
+		cls.update_restaurant_info(customer_base_url=cleaned_url)
+		data = cls.get_data()
+		data["customer_base_url"] = cleaned_url
+		cls.save_data(data)
+
+		try:
+			from frappe.installer import update_site_config
+			update_site_config("customer_base_url", cleaned_url)
+		except Exception:
+			pass
+
+		return cleaned_url
 
 	@classmethod
 	def get_restaurant_info(cls):
@@ -1853,15 +1921,22 @@ class RestaurantStore:
 		date_str = source.get("bill_date") or (created_at.split(" ")[0] if " " in created_at else frappe.utils.nowdate())
 		time_str = source.get("bill_time") or source.get("created_time_str") or (created_at.split(" ")[1] if " " in created_at else frappe.utils.nowtime())
 
+		rest_info = cls.get_restaurant_info() or {}
 		receipt_data = {
-			"restaurant": cls.get_restaurant_info(),
+			"restaurant": rest_info,
+			"restaurant_name": rest_info.get("name", "IZEN BISTRO"),
+			"address": rest_info.get("address", "Nagarbhavi, Bengaluru"),
+			"gstin": rest_info.get("gstin", ""),
+			"phone": rest_info.get("phone", ""),
 			"bill_no": bill_no,
 			"receipt_no": receipt_no,
 			"order_id": source.get("order_id", order_id),
 			"date": date_str,
 			"time": time_str,
+			"date_time": f"{date_str} {time_str}",
 			"table_no": source.get("table_no", ""),
 			"area": source.get("area", "Main Dining Hall"),
+			"customer": source.get("customer_name") or source.get("customer", "Guest"),
 			"customer_name": source.get("customer_name") or source.get("customer", "Guest"),
 			"customer_mobile": source.get("customer_mobile", ""),
 			"customer_id": source.get("customer_id", ""),
@@ -1869,9 +1944,11 @@ class RestaurantStore:
 				{
 					"item_id": it.get("item_id"),
 					"name": it.get("name"),
+					"dish": it.get("name"),
 					"qty": it.get("qty", 1),
 					"price": it.get("price", 0),
-					"amount": it.get("amount", it.get("price", 0) * it.get("qty", 1)),
+					"rate": f"₹{it.get('price', 0):,}",
+					"amount": f"₹{it.get('amount', it.get('price', 0) * it.get('qty', 1)):,}",
 					"formatted_price": f"₹{it.get('price', 0):,}",
 					"formatted_amount": f"₹{it.get('amount', it.get('price', 0) * it.get('qty', 1)):,}",
 				}
@@ -2129,13 +2206,98 @@ class RestaurantStore:
 					t["notes"] = ""
 					changed = True
 
+		# Ensure physical status is strictly 'Available' or 'Occupied'
+		for t in tables:
+			if t.get("status") not in ["Available", "Occupied"]:
+				t["status"] = "Available"
+				t["customer"] = ""
+				t["customer_mobile"] = ""
+				t["customer_id"] = ""
+				t["guests"] = 0
+				t["seated_time"] = ""
+				t["reservation_time"] = ""
+				t["reservation_id"] = ""
+				t["current_booking_ref"] = ""
+				t["notes"] = ""
+				t["visit_id"] = ""
+				t["visit_code"] = ""
+				changed = True
+			elif t.get("status") == "Occupied":
+				if not t.get("visit_code"):
+					t["visit_code"] = f"{secrets.randbelow(9000) + 1000}"
+					changed = True
+				if not t.get("visit_id"):
+					now_dt = frappe.utils.now_datetime()
+					visit_seq = secrets.token_hex(2).upper()
+					t["visit_id"] = f"VIS-{now_dt.strftime('%Y%m%d%H%M%S')}-{visit_seq}"
+					changed = True
+			elif t.get("status") == "Available":
+				if t.get("visit_code") or t.get("visit_id"):
+					t["visit_code"] = ""
+					t["visit_id"] = ""
+					changed = True
+
 		if changed:
 			cls.save_data(data)
 
+		# Synchronize active confirmed reservations for today from persistent DB
+		today_res = []
+		try:
+			if frappe.db and frappe.db.table_exists("Restaurant Reservation"):
+				today_str = frappe.utils.nowdate()
+				today_res = frappe.db.sql(
+					"""
+					SELECT booking_ref, table_no, customer_name, customer_mobile, customer_id,
+					       booking_date, booking_time, start_time, end_time, party_size, notes, status, source
+					FROM `tabRestaurant Reservation`
+					WHERE booking_date = %s AND status = 'Confirmed'
+					ORDER BY start_time ASC
+					""",
+					(today_str,),
+					as_dict=True
+				)
+		except Exception as e:
+			frappe.log_error(f"Error loading reservations in get_floor_data: {str(e)}")
+
+		# Group confirmed reservations by table_no
+		res_by_table = {}
+		for r in today_res:
+			t_no = r["table_no"]
+			if t_no not in res_by_table:
+				res_by_table[t_no] = []
+			res_by_table[t_no].append(r)
+
+		for t in tables:
+			t_no = t["table_no"]
+			upcoming = res_by_table.get(t_no, [])
+			t["upcoming_reservations"] = [
+				{
+					"booking_ref": r["booking_ref"],
+					"booking_time": str(r["booking_time"]),
+					"party_size": r["party_size"],
+					"customer_name": r["customer_name"],
+					"customer_mobile": r.get("customer_mobile", "") or "",
+					"notes": r.get("notes", "") or "",
+				}
+				for r in upcoming
+			]
+			if upcoming:
+				next_r = upcoming[0]
+				t["next_reservation"] = {
+					"booking_ref": next_r["booking_ref"],
+					"booking_time": str(next_r["booking_time"]),
+					"party_size": next_r["party_size"],
+					"customer_name": next_r["customer_name"],
+					"customer_mobile": next_r.get("customer_mobile", "") or "",
+					"notes": next_r.get("notes", "") or "",
+				}
+			else:
+				t["next_reservation"] = None
+
 		total = len(tables)
 		occupied = sum(1 for t in tables if t.get("status") == "Occupied")
-		reserved = sum(1 for t in tables if t.get("status") == "Reserved")
-		available = max(0, total - occupied - reserved)
+		available = sum(1 for t in tables if t.get("status") == "Available")
+		reserved = sum(1 for t in tables if t.get("next_reservation") is not None)
 		occupancy_pct = f"{round((occupied / total) * 100)}%" if total else "0%"
 
 		areas_map = {
@@ -2151,6 +2313,10 @@ class RestaurantStore:
 				areas_map[area]["count"] += 1
 				if t.get("status") == "Occupied":
 					areas_map[area]["occupied"] += 1
+				else:
+					areas_map[area]["available"] += 1
+				if t.get("next_reservation") is not None:
+					areas_map[area]["reserved"] += 1
 				elif t.get("status") == "Reserved":
 					areas_map[area]["reserved"] += 1
 
@@ -2210,6 +2376,404 @@ class RestaurantStore:
 		}
 
 	@classmethod
+	def seat_walk_in(
+		cls,
+		table_no,
+		customer="",
+		customer_mobile="",
+		guests=0,
+		notes="",
+	):
+		"""
+		Seats a walk-in party at the specified table.
+		CRITICAL:
+		- Marks table Occupied for the walk-in party.
+		- Leaves every existing reservation in tabRestaurant Reservation completely untouched!
+		- Sets current_booking_ref = "" so releasing this table will never close/cancel any reservation.
+		"""
+		data = cls.get_data()
+		tables = data.get("tables", [])
+		target = next((t for t in tables if t["table_no"] == table_no), None)
+		if not target:
+			frappe.throw(_("Table {0} not found").format(table_no))
+
+		clean_mobile = ""
+		cust_record = None
+		if customer_mobile:
+			clean_mobile = cls.normalize_and_validate_mobile(customer_mobile)
+			cust_record = cls.get_or_create_customer(name=customer, mobile=clean_mobile, update_visit=True)
+			data["customers"] = cls.get_data().get("customers", [])
+		elif customer:
+			clean_name = (customer or "").strip()
+			for c in data.get("customers", []):
+				if isinstance(c, dict) and c.get("name", "").strip().lower() == clean_name.lower():
+					cust_record = c
+					cust_record["total_visits"] = cust_record.get("total_visits", 0) + 1
+					cust_record["last_visit"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
+					break
+
+		target["status"] = "Occupied"
+		target["customer"] = cust_record["name"] if cust_record else (customer or "Walk-in Guest")
+		target["customer_id"] = cust_record["customer_id"] if cust_record else ""
+		target["customer_mobile"] = cust_record["mobile"] if cust_record else clean_mobile
+		target["guests"] = int(guests) if guests else target.get("capacity", 2)
+		target["seated_time"] = "Just now"
+		target["seated_at"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
+		target["current_booking_ref"] = ""  # Walk-in: no reservation reference
+		target["reservation_id"] = ""
+		target["reservation_time"] = ""
+		target["notes"] = notes or ""
+
+		# Initialize persistent visit session and 4-digit passcode for QR ordering
+		now_dt = frappe.utils.now_datetime()
+		visit_seq = secrets.token_hex(2).upper()
+		target["visit_id"] = f"VIS-{now_dt.strftime('%Y%m%d%H%M%S')}-{visit_seq}"
+		target["visit_code"] = f"{secrets.randbelow(9000) + 1000}"
+
+		target["order_id"] = ""
+		target["order_amount"] = ""
+		target["order_status"] = "Awaiting Order"
+		target["waiter_request"] = None
+		target["bill_request"] = None
+
+		cls.save_data(data)
+		return cls.get_floor_data()
+
+	@classmethod
+	def checkin_reservation(cls, table_no, booking_ref, notes=""):
+		"""
+		Checks in a guest holding an existing confirmed reservation.
+		Validates on the server:
+		1. booking_ref exists.
+		2. booking_ref belongs to this exact table.
+		3. reservation is Confirmed and eligible for check-in.
+		Updates tabRestaurant Reservation status to 'Seated'.
+		Marks table Occupied with this reservation's reference.
+		"""
+		clean_ref = (booking_ref or "").strip()
+		if not clean_ref:
+			frappe.throw(_("Booking reference is required for reservation check-in."))
+
+		res_list = frappe.db.sql(
+			"""
+			SELECT name, booking_ref, customer_name, customer_mobile, customer_id,
+			       booking_date, booking_time, start_time, end_time, party_size,
+			       table_no, table_area, status, notes
+			FROM `tabRestaurant Reservation`
+			WHERE booking_ref = %s
+			LIMIT 1
+			""",
+			(clean_ref,),
+			as_dict=True
+		)
+		if not res_list:
+			frappe.throw(_("Reservation '{0}' not found.").format(clean_ref))
+		res = res_list[0]
+
+		# 1. Server validation: Verify reservation belongs to the table
+		if res["table_no"] != table_no:
+			frappe.throw(
+				_("Reservation '{0}' is assigned to Table {1}, not Table {2}. Please check in at the assigned table.").format(
+					clean_ref, res["table_no"], table_no
+				)
+			)
+
+		# 2. Server validation: Verify reservation is eligible for check-in
+		if res["status"] == "Seated":
+			frappe.throw(_("Reservation '{0}' is already checked in and seated.").format(clean_ref))
+		elif res["status"] == "Completed":
+			frappe.throw(_("Reservation '{0}' has already completed.").format(clean_ref))
+		elif res["status"] == "Cancelled":
+			frappe.throw(_("Reservation '{0}' has been cancelled and cannot be checked in.").format(clean_ref))
+		elif res["status"] != "Confirmed":
+			frappe.throw(
+				_("Reservation '{0}' has status '{1}' and is not eligible for check-in.").format(clean_ref, res["status"])
+			)
+
+		# 3. Update database record: change status to 'Seated'
+		frappe.db.set_value("Restaurant Reservation", res["name"], "status", "Seated")
+		frappe.db.commit()
+
+		# 4. Seat the party at the live table
+		data = cls.get_data()
+		tables = data.get("tables", [])
+		target = next((t for t in tables if t["table_no"] == table_no), None)
+		if not target:
+			frappe.throw(_("Table {0} not found").format(table_no))
+
+		target["status"] = "Occupied"
+		target["customer"] = res["customer_name"]
+		target["customer_id"] = res.get("customer_id", "")
+		target["customer_mobile"] = res["customer_mobile"]
+		target["guests"] = int(res["party_size"])
+		target["seated_time"] = "Just now"
+		target["seated_at"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
+		target["current_booking_ref"] = clean_ref
+		target["reservation_id"] = clean_ref
+		target["reservation_time"] = res["booking_time"]
+		target["notes"] = notes or res.get("notes", "") or ""
+
+		# Initialize persistent visit session and 4-digit passcode for QR ordering
+		now_dt = frappe.utils.now_datetime()
+		visit_seq = secrets.token_hex(2).upper()
+		target["visit_id"] = f"VIS-{now_dt.strftime('%Y%m%d%H%M%S')}-{visit_seq}"
+		target["visit_code"] = f"{secrets.randbelow(9000) + 1000}"
+
+		target["order_id"] = ""
+		target["order_amount"] = ""
+		target["order_status"] = "Awaiting Order"
+		target["waiter_request"] = None
+		target["bill_request"] = None
+
+		cls.save_data(data)
+		return cls.get_floor_data()
+
+	@classmethod
+	def release_table(cls, table_no):
+		"""
+		Releases/vacates a table and marks it Available.
+		RULE:
+		- Closes ONLY the current visit.
+		- If the current seated guests were from a checked-in reservation, marks THAT reservation 'Completed'.
+		- If the current seated guests were a walk-in, leaves reservations completely untouched.
+		- NEVER cancels any reservation! Future reservations remain intact and Confirmed.
+		"""
+		data = cls.get_data()
+		tables = data.get("tables", [])
+		target = next((t for t in tables if t["table_no"] == table_no), None)
+		if not target:
+			frappe.throw(_("Table {0} not found").format(table_no))
+
+		current_ref = target.get("current_booking_ref") or target.get("reservation_id")
+
+		if current_ref:
+			res_name = frappe.db.get_value("Restaurant Reservation", {"booking_ref": current_ref}, "name")
+			if res_name:
+				curr_status = frappe.db.get_value("Restaurant Reservation", res_name, "status")
+				if curr_status == "Seated":
+					frappe.db.set_value("Restaurant Reservation", res_name, "status", "Completed")
+					frappe.db.commit()
+
+		target["status"] = "Available"
+		target["customer"] = ""
+		target["customer_id"] = ""
+		target["customer_mobile"] = ""
+		target["guests"] = 0
+		target["seated_time"] = ""
+		target["seated_at"] = ""
+		target["order_id"] = ""
+		target["order_amount"] = ""
+		target["order_status"] = ""
+		target["current_booking_ref"] = ""
+		target["reservation_id"] = ""
+		target["reservation_time"] = ""
+		target["notes"] = ""
+		target["visit_id"] = ""
+		target["visit_code"] = ""
+		target["waiter_request"] = None
+		target["bill_request"] = None
+
+		cls.save_data(data)
+		return cls.get_floor_data()
+
+	@classmethod
+	def call_waiter(cls, table_no, visit_code):
+		"""
+		Records a guest request for server/waiter assistance.
+		Idempotent per visit session.
+		"""
+		data = cls.get_data()
+		tables = data.get("tables", [])
+		target = next((t for t in tables if t["table_no"] == table_no), None)
+		if not target:
+			frappe.throw(_("Table {0} not found").format(table_no))
+
+		if target.get("status") != "Occupied":
+			frappe.throw(_("Table {0} is currently not seated.").format(table_no))
+
+		clean_code = str(visit_code or "").strip()
+		expected_code = str(target.get("visit_code", "")).strip()
+		if not clean_code or not expected_code or clean_code != expected_code:
+			frappe.throw(_("Invalid or expired table passcode. Please check with your server."))
+
+		req = target.get("waiter_request")
+		if req and isinstance(req, dict) and req.get("visit_id") == target.get("visit_id"):
+			return {
+				"success": True,
+				"already_open": True,
+				"table_no": table_no,
+				"message": _("Waiter already notified"),
+				"waiter_request": req,
+			}
+
+		now_dt = frappe.utils.now_datetime()
+		req = {
+			"table_no": table_no,
+			"requested_at": now_dt.strftime("%Y-%m-%d %H:%M:%S"),
+			"time_str": now_dt.strftime("%I:%M %p"),
+			"visit_id": target.get("visit_id"),
+			"status": "Pending",
+		}
+		target["waiter_request"] = req
+		cls.save_data(data)
+		return {
+			"success": True,
+			"already_open": False,
+			"table_no": table_no,
+			"message": _("Waiter notified"),
+			"waiter_request": req,
+		}
+
+	@classmethod
+	def mark_waiter_handled(cls, table_no):
+		"""
+		Marks a waiter request as handled by staff and dismisses the alert.
+		"""
+		data = cls.get_data()
+		tables = data.get("tables", [])
+		target = next((t for t in tables if t["table_no"] == table_no), None)
+		if not target:
+			frappe.throw(_("Table {0} not found").format(table_no))
+
+		target["waiter_request"] = None
+		cls.save_data(data)
+		return {
+			"success": True,
+			"table_no": table_no,
+			"message": _("Waiter request handled"),
+			"floor_data": cls.get_floor_data(),
+		}
+
+	@classmethod
+	def request_bill(cls, table_no, visit_code):
+		"""
+		Notifies cashier that the seated guests at table_no have requested the bill.
+		Validates that the visit has an active order.
+		Idempotent per visit session.
+		"""
+		data = cls.get_data()
+		tables = data.get("tables", [])
+		target = next((t for t in tables if t["table_no"] == table_no), None)
+		if not target:
+			frappe.throw(_("Table {0} not found").format(table_no))
+
+		if target.get("status") != "Occupied":
+			frappe.throw(_("Table {0} is currently not seated.").format(table_no))
+
+		clean_code = str(visit_code or "").strip()
+		expected_code = str(target.get("visit_code", "")).strip()
+		if not clean_code or not expected_code or clean_code != expected_code:
+			frappe.throw(_("Invalid or expired table passcode. Please check with your server."))
+
+		order_id = target.get("order_id")
+		if not order_id:
+			frappe.throw(_("No active order for this table. Please place an order before requesting the bill."))
+
+		req = target.get("bill_request")
+		if req and isinstance(req, dict) and req.get("visit_id") == target.get("visit_id"):
+			return {
+				"success": True,
+				"already_open": True,
+				"table_no": table_no,
+				"order_id": order_id,
+				"message": _("Bill already requested"),
+				"bill_request": req,
+			}
+
+		now_dt = frappe.utils.now_datetime()
+		req = {
+			"table_no": table_no,
+			"order_id": order_id,
+			"requested_at": now_dt.strftime("%Y-%m-%d %H:%M:%S"),
+			"time_str": now_dt.strftime("%I:%M %p"),
+			"visit_id": target.get("visit_id"),
+			"status": "Pending",
+		}
+		target["bill_request"] = req
+		cls.save_data(data)
+		return {
+			"success": True,
+			"already_open": False,
+			"table_no": table_no,
+			"order_id": order_id,
+			"message": _("Bill requested"),
+			"bill_request": req,
+		}
+
+	@classmethod
+	def mark_bill_handled(cls, table_no):
+		"""
+		Marks a bill request as handled by staff/cashier.
+		"""
+		data = cls.get_data()
+		tables = data.get("tables", [])
+		target = next((t for t in tables if t["table_no"] == table_no), None)
+		if not target:
+			frappe.throw(_("Table {0} not found").format(table_no))
+
+		target["bill_request"] = None
+		cls.save_data(data)
+		return {
+			"success": True,
+			"table_no": table_no,
+			"message": _("Bill request handled"),
+			"floor_data": cls.get_floor_data(),
+		}
+
+	@classmethod
+	def get_table_qr(cls, table_no):
+		"""
+		Returns table QR code details, permanent table ordering URL, and active visit passcode.
+		"""
+		data = cls.get_data()
+		tables = data.get("tables", [])
+		target = next((t for t in tables if t["table_no"] == table_no), None)
+		if not target:
+			frappe.throw(_("Table {0} not found").format(table_no))
+
+		customer_base_url = cls.get_customer_base_url()
+		table_url = f"{customer_base_url}/order?table={table_no}"
+
+		svg_content = ""
+		try:
+			from pyqrcode import create as qrcreate
+			code = qrcreate(table_url, error="M")
+			stream = io.BytesIO()
+			code.svg(
+				stream,
+				scale=6,
+				background="#ffffff",
+				module_color="#1e3a8a",
+				quiet_zone=4,
+				xmldecl=False,
+				omithw=True
+			)
+			svg_content = stream.getvalue().decode("utf-8").strip()
+			if "<svg" in svg_content:
+				if "viewBox=" not in svg_content:
+					svg_content = svg_content.replace("<svg ", '<svg viewBox="0 0 246 246" ', 1)
+				if 'width="100%"' not in svg_content:
+					svg_content = svg_content.replace("<svg ", '<svg width="100%" height="100%" style="display:block;width:100%;height:100%;aspect-ratio:1/1;" ', 1)
+		except Exception as e:
+			frappe.log_error(f"Error generating table QR: {str(e)}")
+
+		return {
+			"table_no": table_no,
+			"area": target.get("area", "Main Dining Hall"),
+			"capacity": target.get("capacity", 4),
+			"status": target.get("status", "Available"),
+			"customer_base_url": customer_base_url,
+			"table_url": table_url,
+			"qr_svg": svg_content,
+			"visit_id": target.get("visit_id", ""),
+			"visit_code": target.get("visit_code", ""),
+			"is_seated": target.get("status") == "Occupied",
+			"customer": target.get("customer", "") if target.get("status") == "Occupied" else "",
+			"order_id": target.get("order_id", ""),
+			"order_amount": target.get("order_amount", ""),
+		}
+
+	@classmethod
 	def update_table_status(
 		cls,
 		table_no,
@@ -2219,84 +2783,52 @@ class RestaurantStore:
 		guests=0,
 		reservation_time="",
 		notes="",
+		booking_ref="",
 	):
-		data = cls.get_data()
-		tables = data.get("tables", [])
-		target = None
+		"""
+		Central dispatcher for table status updates.
+		- status='Available': Releases current visit without cancelling any reservations.
+		- status='Occupied': If booking_ref provided, checks in that reservation. Otherwise seats walk-in.
+		- status='Reserved': Creates an advance staff reservation in tabRestaurant Reservation.
+		"""
+		if status == "Available":
+			return cls.release_table(table_no)
 
-		for t in tables:
-			if t["table_no"] == table_no:
-				target = t
-				break
-
-		if not target:
-			frappe.throw(_("Table {0} not found").format(table_no))
-
-		target["status"] = status
-
-		if status == "Occupied":
-			cust_record = None
-			if customer_mobile:
-				cust_record = cls.get_or_create_customer(name=customer, mobile=customer_mobile, update_visit=True)
-				data["customers"] = cls.get_data().get("customers", [])
-			elif customer:
-				for c in data.get("customers", []):
-					if isinstance(c, dict) and c.get("name").strip().lower() == customer.strip().lower():
-						cust_record = c
-						cust_record["total_visits"] = cust_record.get("total_visits", 0) + 1
-						cust_record["last_visit"] = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
-						break
-
-			target["customer"] = cust_record["name"] if cust_record else (customer or "Guest Party")
-			target["customer_id"] = cust_record["customer_id"] if cust_record else ""
-			target["customer_mobile"] = cust_record["mobile"] if cust_record else (customer_mobile or "")
-			target["guests"] = int(guests) if guests else target.get("capacity", 2)
-			target["seated_time"] = "Just now"
-			target["reservation_time"] = ""
-			target["notes"] = notes or ""
-
-			# Seating a customer MUST NOT automatically create orders, dishes, or bills
-			if not target.get("order_id"):
-				target["order_id"] = ""
-				target["order_amount"] = ""
-				target["order_status"] = "Awaiting Order"
+		elif status == "Occupied":
+			if booking_ref:
+				return cls.checkin_reservation(table_no=table_no, booking_ref=booking_ref, notes=notes)
+			else:
+				return cls.seat_walk_in(
+					table_no=table_no,
+					customer=customer,
+					customer_mobile=customer_mobile,
+					guests=guests,
+					notes=notes,
+				)
 
 		elif status == "Reserved":
-			cust_record = None
-			if customer_mobile:
-				cust_record = cls.get_or_create_customer(name=customer, mobile=customer_mobile, update_visit=False)
-				data["customers"] = cls.get_data().get("customers", [])
-			elif customer:
-				for c in data.get("customers", []):
-					if isinstance(c, dict) and c.get("name").strip().lower() == customer.strip().lower():
-						cust_record = c
-						break
+			from restaurant_management.restaurant_management.services.reservation_service import ReservationService
+			party_size_val = int(guests) if guests else 2
+			staff_time = reservation_time or "07:00 PM"
+			try:
+				norm_time = ReservationService.normalize_booking_time(staff_time)
+			except Exception:
+				norm_time = "07:00 PM"
 
-			target["customer"] = cust_record["name"] if cust_record else (customer or "Reserved Party")
-			target["customer_id"] = cust_record["customer_id"] if cust_record else ""
-			target["customer_mobile"] = cust_record["mobile"] if cust_record else (customer_mobile or "")
-			target["guests"] = int(guests) if guests else target.get("capacity", 2)
-			target["seated_time"] = ""
-			target["reservation_time"] = reservation_time or "Today"
-			target["notes"] = notes or ""
-			target["order_id"] = ""
-			target["order_amount"] = ""
-			target["order_status"] = ""
+			ReservationService.create_reservation(
+				booking_date=frappe.utils.nowdate(),
+				booking_time=norm_time,
+				party_size=party_size_val,
+				customer_name=customer or "Reserved Party",
+				customer_mobile=customer_mobile or "9820010000",
+				notes=notes or "",
+				table_no=table_no,
+				source="Staff"
+			)
+			return cls.get_floor_data()
 
-		elif status == "Available":
-			target["customer"] = ""
-			target["customer_id"] = ""
-			target["customer_mobile"] = ""
-			target["guests"] = 0
-			target["seated_time"] = ""
-			target["reservation_time"] = ""
-			target["notes"] = ""
-			target["order_id"] = ""
-			target["order_amount"] = ""
-			target["order_status"] = ""
-
-		cls.save_data(data)
-		return cls.get_floor_data()
+		else:
+			frappe.throw(_("Unsupported table status '{0}'").format(status))
 
 	@classmethod
 	def transfer_table(cls, from_table_no, to_table_no, reason=""):
@@ -2572,8 +3104,39 @@ class RestaurantStore:
 		restaurant_info["location"] = "Nagarbhavi, Bengaluru, Karnataka"
 		restaurant_info["subtitle"] = "Restaurant Management Dashboard"
 
+		# Active customer service alerts across all tables (waiter calls & bill requests)
+		alerts = []
+		for t in tables:
+			wr = t.get("waiter_request")
+			if wr and isinstance(wr, dict):
+				alerts.append({
+					"table_no": t.get("table_no"),
+					"type": "waiter",
+					"type_label": "Waiter Assistance",
+					"time_str": wr.get("time_str") or wr.get("requested_at"),
+					"requested_at": wr.get("requested_at"),
+					"visit_id": wr.get("visit_id") or t.get("visit_id"),
+					"order_id": t.get("order_id"),
+					"area": t.get("area", "Main Dining Hall"),
+					"customer": t.get("customer") or t.get("current_guest") or "Guest",
+				})
+			br = t.get("bill_request")
+			if br and isinstance(br, dict):
+				alerts.append({
+					"table_no": t.get("table_no"),
+					"type": "bill",
+					"type_label": "Bill Request",
+					"time_str": br.get("time_str") or br.get("requested_at"),
+					"requested_at": br.get("requested_at"),
+					"visit_id": br.get("visit_id") or t.get("visit_id"),
+					"order_id": br.get("order_id") or t.get("order_id"),
+					"area": t.get("area", "Main Dining Hall"),
+					"customer": t.get("customer") or t.get("current_guest") or "Guest",
+				})
+
 		return {
 			"restaurant_info": restaurant_info,
+			"alerts": alerts,
 			"kpis": {
 				"today_revenue": today_revenue,
 				"formatted_revenue": f"₹{int(today_revenue):,}" if today_revenue == int(today_revenue) else f"₹{today_revenue:,.2f}",
@@ -3323,12 +3886,23 @@ class RestaurantStore:
 		total = subtotal + tax
 
 		# Deterministic sequential order ID generation (ORD-2026-XXXX)
+		# Ensures order numbering never reuses IDs referenced in stock movement history or prior orders
 		existing_order_nums = []
+		if data.get("last_order_seq"):
+			try:
+				existing_order_nums.append(int(data["last_order_seq"]))
+			except (ValueError, TypeError):
+				pass
 		for o in data.get("orders", []):
 			m = re.search(r"ORD-2026-(\d+)", o.get("order_id", ""))
 			if m:
 				existing_order_nums.append(int(m.group(1)))
-		next_num = max(existing_order_nums, default=132) + 1
+		for m_rec in data.get("stock_movements", []):
+			m = re.search(r"ORD-2026-(\d+)", str(m_rec.get("reference", "")))
+			if m:
+				existing_order_nums.append(int(m.group(1)))
+		next_num = max(existing_order_nums, default=157) + 1
+		data["last_order_seq"] = next_num
 		order_id = f"ORD-2026-{next_num:04d}"
 
 		status_badge_map = {
@@ -3744,23 +4318,14 @@ class RestaurantStore:
 			cls._reverse_inventory_for_order(data, order)
 			order["cancellation_reason"] = reason or "Cancelled by user"
 			if table and table.get("order_id") == order_id:
-				table["status"] = "Available"
-				table["customer"] = ""
-				table["order_id"] = ""
-				table["order_amount"] = ""
-				table["seated_time"] = ""
-				table["notes"] = ""
+				cls.release_table(table_no)
+				data = cls.get_data()
 
 		elif new_status == "Paid":
 			order["payment_status"] = "Paid"
 			if table and table.get("order_id") == order_id:
-				table["status"] = "Available"
-				table["customer"] = ""
-				table["guests"] = 0
-				table["seated_time"] = ""
-				table["order_id"] = ""
-				table["order_amount"] = ""
-				table["notes"] = ""
+				cls.release_table(table_no)
+				data = cls.get_data()
 
 		elif new_status == "Billed":
 			order["status"] = "Billed"
@@ -4345,26 +4910,13 @@ class RestaurantStore:
 			order["payment_reference"] = ref
 			order["paid_at"] = paid_at
 
-		# Release table
+		# Release table safely (closes only current visit, never cancels reservations)
 		table_no = order.get("table_no") if order else (bill.get("table_no") if bill else None)
 		released_table = None
 		if table_no:
-			table = next((t for t in data.get("tables", []) if t.get("table_no") == table_no), None)
-			if table:
-				table["status"] = "Available"
-				table["customer"] = ""
-				table["customer_id"] = ""
-				table["customer_mobile"] = ""
-				table["guests"] = 0
-				table["seated_time"] = ""
-				table["seated_at"] = ""
-				table["order_id"] = ""
-				table["order_amount"] = ""
-				table["reservation_time"] = ""
-				table["reservation_id"] = ""
-				table["notes"] = ""
-				table["order_status"] = ""
-				released_table = table_no
+			cls.release_table(table_no)
+			released_table = table_no
+			data = cls.get_data()
 
 		cls.save_data(data)
 		return {
@@ -4427,6 +4979,21 @@ class RestaurantStore:
 		filtered.sort(key=lambda x: x.get("created_at", ""), reverse=True)
 
 		areas = [a.get("name") for a in data.get("areas", [])]
+		tables = data.get("tables", [])
+
+		bill_requests = []
+		for t in tables:
+			br = t.get("bill_request")
+			if br and isinstance(br, dict):
+				bill_requests.append({
+					"table_no": t.get("table_no"),
+					"order_id": br.get("order_id") or t.get("order_id"),
+					"time_str": br.get("time_str") or br.get("requested_at"),
+					"requested_at": br.get("requested_at"),
+					"visit_id": br.get("visit_id") or t.get("visit_id"),
+					"customer": t.get("customer") or t.get("current_guest") or "Guest",
+					"area": t.get("area", "Main Dining Hall"),
+				})
 
 		return {
 			"summary": {
@@ -4437,6 +5004,7 @@ class RestaurantStore:
 				"formatted_revenue": f"₹{todays_revenue:,}",
 			},
 			"bills": filtered,
+			"bill_requests": bill_requests,
 			"served_orders": served_orders,
 			"areas": areas,
 			"restaurant_info": cls.get_restaurant_info(),
@@ -6369,8 +6937,39 @@ class RestaurantStore:
 				"bill_date": b.get("bill_date", today_str),
 			})
 
+		# Active customer service alerts across all tables (waiter calls & bill requests)
+		alerts = []
+		for t in tables:
+			wr = t.get("waiter_request")
+			if wr and isinstance(wr, dict):
+				alerts.append({
+					"table_no": t.get("table_no"),
+					"type": "waiter",
+					"type_label": "Waiter Assistance",
+					"time_str": wr.get("time_str") or wr.get("requested_at"),
+					"requested_at": wr.get("requested_at"),
+					"visit_id": wr.get("visit_id") or t.get("visit_id"),
+					"order_id": t.get("order_id"),
+					"area": t.get("area", "Main Dining Hall"),
+					"customer": t.get("customer") or t.get("current_guest") or "Guest",
+				})
+			br = t.get("bill_request")
+			if br and isinstance(br, dict):
+				alerts.append({
+					"table_no": t.get("table_no"),
+					"type": "bill",
+					"type_label": "Bill Request",
+					"time_str": br.get("time_str") or br.get("requested_at"),
+					"requested_at": br.get("requested_at"),
+					"visit_id": br.get("visit_id") or t.get("visit_id"),
+					"order_id": br.get("order_id") or t.get("order_id"),
+					"area": t.get("area", "Main Dining Hall"),
+					"customer": t.get("customer") or t.get("current_guest") or "Guest",
+				})
+
 		return {
 			"restaurant_info": restaurant_info,
+			"alerts": alerts,
 			"period": norm_period,
 			"period_label": period_label,
 			"start_date": start_date,
@@ -6636,4 +7235,401 @@ def api_add_batch_record(item_name, batch_no, mfg_date, expiry_date, qty, locati
 @frappe.whitelist()
 def api_get_inventory_reports(report_type="stock_balance", from_date=None, to_date=None, category=None, location=None):
 	return RestaurantStore.get_inventory_reports(report_type=report_type, from_date=from_date, to_date=to_date, category=category, location=location)
+
+
+# =============================================================================
+# Customer Booking & Reservation Whitelisted APIs
+# =============================================================================
+@frappe.whitelist(allow_guest=True)
+def api_get_booking_availability(date=None, party_size=2):
+	"""
+	Public guest-accessible availability lookup for date and party size.
+	Returns available 30-min start time slots between 12:00 PM and 9:30 PM.
+	Completely anonymized: zero guest information exposed.
+	"""
+	from restaurant_management.restaurant_management.services.reservation_service import ReservationService
+	if not date:
+		date = frappe.utils.nowdate()
+	return ReservationService.get_availability(booking_date=date, party_size=party_size)
+
+
+@frappe.whitelist(allow_guest=True)
+def api_create_public_booking(booking_date, booking_time, party_size, customer_name, customer_mobile, notes=""):
+	"""
+	Public guest-accessible reservation submission endpoint.
+	Enforces rate-limiting, transactional table locking, dynamic capacity checks,
+	and idempotency (double tap returns original confirmation).
+	"""
+	from restaurant_management.restaurant_management.services.reservation_service import ReservationService
+	ReservationService.check_rate_limit(customer_mobile)
+	return ReservationService.create_reservation(
+		booking_date=booking_date,
+		booking_time=booking_time,
+		party_size=party_size,
+		customer_name=customer_name,
+		customer_mobile=customer_mobile,
+		notes=notes,
+		table_no=None,
+		source="Website"
+	)
+
+
+@frappe.whitelist(allow_guest=True)
+def api_get_booking_info(booking_ref, customer_mobile=None):
+	"""
+	Lookup booking details by booking reference.
+	Security enforcement:
+	- If called by an unauthenticated guest (frappe.session.user == 'Guest'),
+	  the customer's 10-digit mobile number is mandatory and verified against the booking.
+	  Knowing only a booking reference CANNOT reveal personal customer details to a guest.
+	- If called by authenticated staff (frappe.session.user != 'Guest'),
+	  lookup by booking reference alone is permitted for floor and front-desk operations.
+	"""
+	from restaurant_management.restaurant_management.services.restaurant_store import RestaurantStore
+
+	clean_ref = (booking_ref or "").strip()
+	if not clean_ref:
+		frappe.throw(_("Booking reference is required."))
+
+	is_guest = (getattr(frappe.session, "user", None) == "Guest")
+
+	if is_guest:
+		if not customer_mobile:
+			frappe.throw(
+				_("Verification required: Customer mobile number must be provided to access booking details."),
+				frappe.PermissionError
+			)
+		clean_mobile = RestaurantStore.normalize_and_validate_mobile(customer_mobile)
+		res = frappe.db.sql(
+			"""
+			SELECT booking_ref, customer_name, customer_mobile, booking_date, booking_time,
+			       party_size, table_no, table_area, status, notes
+			FROM `tabRestaurant Reservation`
+			WHERE booking_ref = %s AND customer_mobile = %s
+			LIMIT 1
+			""",
+			(clean_ref, clean_mobile),
+			as_dict=True
+		)
+		if not res:
+			frappe.throw(_("No reservation found matching booking reference '{0}' and mobile number.").format(clean_ref))
+		return res[0]
+	else:
+		# Authenticated staff
+		res = frappe.db.sql(
+			"""
+			SELECT booking_ref, customer_name, customer_mobile, customer_id, booking_date, booking_time,
+			       party_size, table_no, table_area, status, notes, source
+			FROM `tabRestaurant Reservation`
+			WHERE booking_ref = %s
+			LIMIT 1
+			""",
+			(clean_ref,),
+			as_dict=True
+		)
+		if not res:
+			frappe.throw(_("Reservation '{0}' not found.").format(clean_ref))
+		return res[0]
+
+
+@frappe.whitelist()
+def api_get_upcoming_reservations(date=None, table_no=None):
+	"""
+	Staff-only endpoint to list upcoming reservations.
+	"""
+	filters = {"status": ("in", ["Confirmed", "Seated"])}
+	if date:
+		filters["booking_date"] = date
+	if table_no:
+		filters["table_no"] = table_no
+	return frappe.get_all(
+		"Restaurant Reservation",
+		filters=filters,
+		fields=["name", "booking_ref", "customer_name", "customer_mobile", "booking_date", "booking_time", "party_size", "table_no", "table_area", "status", "notes", "source"],
+		order_by="booking_date asc, start_time asc"
+	)
+
+
+# =============================================================================
+# Dine-in QR Ordering APIs
+# =============================================================================
+
+@frappe.whitelist()
+def api_get_table_qr(table_no):
+	"""
+	Staff-accessible endpoint to retrieve printable QR card details for a table.
+	"""
+	return RestaurantStore.get_table_qr(table_no)
+
+
+@frappe.whitelist(allow_guest=True)
+def api_get_table_menu(table_no, visit_code=None):
+	"""
+	Public customer endpoint to browse menu and view table state.
+	Anonymous browsing is permitted.
+	If valid visit_code is supplied for an Occupied table, active orders are returned.
+	"""
+	data = RestaurantStore.get_data()
+	tables = data.get("tables", [])
+	target = next((t for t in tables if t.get("table_no") == table_no), None)
+	if not target:
+		frappe.throw(_("Table {0} not found").format(table_no))
+
+	is_seated = target.get("status") == "Occupied"
+	is_verified = False
+	active_order = None
+
+	if is_seated and visit_code:
+		clean_code = str(visit_code).strip()
+		if clean_code and clean_code == str(target.get("visit_code", "")).strip():
+			is_verified = True
+			if target.get("order_id"):
+				active_order = RestaurantStore.get_order_details(target.get("order_id"))
+
+	# Filter menu items: public fields only
+	menu_items = []
+	for it in data.get("menu_items", []):
+		menu_items.append({
+			"item_id": it.get("item_id"),
+			"name": it.get("name"),
+			"category": it.get("category"),
+			"price": it.get("price"),
+			"is_veg": it.get("is_veg", True),
+			"image": it.get("image", ""),
+			"description": it.get("description", ""),
+			"available": it.get("available", True),
+		})
+
+	restaurant_info = RestaurantStore.get_restaurant_info()
+
+	return {
+		"table": {
+			"table_no": target.get("table_no"),
+			"area": target.get("area"),
+			"capacity": target.get("capacity"),
+			"status": target.get("status"),
+			"is_seated": is_seated,
+			"is_verified": is_verified,
+			"has_active_order": bool(target.get("order_id")),
+			"waiter_request": target.get("waiter_request") if is_verified else None,
+			"bill_request": target.get("bill_request") if is_verified else None,
+		},
+		"restaurant": {
+			"name": restaurant_info.get("name", "Izen Bistro"),
+			"tagline": restaurant_info.get("tagline", "Nagarbhavi, Bengaluru"),
+		},
+		"menu_items": menu_items,
+		"active_order": active_order,
+	}
+
+
+@frappe.whitelist(allow_guest=True)
+def api_verify_table_passcode(table_no, visit_code):
+	"""
+	Validates that the entered 4-digit passcode matches the currently seated visit.
+	"""
+	data = RestaurantStore.get_data()
+	tables = data.get("tables", [])
+	target = next((t for t in tables if t.get("table_no") == table_no), None)
+	if not target:
+		frappe.throw(_("Table {0} not found").format(table_no))
+
+	if target.get("status") != "Occupied":
+		frappe.throw(_("Table {0} is currently not seated. Please ask staff to seat your party.").format(table_no))
+
+	clean_code = str(visit_code).strip()
+	expected_code = str(target.get("visit_code", "")).strip()
+
+	if not clean_code or not expected_code or clean_code != expected_code:
+		frappe.throw(_("Incorrect table passcode. Please ask your server or check your table stand."))
+
+	order_details = None
+	if target.get("order_id"):
+		order_details = RestaurantStore.get_order_details(target.get("order_id"))
+
+	return {
+		"verified": True,
+		"table_no": table_no,
+		"area": target.get("area"),
+		"active_order": order_details,
+		"waiter_request": target.get("waiter_request"),
+		"bill_request": target.get("bill_request"),
+	}
+
+
+@frappe.whitelist(allow_guest=True)
+def api_submit_guest_order(table_no, visit_code, items, notes="", idempotency_key=""):
+	"""
+	Guest order submission endpoint.
+	Enforces:
+	1. Table must be currently Occupied.
+	2. visit_code must match the active seated visit.
+	3. Items cannot be empty and items must be available.
+	4. Idempotency: exact idempotency_key returns cached response without duplicate additions or deductions.
+	5. Appends items to active order if one exists, or creates the first order for the visit.
+	"""
+	if isinstance(items, str):
+		try:
+			items = json.loads(items)
+		except Exception:
+			items = []
+
+	if not items:
+		frappe.throw(_("Your order must contain at least one dish."))
+
+	data = RestaurantStore.get_data()
+	tables = data.get("tables", [])
+	target = next((t for t in tables if t.get("table_no") == table_no), None)
+	if not target:
+		frappe.throw(_("Table {0} not found").format(table_no))
+
+	if target.get("status") != "Occupied":
+		frappe.throw(_("Table {0} is not currently seated. Please ask staff to activate your table.").format(table_no))
+
+	clean_code = str(visit_code).strip()
+	expected_code = str(target.get("visit_code", "")).strip()
+	if not clean_code or not expected_code or clean_code != expected_code:
+		frappe.throw(_("Invalid or expired table passcode. Please check with your server."))
+
+	# Check idempotency: Return cached response if this key was already processed
+	idempotency_records = data.setdefault("idempotency_records", {})
+	if idempotency_key and idempotency_key in idempotency_records:
+		cached = idempotency_records[idempotency_key]
+		if cached.get("table_no") == table_no and cached.get("visit_id") == target.get("visit_id"):
+			return cached.get("response")
+
+	# Check if table already has an active order
+	existing_order_id = target.get("order_id")
+	if existing_order_id:
+		# Multi-device ordering: append to existing table order
+		res = RestaurantStore.add_items_to_order(
+			order_id=existing_order_id,
+			table_no=table_no,
+			items=items,
+			notes=notes,
+		)
+		order_obj = res.get("order", {})
+		order_id = existing_order_id
+		new_batch = res.get("new_batch", {})
+		batch_id = new_batch.get("batch_id") or f"{order_id}-R{res.get('round', 2)}"
+		round_no = res.get("round", 2)
+		total_amount = order_obj.get("total", 0)
+		formatted_amount = order_obj.get("formatted_amount") or f"₹{total_amount:,}"
+		order_status = order_obj.get("status", "Confirmed")
+		items_list = order_obj.get("items", [])
+	else:
+		# First order for this visit: create order
+		res = RestaurantStore.create_order(
+			table_no=table_no,
+			customer=target.get("customer", "Dine-in Guest"),
+			items=items,
+			notes=notes,
+			initial_status="Confirmed",
+			customer_mobile=target.get("customer_mobile", ""),
+			customer_id=target.get("customer_id", ""),
+		)
+		order_id = res.get("order_id")
+		batch_id = f"{order_id}-R1"
+		round_no = 1
+		total_amount = res.get("total", 0)
+		formatted_amount = res.get("formatted_amount") or f"₹{total_amount:,}"
+		order_status = res.get("status", "Confirmed")
+		items_list = res.get("items", [])
+
+	result_payload = {
+		"success": True,
+		"order_id": order_id,
+		"batch_id": batch_id,
+		"round": round_no,
+		"table_no": table_no,
+		"total": total_amount,
+		"formatted_amount": formatted_amount,
+		"status": order_status,
+		"message": f"Order sent to kitchen! (Round {round_no})",
+		"items": items_list,
+	}
+
+	if idempotency_key:
+		fresh_data = RestaurantStore.get_data()
+		fresh_data.setdefault("idempotency_records", {})[idempotency_key] = {
+			"table_no": table_no,
+			"visit_id": target.get("visit_id"),
+			"order_id": order_id,
+			"batch_id": batch_id,
+			"response": result_payload,
+			"timestamp": frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
+		}
+		RestaurantStore.save_data(fresh_data)
+
+	return result_payload
+
+
+@frappe.whitelist()
+def api_get_customer_base_url():
+	"""
+	Returns the configured customer base URL used for QR code generation and customer links.
+	"""
+	return RestaurantStore.get_customer_base_url()
+
+
+@frappe.whitelist()
+def api_set_customer_base_url(base_url):
+	"""
+	Configures the customer base URL across persistent store and site config.
+	"""
+	return RestaurantStore.set_customer_base_url(base_url)
+
+
+@frappe.whitelist(allow_guest=True)
+def api_call_waiter(table_no, visit_code):
+	"""
+	Guest endpoint to call waiter assistance for a seated table.
+	"""
+	return RestaurantStore.call_waiter(table_no=table_no, visit_code=visit_code)
+
+
+@frappe.whitelist(allow_guest=True)
+def api_request_bill(table_no, visit_code):
+	"""
+	Guest endpoint to request bill for an active seated visit.
+	"""
+	return RestaurantStore.request_bill(table_no=table_no, visit_code=visit_code)
+
+
+@frappe.whitelist()
+def api_mark_waiter_handled(table_no):
+	"""
+	Staff endpoint to mark a table's waiter call as handled.
+	"""
+	return RestaurantStore.mark_waiter_handled(table_no=table_no)
+
+
+@frappe.whitelist()
+def api_mark_bill_handled(table_no):
+	"""
+	Staff endpoint to mark a table's bill request as handled.
+	"""
+	return RestaurantStore.mark_bill_handled(table_no=table_no)
+
+
+@frappe.whitelist(allow_guest=True)
+def api_get_booking_by_token(booking_ref, cancel_token):
+	"""
+	Guest endpoint to retrieve booking details authenticated by unguessable cancel_token.
+	"""
+	from restaurant_management.restaurant_management.services.reservation_service import ReservationService
+	return ReservationService.get_booking_by_token(booking_ref=booking_ref, cancel_token=cancel_token)
+
+
+@frappe.whitelist(allow_guest=True)
+def api_cancel_customer_booking(booking_ref, cancel_token, reason=""):
+	"""
+	Guest endpoint to cancel a confirmed booking authenticated by unguessable cancel_token.
+	"""
+	from restaurant_management.restaurant_management.services.reservation_service import ReservationService
+	return ReservationService.cancel_customer_booking(booking_ref=booking_ref, cancel_token=cancel_token, reason=reason)
+
+
+
+
 

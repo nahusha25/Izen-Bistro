@@ -24,3 +24,14 @@ def get_customers(search=None):
 	Returns customer registry for the Dashboard Customer Management dialog.
 	"""
 	return RestaurantStore.get_customers_list(search=search)
+
+
+@frappe.whitelist()
+def mark_waiter_handled(table_no):
+	return RestaurantStore.mark_waiter_handled(table_no)
+
+
+@frappe.whitelist()
+def mark_bill_handled(table_no):
+	return RestaurantStore.mark_bill_handled(table_no)
+

@@ -1,0 +1,1935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<title>{{ title or "Dine-in Menu | Izen Bistro" }}</title>
+	<link rel="icon" type="image/x-icon" href="/assets/restaurant_management/images/dishes/placeholder.jpg">
+	<style>
+		:root {
+			--rm-navy-950: #0a0f1d;
+			--rm-navy-900: #0f172a;
+			--rm-navy-800: #1e293b;
+			--rm-navy-700: #334155;
+			--rm-navy-600: #475569;
+			--rm-navy-500: #64748b;
+			--rm-navy-100: #e2e8f0;
+			--rm-navy-50:  #f8fafc;
+			--rm-amber-600: #ea580c;
+			--rm-amber-500: #f97316;
+			--rm-amber-100: #ffedd5;
+			--rm-amber-50:  #fff7ed;
+			--rm-green-600: #059669;
+			--rm-green-500: #10b981;
+			--rm-green-100: #d1fae5;
+			--rm-red-600:   #dc2626;
+			--rm-red-500:   #ef4444;
+			--rm-red-100:   #fee2e2;
+			--rm-slate-200: #e2e8f0;
+			--rm-slate-100: #f1f5f9;
+			--rm-slate-50:  #f8fafc;
+			--rm-card-bg:   #ffffff;
+			--rm-text-dark: #0f172a;
+			--rm-text-body: #334155;
+			--rm-text-muted: #64748b;
+			--rm-radius: 12px;
+			--rm-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+			--rm-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+			--rm-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+			--rm-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+		}
+
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		html, body {
+			background-color: var(--rm-slate-50);
+			color: var(--rm-text-body);
+			line-height: 1.45;
+			min-height: 100vh;
+			display: flex;
+			flex-direction: column;
+			overflow-x: hidden;
+		}
+
+		/* Header */
+		.brand-header {
+			background: #ffffff;
+			border-bottom: 1px solid var(--rm-slate-200);
+			padding: 0.65rem 1rem;
+			position: sticky;
+			top: 0;
+			z-index: 50;
+			box-shadow: var(--rm-shadow-sm);
+		}
+
+		.brand-header-inner {
+			max-width: 900px;
+			margin: 0 auto;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 0.75rem;
+		}
+
+		.rm-brand-left {
+			display: flex;
+			align-items: center;
+			gap: 0.75rem;
+		}
+
+		.rm-brand-logo-frame {
+			width: 42px;
+			height: 42px;
+			min-width: 42px;
+			border-radius: 10px;
+			background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+			border: 1.5px solid #cbd5e1;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			box-shadow: 0 3px 6px -1px rgba(15, 23, 42, 0.18);
+			user-select: none;
+		}
+
+		.rm-monogram {
+			color: #ffffff;
+			font-size: 1.25rem;
+			font-weight: 800;
+			letter-spacing: 0.05em;
+			font-family: "Georgia", "Times New Roman", serif;
+		}
+
+		.rm-brand-meta {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.rm-brand-title {
+			font-size: 1.05rem;
+			font-weight: 700;
+			color: var(--rm-navy-900);
+			letter-spacing: -0.01em;
+			line-height: 1.2;
+		}
+
+		.rm-brand-subtitle {
+			font-size: 0.78rem;
+			color: var(--rm-navy-500);
+			font-weight: 500;
+		}
+
+		.table-badge-pill {
+			display: flex;
+			align-items: center;
+			gap: 0.4rem;
+			background: #f1f5f9;
+			border: 1px solid #cbd5e1;
+			border-radius: 20px;
+			padding: 0.35rem 0.75rem;
+			font-size: 0.85rem;
+			font-weight: 700;
+			color: #0f172a;
+		}
+
+		.table-dot {
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: #10b981;
+		}
+
+		.table-dot.inactive {
+			background: #94a3b8;
+		}
+
+		/* Main container */
+		.order-container {
+			max-width: 900px;
+			width: 100%;
+			margin: 0 auto;
+			padding: 0.75rem 1rem 5.5rem 1rem;
+			flex: 1;
+		}
+
+		/* Status Notice Bar */
+		.table-status-bar {
+			background: #ffffff;
+			border: 1px solid #cbd5e1;
+			border-radius: var(--rm-radius);
+			padding: 0.75rem 1rem;
+			margin-bottom: 0.85rem;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 0.75rem;
+			box-shadow: var(--rm-shadow-sm);
+		}
+
+		.status-info {
+			display: flex;
+			align-items: center;
+			gap: 0.6rem;
+		}
+
+		.status-icon {
+			font-size: 1.15rem;
+		}
+
+		.status-text {
+			font-size: 0.85rem;
+			color: var(--rm-navy-800);
+		}
+
+		.status-text strong {
+			color: var(--rm-navy-950);
+		}
+
+		.btn-unlock-visit {
+			background: #1e3a8a;
+			color: #ffffff;
+			border: none;
+			border-radius: 8px;
+			padding: 0.4rem 0.8rem;
+			font-size: 0.8rem;
+			font-weight: 600;
+			cursor: pointer;
+			white-space: nowrap;
+			transition: all 0.15s ease;
+		}
+
+		.btn-unlock-visit:hover {
+			background: #172554;
+		}
+
+		.passcode-pill {
+			background: #ecfdf5;
+			color: #047857;
+			border: 1px solid #a7f3d0;
+			padding: 0.3rem 0.65rem;
+			border-radius: 6px;
+			font-size: 0.8rem;
+			font-weight: 700;
+			font-family: monospace;
+			letter-spacing: 1px;
+		}
+
+		/* Seated Guest Service Actions */
+		.guest-service-bar {
+			background: #ffffff;
+			border: 1px solid #cbd5e1;
+			border-radius: var(--rm-radius);
+			padding: 0.75rem 1rem;
+			margin-bottom: 0.85rem;
+			box-shadow: var(--rm-shadow-sm);
+		}
+		.service-actions-row {
+			display: flex;
+			gap: 10px;
+		}
+		.btn-service-action {
+			flex: 1;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+			padding: 10px 14px;
+			border-radius: 8px;
+			font-size: 0.88rem;
+			font-weight: 700;
+			border: 1.5px solid transparent;
+			cursor: pointer;
+			transition: all 0.18s ease;
+		}
+		.btn-call-waiter {
+			background: #fef3c7;
+			color: #92400e;
+			border-color: #fcd34d;
+		}
+		.btn-call-waiter:hover {
+			background: #fde68a;
+		}
+		.btn-call-waiter.active-notified {
+			background: #d97706;
+			color: #ffffff;
+			border-color: #d97706;
+		}
+		.btn-request-bill {
+			background: #eff6ff;
+			color: #1e40af;
+			border-color: #bfdbfe;
+		}
+		.btn-request-bill:hover {
+			background: #dbeafe;
+		}
+		.btn-request-bill.active-notified {
+			background: #2563eb;
+			color: #ffffff;
+			border-color: #2563eb;
+		}
+		.service-feedback-msg {
+			margin-top: 8px;
+			font-size: 0.82rem;
+			color: #dc2626;
+			background: #fef2f2;
+			border: 1px solid #fecaca;
+			border-radius: 6px;
+			padding: 8px 12px;
+			line-height: 1.35;
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		/* Search & Filter bar */
+		.controls-bar {
+			display: flex;
+			align-items: center;
+			gap: 0.6rem;
+			margin-bottom: 0.85rem;
+		}
+
+		.search-input-wrap {
+			flex: 1;
+			position: relative;
+		}
+
+		.search-input {
+			width: 100%;
+			background: #ffffff;
+			border: 1px solid #cbd5e1;
+			border-radius: 8px;
+			padding: 0.5rem 0.75rem 0.5rem 2rem;
+			font-size: 0.88rem;
+			color: var(--rm-navy-900);
+			outline: none;
+		}
+
+		.search-input:focus {
+			border-color: #1e3a8a;
+		}
+
+		.search-icon {
+			position: absolute;
+			left: 0.65rem;
+			top: 50%;
+			transform: translateY(-50%);
+			color: #94a3b8;
+			font-size: 0.9rem;
+			pointer-events: none;
+		}
+
+		.veg-toggle-btn {
+			display: flex;
+			align-items: center;
+			gap: 0.4rem;
+			background: #ffffff;
+			border: 1px solid #cbd5e1;
+			border-radius: 8px;
+			padding: 0.48rem 0.75rem;
+			font-size: 0.82rem;
+			font-weight: 600;
+			color: var(--rm-navy-700);
+			cursor: pointer;
+			white-space: nowrap;
+			user-select: none;
+			transition: all 0.15s ease;
+		}
+
+		.veg-toggle-btn.active {
+			background: #ecfdf5;
+			border-color: #10b981;
+			color: #047857;
+		}
+
+		.veg-dot-icon {
+			width: 12px;
+			height: 12px;
+			border: 1.5px solid #10b981;
+			border-radius: 3px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.veg-dot-icon::after {
+			content: "";
+			width: 6px;
+			height: 6px;
+			background: #10b981;
+			border-radius: 50%;
+		}
+
+		/* Category strip */
+		.category-strip {
+			display: flex;
+			gap: 0.45rem;
+			overflow-x: auto;
+			padding-bottom: 0.5rem;
+			margin-bottom: 0.85rem;
+			scrollbar-width: none;
+		}
+
+		.category-strip::-webkit-scrollbar {
+			display: none;
+		}
+
+		.cat-pill {
+			background: #ffffff;
+			border: 1px solid #cbd5e1;
+			border-radius: 20px;
+			padding: 0.35rem 0.85rem;
+			font-size: 0.82rem;
+			font-weight: 600;
+			color: var(--rm-navy-700);
+			white-space: nowrap;
+			cursor: pointer;
+			transition: all 0.15s ease;
+		}
+
+		.cat-pill:hover {
+			border-color: #94a3b8;
+		}
+
+		.cat-pill.active {
+			background: #0f172a;
+			color: #ffffff;
+			border-color: #0f172a;
+		}
+
+		/* Menu Section & Grid */
+		.menu-section {
+			margin-bottom: 1.5rem;
+		}
+
+		.menu-section-title {
+			font-size: 1.05rem;
+			font-weight: 700;
+			color: var(--rm-navy-900);
+			margin-bottom: 0.75rem;
+			padding-left: 0.2rem;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+
+		.menu-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+			gap: 0.85rem;
+		}
+
+		/* Dish Card */
+		.dish-card {
+			background: #ffffff;
+			border: 1px solid var(--rm-slate-200);
+			border-radius: var(--rm-radius);
+			overflow: hidden;
+			display: flex;
+			flex-direction: column;
+			box-shadow: var(--rm-shadow-sm);
+			transition: transform 0.12s ease, box-shadow 0.12s ease;
+		}
+
+		.dish-card:hover {
+			box-shadow: var(--rm-shadow-md);
+		}
+
+		.dish-card.unavailable {
+			opacity: 0.6;
+			filter: grayscale(0.8);
+		}
+
+		.dish-img-wrap {
+			position: relative;
+			width: 100%;
+			height: 140px;
+			background: #f1f5f9;
+			overflow: hidden;
+		}
+
+		.dish-img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		.diet-badge {
+			position: absolute;
+			top: 8px;
+			left: 8px;
+			width: 18px;
+			height: 18px;
+			background: #ffffff;
+			border-radius: 3px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+		}
+
+		.diet-badge.veg {
+			border: 1.5px solid #10b981;
+		}
+
+		.diet-badge.veg::after {
+			content: "";
+			width: 8px;
+			height: 8px;
+			background: #10b981;
+			border-radius: 50%;
+		}
+
+		.diet-badge.non-veg {
+			border: 1.5px solid #dc2626;
+		}
+
+		.diet-badge.non-veg::after {
+			content: "";
+			width: 8px;
+			height: 8px;
+			background: #dc2626;
+			clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+		}
+
+		.soldout-overlay {
+			position: absolute;
+			top: 8px;
+			right: 8px;
+			background: rgba(15, 23, 42, 0.85);
+			color: #ffffff;
+			font-size: 0.72rem;
+			font-weight: 700;
+			padding: 0.2rem 0.5rem;
+			border-radius: 4px;
+			letter-spacing: 0.5px;
+			text-transform: uppercase;
+		}
+
+		.dish-content {
+			padding: 0.75rem;
+			display: flex;
+			flex-direction: column;
+			flex: 1;
+		}
+
+		.dish-header-row {
+			display: flex;
+			justify-content: space-between;
+			align-items: flex-start;
+			gap: 0.4rem;
+			margin-bottom: 0.25rem;
+		}
+
+		.dish-name {
+			font-size: 0.95rem;
+			font-weight: 700;
+			color: var(--rm-navy-900);
+			line-height: 1.25;
+		}
+
+		.dish-price {
+			font-size: 0.95rem;
+			font-weight: 700;
+			color: #0f172a;
+			white-space: nowrap;
+		}
+
+		.dish-desc {
+			font-size: 0.78rem;
+			color: var(--rm-navy-600);
+			line-height: 1.35;
+			margin-bottom: 0.75rem;
+			flex: 1;
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+
+		.dish-action-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-top: auto;
+		}
+
+		.btn-add-item {
+			background: #ffffff;
+			border: 1px solid #1e3a8a;
+			color: #1e3a8a;
+			border-radius: 6px;
+			padding: 0.35rem 0.85rem;
+			font-size: 0.82rem;
+			font-weight: 700;
+			cursor: pointer;
+			transition: all 0.12s ease;
+			display: flex;
+			align-items: center;
+			gap: 0.3rem;
+		}
+
+		.btn-add-item:hover {
+			background: #1e3a8a;
+			color: #ffffff;
+		}
+
+		.btn-add-item:disabled {
+			border-color: #cbd5e1;
+			color: #94a3b8;
+			cursor: not-allowed;
+			background: #f8fafc;
+		}
+
+		.qty-stepper {
+			display: flex;
+			align-items: center;
+			background: #1e3a8a;
+			border-radius: 6px;
+			overflow: hidden;
+		}
+
+		.btn-step {
+			background: transparent;
+			color: #ffffff;
+			border: none;
+			width: 28px;
+			height: 28px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 1rem;
+			font-weight: 700;
+			cursor: pointer;
+		}
+
+		.btn-step:hover {
+			background: rgba(255, 255, 255, 0.15);
+		}
+
+		.qty-val {
+			color: #ffffff;
+			font-size: 0.85rem;
+			font-weight: 700;
+			min-width: 20px;
+			text-align: center;
+		}
+
+		/* Bottom Floating Bar */
+		.bottom-order-bar {
+			position: fixed;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			background: #ffffff;
+			border-top: 1px solid #cbd5e1;
+			box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+			padding: 0.75rem 1rem;
+			z-index: 40;
+		}
+
+		.bottom-order-bar-inner {
+			max-width: 900px;
+			margin: 0 auto;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 1rem;
+		}
+
+		.cart-summary-text {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.cart-count {
+			font-size: 0.8rem;
+			color: var(--rm-navy-500);
+			font-weight: 600;
+		}
+
+		.cart-total {
+			font-size: 1.15rem;
+			font-weight: 800;
+			color: var(--rm-navy-950);
+		}
+
+		.btn-view-cart {
+			background: #1e3a8a;
+			color: #ffffff;
+			border: none;
+			border-radius: 10px;
+			padding: 0.65rem 1.4rem;
+			font-size: 0.92rem;
+			font-weight: 700;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			transition: background 0.15s ease;
+		}
+
+		.btn-view-cart:hover {
+			background: #172554;
+		}
+
+		/* Drawer / Modal */
+		.modal-backdrop {
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background: rgba(15, 23, 42, 0.6);
+			backdrop-filter: blur(2px);
+			z-index: 100;
+			display: none;
+			align-items: flex-end;
+			justify-content: center;
+		}
+
+		.modal-backdrop.active {
+			display: flex;
+		}
+
+		.modal-sheet {
+			background: #ffffff;
+			width: 100%;
+			max-width: 520px;
+			max-height: 85vh;
+			border-radius: 16px 16px 0 0;
+			display: flex;
+			flex-direction: column;
+			box-shadow: var(--rm-shadow-xl);
+			animation: slideUp 0.22s ease-out;
+		}
+
+		@keyframes slideUp {
+			from { transform: translateY(100%); }
+			to { transform: translateY(0); }
+		}
+
+		.modal-header {
+			padding: 1rem 1.25rem;
+			border-bottom: 1px solid var(--rm-slate-200);
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+
+		.modal-title {
+			font-size: 1.1rem;
+			font-weight: 700;
+			color: var(--rm-navy-900);
+		}
+
+		.btn-close-modal {
+			background: #f1f5f9;
+			border: none;
+			width: 32px;
+			height: 32px;
+			border-radius: 50%;
+			font-size: 1.1rem;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: var(--rm-navy-600);
+		}
+
+		.modal-body {
+			padding: 1.25rem;
+			overflow-y: auto;
+			flex: 1;
+		}
+
+		.cart-item-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0.65rem 0;
+			border-bottom: 1px dashed #e2e8f0;
+			gap: 0.75rem;
+		}
+
+		.cart-item-info {
+			flex: 1;
+		}
+
+		.cart-item-title {
+			font-size: 0.92rem;
+			font-weight: 700;
+			color: var(--rm-navy-900);
+		}
+
+		.cart-item-sub {
+			font-size: 0.78rem;
+			color: var(--rm-navy-500);
+		}
+
+		.cart-item-stepper {
+			display: flex;
+			align-items: center;
+			gap: 0.4rem;
+		}
+
+		.cart-stepper-btn {
+			width: 26px;
+			height: 26px;
+			border-radius: 4px;
+			border: 1px solid #cbd5e1;
+			background: #f8fafc;
+			font-size: 0.9rem;
+			font-weight: 700;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.cart-item-price {
+			font-size: 0.92rem;
+			font-weight: 700;
+			color: var(--rm-navy-900);
+			min-width: 65px;
+			text-align: right;
+		}
+
+		.order-notes-textarea {
+			width: 100%;
+			border: 1px solid #cbd5e1;
+			border-radius: 8px;
+			padding: 0.5rem 0.75rem;
+			font-size: 0.85rem;
+			margin-top: 0.75rem;
+			resize: none;
+			outline: none;
+		}
+
+		.order-notes-textarea:focus {
+			border-color: #1e3a8a;
+		}
+
+		.bill-breakdown-card {
+			background: #f8fafc;
+			border-radius: 8px;
+			padding: 0.75rem 1rem;
+			margin-top: 1rem;
+			border: 1px solid #e2e8f0;
+		}
+
+		.bill-row {
+			display: flex;
+			justify-content: space-between;
+			font-size: 0.84rem;
+			color: var(--rm-navy-600);
+			margin-bottom: 0.35rem;
+		}
+
+		.bill-row.total-row {
+			font-size: 1.05rem;
+			font-weight: 800;
+			color: var(--rm-navy-950);
+			border-top: 1px dashed #cbd5e1;
+			padding-top: 0.5rem;
+			margin-top: 0.5rem;
+			margin-bottom: 0;
+		}
+
+		.active-rounds-section {
+			margin-top: 1.25rem;
+			padding-top: 1rem;
+			border-top: 1px solid #e2e8f0;
+		}
+
+		.round-ticket-badge {
+			display: inline-block;
+			background: #f1f5f9;
+			border: 1px solid #cbd5e1;
+			border-radius: 4px;
+			padding: 0.2rem 0.5rem;
+			font-size: 0.75rem;
+			font-weight: 700;
+			color: #334155;
+			margin-bottom: 0.4rem;
+		}
+
+		.round-item-line {
+			display: flex;
+			justify-content: space-between;
+			font-size: 0.82rem;
+			color: #475569;
+			padding: 0.2rem 0;
+		}
+
+		.modal-footer {
+			padding: 1rem 1.25rem;
+			border-top: 1px solid var(--rm-slate-200);
+			display: flex;
+			gap: 0.75rem;
+		}
+
+		.btn-submit-order {
+			flex: 1;
+			background: #1e3a8a;
+			color: #ffffff;
+			border: none;
+			border-radius: 10px;
+			padding: 0.75rem;
+			font-size: 0.95rem;
+			font-weight: 700;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 0.5rem;
+			transition: background 0.15s ease;
+		}
+
+		.btn-submit-order:hover {
+			background: #172554;
+		}
+
+		.btn-submit-order:disabled {
+			background: #94a3b8;
+			cursor: not-allowed;
+		}
+
+		/* Passcode Dialog */
+		.pin-input-container {
+			display: flex;
+			justify-content: center;
+			gap: 0.65rem;
+			margin: 1.25rem 0;
+		}
+
+		.pin-digit {
+			width: 48px;
+			height: 56px;
+			border: 2px solid #cbd5e1;
+			border-radius: 10px;
+			text-align: center;
+			font-size: 1.5rem;
+			font-weight: 800;
+			color: #0f172a;
+			outline: none;
+			transition: border-color 0.15s ease;
+		}
+
+		.pin-digit:focus {
+			border-color: #1e3a8a;
+			box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.15);
+		}
+
+		.pin-desc {
+			font-size: 0.85rem;
+			color: #64748b;
+			text-align: center;
+			line-height: 1.4;
+		}
+
+		.alert-banner {
+			padding: 0.65rem 0.85rem;
+			border-radius: 8px;
+			font-size: 0.82rem;
+			margin-bottom: 0.85rem;
+			display: none;
+		}
+
+		.alert-banner.error {
+			background: #fef2f2;
+			border: 1px solid #fecaca;
+			color: #dc2626;
+			display: block;
+		}
+
+		.alert-banner.success {
+			background: #ecfdf5;
+			border: 1px solid #a7f3d0;
+			color: #047857;
+			display: block;
+		}
+
+		/* Spinner */
+		.spinner {
+			width: 16px;
+			height: 16px;
+			border: 2px solid rgba(255,255,255,0.3);
+			border-radius: 50%;
+			border-top-color: #ffffff;
+			animation: spin 0.6s linear infinite;
+		}
+
+		@keyframes spin {
+			to { transform: rotate(360deg); }
+		}
+
+		@media (max-width: 600px) {
+			.menu-grid {
+				grid-template-columns: 1fr;
+			}
+			.dish-card {
+				flex-direction: row;
+			}
+			.dish-img-wrap {
+				width: 110px;
+				min-width: 110px;
+				height: 110px;
+			}
+			.dish-desc {
+				-webkit-line-clamp: 2;
+			}
+			.dish-content {
+				padding: 0.6rem;
+			}
+		}
+	</style>
+</head>
+<body>
+
+	<!-- Brand Header -->
+	<header class="brand-header">
+		<div class="brand-header-inner">
+			<div class="rm-brand-left">
+				<div class="rm-brand-logo-frame" aria-hidden="true">
+					<span class="rm-monogram">IB</span>
+				</div>
+				<div class="rm-brand-meta">
+					<span class="rm-brand-title">Izen Bistro</span>
+					<span class="rm-brand-subtitle">Nagarbhavi, Bengaluru</span>
+				</div>
+			</div>
+
+			<div class="table-badge-pill" id="tableBadge">
+				<span class="table-dot {{ '' if is_seated else 'inactive' }}" id="tableStatusDot"></span>
+				<span id="tableLabel">Table {{ table_no }}</span>
+			</div>
+		</div>
+	</header>
+
+	<main class="order-container">
+
+		<!-- Table Status Bar -->
+		<div class="table-status-bar" id="statusBar">
+			<div class="status-info">
+				<span class="status-icon" id="statusIcon">
+					{% if is_seated %}🍽️{% else %}ℹ️{% endif %}
+				</span>
+				<div class="status-text" id="statusMessage">
+					{% if is_seated %}
+						Table <strong>{{ table_no }}</strong> is seated • Enter passcode to order
+					{% else %}
+						Table <strong>{{ table_no }}</strong> is currently open • Browse menu freely
+					{% endif %}
+				</div>
+			</div>
+
+			<div id="statusAction">
+				{% if is_seated %}
+					<button type="button" class="btn-unlock-visit" id="btnOpenPasscodeModal">Enter Passcode</button>
+				{% endif %}
+			</div>
+		</div>
+
+		<!-- Seated Guest Service Actions (Call Waiter & Request Bill) -->
+		<div class="guest-service-bar" id="guestServiceBar" style="display: none;">
+			<div class="service-actions-row">
+				<button type="button" class="btn-service-action btn-call-waiter" id="btnCallWaiter">
+					<span class="service-action-icon">🔔</span>
+					<span class="service-action-label" id="lblCallWaiter">Call waiter</span>
+				</button>
+				<button type="button" class="btn-service-action btn-request-bill" id="btnRequestBill">
+					<span class="service-action-icon">🧾</span>
+					<span class="service-action-label" id="lblRequestBill">Request bill</span>
+				</button>
+			</div>
+			<div id="serviceFeedbackMsg" class="service-feedback-msg" style="display: none;"></div>
+		</div>
+		<div class="controls-bar">
+			<div class="search-input-wrap">
+				<span class="search-icon">🔍</span>
+				<input type="text" class="search-input" id="dishSearch" placeholder="Search dishes (e.g. Biryani, Paneer, Tikka)..." autocomplete="off">
+			</div>
+			<div class="veg-toggle-btn" id="vegFilterBtn">
+				<span class="veg-dot-icon"></span>
+				<span>Veg Only</span>
+			</div>
+		</div>
+
+		<!-- Category Horizontal Scroll Strip -->
+		<div class="category-strip" id="categoryStrip">
+			<div class="cat-pill active" data-cat="all">All Dishes</div>
+			{% for cat in categories %}
+				<div class="cat-pill" data-cat="{{ cat }}">{{ cat }}</div>
+			{% endfor %}
+		</div>
+
+		<!-- Menu Listing Sections -->
+		<div id="menuContent">
+			<!-- Rendered by JavaScript for interactivity & instant cart syncing -->
+		</div>
+
+	</main>
+
+	<!-- Fixed Bottom Order Bar -->
+	<footer class="bottom-order-bar" id="bottomBar" style="display: none;">
+		<div class="bottom-order-bar-inner">
+			<div class="cart-summary-text">
+				<span class="cart-count" id="cartItemCountText">0 items selected</span>
+				<span class="cart-total" id="cartTotalText">₹0</span>
+			</div>
+			<button type="button" class="btn-view-cart" id="btnOpenCartModal">
+				<span>View Order / Bill</span>
+				<span id="cartCountBadge" style="background: rgba(255,255,255,0.25); border-radius: 12px; padding: 2px 7px; font-size: 0.8rem;">0</span>
+			</button>
+		</div>
+	</footer>
+
+	<!-- Cart & Bill Modal Sheet -->
+	<div class="modal-backdrop" id="cartModalBackdrop">
+		<div class="modal-sheet">
+			<div class="modal-header">
+				<div class="modal-title">Table {{ table_no }} • Order & Bill</div>
+				<button type="button" class="btn-close-modal" id="btnCloseCartModal">&times;</button>
+			</div>
+
+			<div class="modal-body">
+				<div id="cartModalAlert" class="alert-banner"></div>
+
+				<!-- Section A: Current items to order -->
+				<div style="font-size: 0.88rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+					<span>New Items to Order</span>
+					<span id="cartItemsSubtotalText" style="color: #64748b; font-weight: 500;"></span>
+				</div>
+
+				<div id="cartItemsList">
+					<div style="text-align: center; color: #94a3b8; padding: 1rem; font-size: 0.85rem;">
+						No new items selected yet. Tap + Add on any dish!
+					</div>
+				</div>
+
+				<div id="orderNotesSection" style="margin-top: 0.75rem; display: none;">
+					<label style="font-size: 0.78rem; font-weight: 600; color: #475569;">Special Cooking Notes (Optional):</label>
+					<textarea class="order-notes-textarea" id="orderNotesInput" rows="2" placeholder="e.g. Less spicy, serve breads hot..."></textarea>
+				</div>
+
+				<!-- Section B: Live Active Orders for Table -->
+				<div class="active-rounds-section" id="activeRoundsSection" style="display: none;">
+					<div style="font-size: 0.88rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">
+						Dishes Already Ordered in this Visit
+					</div>
+					<div id="activeRoundsList"></div>
+				</div>
+
+				<!-- Section C: Consolidated Bill Breakdown -->
+				<div class="bill-breakdown-card" id="billSummaryCard">
+					<div class="bill-row">
+						<span>Subtotal</span>
+						<span id="billSubtotal">₹0</span>
+					</div>
+					<div class="bill-row">
+						<span>GST 5% (CGST 2.5% + SGST 2.5%)</span>
+						<span id="billGst">₹0</span>
+					</div>
+					<div class="bill-row total-row">
+						<span>Total Bill</span>
+						<span id="billGrandTotal">₹0</span>
+					</div>
+				</div>
+			</div>
+
+			<div class="modal-footer">
+				<button type="button" class="btn-submit-order" id="btnSubmitOrder" disabled>
+					<span id="btnSubmitSpinner" class="spinner" style="display: none;"></span>
+					<span id="btnSubmitText">Send Order to Kitchen</span>
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Passcode Verification Modal Sheet -->
+	<div class="modal-backdrop" id="passcodeModalBackdrop">
+		<div class="modal-sheet" style="max-height: 400px;">
+			<div class="modal-header">
+				<div class="modal-title">Enter Table Passcode</div>
+				<button type="button" class="btn-close-modal" id="btnClosePasscodeModal">&times;</button>
+			</div>
+
+			<div class="modal-body">
+				<div id="passcodeAlert" class="alert-banner"></div>
+				<p class="pin-desc">
+					Ask your server or check your printed table QR stand for the <strong>4-digit passcode</strong> to join Table {{ table_no }}'s visit.
+				</p>
+
+				<div class="pin-input-container">
+					<input type="tel" maxlength="1" class="pin-digit" id="pin1" autofocus autocomplete="off">
+					<input type="tel" maxlength="1" class="pin-digit" id="pin2" autocomplete="off">
+					<input type="tel" maxlength="1" class="pin-digit" id="pin3" autocomplete="off">
+					<input type="tel" maxlength="1" class="pin-digit" id="pin4" autocomplete="off">
+				</div>
+
+				<div style="text-align: center;">
+					<button type="button" class="btn-submit-order" id="btnVerifyPasscode" style="width: 100%; max-width: 280px; margin: 0 auto;">
+						<span id="btnVerifySpinner" class="spinner" style="display: none;"></span>
+						<span id="btnVerifyText">Verify & Unlock Ordering</span>
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		// Data passed from server template
+		const TABLE_NO = "{{ table_no }}";
+		const RAW_MENU = {{ menu_items_json | safe }};
+		const INITIAL_IS_SEATED = {{ 'true' if is_seated else 'false' }};
+		const INITIAL_CODE = "{{ initial_code }}";
+		const CSRF_TOKEN = (window.frappe && window.frappe.csrf_token) || "{{ frappe.session.csrf_token }}" || "";
+
+		// Client State
+		let cart = {}; // item_id -> { item: object, qty: number, notes: string }
+		let verifiedPasscode = sessionStorage.getItem(`izen_passcode_${TABLE_NO}`) || INITIAL_CODE || "";
+		let activeOrderData = null;
+		let tableData = null;
+		let currentCategory = "all";
+		let searchQuery = "";
+		let vegOnly = false;
+		let isSeated = INITIAL_IS_SEATED;
+
+		// Session storage initialization
+		if (verifiedPasscode) {
+			sessionStorage.setItem(`izen_passcode_${TABLE_NO}`, verifiedPasscode);
+		}
+
+		// Initialize
+		document.addEventListener("DOMContentLoaded", function() {
+			setupEventListeners();
+			renderMenu();
+			refreshTableState();
+		});
+
+		// Refresh table status and active order from server
+		function refreshTableState() {
+			let url = `/api/method/restaurant_management.restaurant_management.services.restaurant_store.api_get_table_menu?table_no=${encodeURIComponent(TABLE_NO)}`;
+			if (verifiedPasscode) {
+				url += `&visit_code=${encodeURIComponent(verifiedPasscode)}`;
+			}
+
+			fetch(url)
+				.then(res => res.json())
+				.then(data => {
+					if (data.message) {
+						let msg = data.message;
+						isSeated = msg.table.is_seated;
+						tableData = msg.table;
+						if (msg.active_order) {
+							activeOrderData = msg.active_order;
+						} else {
+							activeOrderData = null;
+						}
+						updateStatusUI();
+						updateCartUI();
+					}
+				})
+				.catch(err => {
+					console.error("Failed to fetch table state:", err);
+				});
+		}
+
+		function updateStatusUI() {
+			const dot = document.getElementById("tableStatusDot");
+			const icon = document.getElementById("statusIcon");
+			const msg = document.getElementById("statusMessage");
+			const action = document.getElementById("statusAction");
+			const serviceBar = document.getElementById("guestServiceBar");
+			const btnWaiter = document.getElementById("btnCallWaiter");
+			const lblWaiter = document.getElementById("lblCallWaiter");
+			const btnBill = document.getElementById("btnRequestBill");
+			const lblBill = document.getElementById("lblRequestBill");
+			const feedbackMsg = document.getElementById("serviceFeedbackMsg");
+
+			if (!isSeated) {
+				dot.classList.add("inactive");
+				icon.textContent = "ℹ️";
+				msg.innerHTML = `Table <strong>${TABLE_NO}</strong> is open • Browse menu freely`;
+				action.innerHTML = "";
+				verifiedPasscode = "";
+				sessionStorage.removeItem(`izen_passcode_${TABLE_NO}`);
+				if (serviceBar) serviceBar.style.display = "none";
+			} else if (verifiedPasscode) {
+				dot.classList.remove("inactive");
+				icon.textContent = "✅";
+				msg.innerHTML = `Table <strong>${TABLE_NO}</strong> Active • Visit Passcode: <span class="passcode-pill">${verifiedPasscode}</span>`;
+				action.innerHTML = `<span style="font-size: 0.78rem; color: #047857; font-weight: 600;">Ordering Active</span>`;
+				if (serviceBar) {
+					serviceBar.style.display = "block";
+					// Sync waiter state
+					if (tableData && tableData.waiter_request) {
+						btnWaiter.classList.add("active-notified");
+						lblWaiter.textContent = "Waiter notified";
+					} else {
+						btnWaiter.classList.remove("active-notified");
+						lblWaiter.textContent = "Call waiter";
+					}
+					// Sync bill state
+					if (tableData && tableData.bill_request) {
+						btnBill.classList.add("active-notified");
+						lblBill.textContent = "Bill requested";
+					} else {
+						btnBill.classList.remove("active-notified");
+						lblBill.textContent = "Request bill";
+					}
+				}
+			} else {
+				dot.classList.remove("inactive");
+				icon.textContent = "🍽️";
+				msg.innerHTML = `Table <strong>${TABLE_NO}</strong> is seated • Enter passcode to order`;
+				action.innerHTML = `<button type="button" class="btn-unlock-visit" id="btnOpenPasscodeModal" onclick="openPasscodeModal()">Enter Passcode</button>`;
+				if (serviceBar) serviceBar.style.display = "none";
+			}
+		}
+
+		async function handleCallWaiter() {
+			const feedback = document.getElementById("serviceFeedbackMsg");
+			if (feedback) feedback.style.display = "none";
+			if (!verifiedPasscode) {
+				openPasscodeModal();
+				return;
+			}
+			const btnWaiter = document.getElementById("btnCallWaiter");
+			const lblWaiter = document.getElementById("lblCallWaiter");
+			try {
+				const res = await fetch(`/api/method/restaurant_management.restaurant_management.services.restaurant_store.api_call_waiter?table_no=${encodeURIComponent(TABLE_NO)}&visit_code=${encodeURIComponent(verifiedPasscode)}`);
+				const data = await res.json();
+				if (data.message && data.message.success) {
+					btnWaiter.classList.add("active-notified");
+					lblWaiter.textContent = "Waiter notified";
+					if (tableData) {
+						tableData.waiter_request = data.message.waiter_request;
+					}
+				} else if (data._server_messages) {
+					try {
+						let err = JSON.parse(JSON.parse(data._server_messages)[0]).message;
+						if (feedback) {
+							feedback.textContent = err;
+							feedback.style.display = "block";
+						}
+					} catch(e) {}
+				}
+			} catch (err) {
+				console.error("Error calling waiter:", err);
+			}
+		}
+
+		async function handleRequestBill() {
+			const feedback = document.getElementById("serviceFeedbackMsg");
+			if (feedback) feedback.style.display = "none";
+			if (!verifiedPasscode) {
+				openPasscodeModal();
+				return;
+			}
+			// Check if table has an active order
+			if (!activeOrderData || !activeOrderData.items || activeOrderData.items.length === 0) {
+				if (feedback) {
+					feedback.textContent = "No active order for this table. Please order items before requesting the bill.";
+					feedback.style.display = "block";
+				}
+				return;
+			}
+			const btnBill = document.getElementById("btnRequestBill");
+			const lblBill = document.getElementById("lblRequestBill");
+			try {
+				const res = await fetch(`/api/method/restaurant_management.restaurant_management.services.restaurant_store.api_request_bill?table_no=${encodeURIComponent(TABLE_NO)}&visit_code=${encodeURIComponent(verifiedPasscode)}`);
+				const data = await res.json();
+				if (data.message && data.message.success) {
+					btnBill.classList.add("active-notified");
+					lblBill.textContent = "Bill requested";
+					if (tableData) {
+						tableData.bill_request = data.message.bill_request;
+					}
+				} else if (data._server_messages) {
+					try {
+						let err = JSON.parse(JSON.parse(data._server_messages)[0]).message;
+						if (feedback) {
+							feedback.textContent = err;
+							feedback.style.display = "block";
+						}
+					} catch(e) {}
+				}
+			} catch (err) {
+				console.error("Error requesting bill:", err);
+			}
+		}
+
+		function setupEventListeners() {
+			// Category selection
+			document.querySelectorAll(".cat-pill").forEach(pill => {
+				pill.addEventListener("click", function() {
+					document.querySelectorAll(".cat-pill").forEach(p => p.classList.remove("active"));
+					this.classList.add("active");
+					currentCategory = this.getAttribute("data-cat");
+					renderMenu();
+				});
+			});
+
+			// Search input
+			const searchInput = document.getElementById("dishSearch");
+			searchInput.addEventListener("input", function() {
+				searchQuery = this.value.trim().toLowerCase();
+				renderMenu();
+			});
+
+			// Veg filter toggle
+			const vegBtn = document.getElementById("vegFilterBtn");
+			vegBtn.addEventListener("click", function() {
+				vegOnly = !vegOnly;
+				this.classList.toggle("active", vegOnly);
+				renderMenu();
+			});
+
+			// Cart modal triggers
+			document.getElementById("btnOpenCartModal").addEventListener("click", openCartModal);
+			document.getElementById("btnCloseCartModal").addEventListener("click", closeCartModal);
+			document.getElementById("cartModalBackdrop").addEventListener("click", function(e) {
+				if (e.target === this) closeCartModal();
+			});
+
+			// Passcode modal triggers
+			const btnOpenPasscode = document.getElementById("btnOpenPasscodeModal");
+			if (btnOpenPasscode) {
+				btnOpenPasscode.addEventListener("click", openPasscodeModal);
+			}
+			document.getElementById("btnClosePasscodeModal").addEventListener("click", closePasscodeModal);
+			document.getElementById("passcodeModalBackdrop").addEventListener("click", function(e) {
+				if (e.target === this) closePasscodeModal();
+			});
+
+			// PIN digits auto-advance
+			const pins = [
+				document.getElementById("pin1"),
+				document.getElementById("pin2"),
+				document.getElementById("pin3"),
+				document.getElementById("pin4")
+			];
+
+			pins.forEach((pin, idx) => {
+				pin.addEventListener("input", function() {
+					if (this.value.length === 1 && idx < 3) {
+						pins[idx + 1].focus();
+					}
+					checkPinComplete();
+				});
+				pin.addEventListener("keydown", function(e) {
+					if (e.key === "Backspace" && this.value === "" && idx > 0) {
+						pins[idx - 1].focus();
+					}
+				});
+			});
+
+			document.getElementById("btnVerifyPasscode").addEventListener("click", submitPasscode);
+			document.getElementById("btnSubmitOrder").addEventListener("click", submitOrder);
+
+			const btnWaiter = document.getElementById("btnCallWaiter");
+			if (btnWaiter) {
+				btnWaiter.addEventListener("click", handleCallWaiter);
+			}
+
+			const btnBill = document.getElementById("btnRequestBill");
+			if (btnBill) {
+				btnBill.addEventListener("click", handleRequestBill);
+			}
+		}
+
+		function checkPinComplete() {
+			const p1 = document.getElementById("pin1").value;
+			const p2 = document.getElementById("pin2").value;
+			const p3 = document.getElementById("pin3").value;
+			const p4 = document.getElementById("pin4").value;
+			const code = `${p1}${p2}${p3}${p4}`;
+			if (code.length === 4) {
+				submitPasscode();
+			}
+		}
+
+		function openPasscodeModal() {
+			document.getElementById("passcodeAlert").style.display = "none";
+			document.getElementById("passcodeModalBackdrop").classList.add("active");
+			document.getElementById("pin1").focus();
+		}
+
+		function closePasscodeModal() {
+			document.getElementById("passcodeModalBackdrop").classList.remove("active");
+		}
+
+		function submitPasscode() {
+			const p1 = document.getElementById("pin1").value;
+			const p2 = document.getElementById("pin2").value;
+			const p3 = document.getElementById("pin3").value;
+			const p4 = document.getElementById("pin4").value;
+			const code = `${p1}${p2}${p3}${p4}`.trim();
+
+			if (code.length < 4) {
+				showPasscodeError("Please enter the full 4-digit passcode.");
+				return;
+			}
+
+			const btn = document.getElementById("btnVerifyPasscode");
+			const spinner = document.getElementById("btnVerifySpinner");
+			const text = document.getElementById("btnVerifyText");
+
+			btn.disabled = true;
+			spinner.style.display = "inline-block";
+			text.textContent = "Verifying...";
+
+			fetch("/api/method/restaurant_management.restaurant_management.services.restaurant_store.api_verify_table_passcode", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-www-form-urlencoded",
+					"X-Frappe-CSRF-Token": CSRF_TOKEN
+				},
+				body: new URLSearchParams({
+					table_no: TABLE_NO,
+					visit_code: code
+				})
+			})
+			.then(res => res.json())
+			.then(data => {
+				btn.disabled = false;
+				spinner.style.display = "none";
+				text.textContent = "Verify & Unlock Ordering";
+
+				if (data.message && data.message.verified) {
+					verifiedPasscode = code;
+					sessionStorage.setItem(`izen_passcode_${TABLE_NO}`, code);
+					if (data.message.active_order) {
+						activeOrderData = data.message.active_order;
+					}
+					tableData = {
+						waiter_request: data.message.waiter_request,
+						bill_request: data.message.bill_request
+					};
+					closePasscodeModal();
+					updateStatusUI();
+					updateCartUI();
+				} else if (data._server_messages) {
+					try {
+						let parsed = JSON.parse(JSON.parse(data._server_messages)[0]);
+						showPasscodeError(parsed.message || "Invalid passcode.");
+					} catch(e) {
+						showPasscodeError("Invalid passcode.");
+					}
+				} else {
+					showPasscodeError("Incorrect table passcode. Please ask your server.");
+				}
+			})
+			.catch(err => {
+				btn.disabled = false;
+				spinner.style.display = "none";
+				text.textContent = "Verify & Unlock Ordering";
+				showPasscodeError("Failed to verify passcode. Please try again.");
+			});
+		}
+
+		function showPasscodeError(msg) {
+			const alert = document.getElementById("passcodeAlert");
+			alert.className = "alert-banner error";
+			alert.textContent = msg;
+			alert.style.display = "block";
+		}
+
+		// Menu Rendering
+		function renderMenu() {
+			const container = document.getElementById("menuContent");
+			container.innerHTML = "";
+
+			let filtered = RAW_MENU.filter(item => {
+				if (currentCategory !== "all" && item.category !== currentCategory) return false;
+				if (vegOnly && !item.is_veg) return false;
+				if (searchQuery) {
+					let matchName = item.name.toLowerCase().includes(searchQuery);
+					let matchDesc = (item.description || "").toLowerCase().includes(searchQuery);
+					if (!matchName && !matchDesc) return false;
+				}
+				return true;
+			});
+
+			if (filtered.length === 0) {
+				container.innerHTML = `
+					<div style="text-align: center; padding: 3rem 1rem; color: #94a3b8;">
+						<div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+						<div style="font-size: 0.95rem; font-weight: 600; color: #64748b;">No dishes match your filter</div>
+						<div style="font-size: 0.8rem; margin-top: 0.25rem;">Try clearing your search or switching categories.</div>
+					</div>
+				`;
+				return;
+			}
+
+			// Group by category if "all" is active
+			let groups = {};
+			if (currentCategory === "all") {
+				filtered.forEach(it => {
+					let cat = it.category || "Other";
+					if (!groups[cat]) groups[cat] = [];
+					groups[cat].push(it);
+				});
+			} else {
+				groups[currentCategory] = filtered;
+			}
+
+			Object.keys(groups).forEach(catName => {
+				const section = document.createElement("div");
+				section.className = "menu-section";
+
+				const title = document.createElement("div");
+				title.className = "menu-section-title";
+				title.textContent = catName;
+				section.appendChild(title);
+
+				const grid = document.createElement("div");
+				grid.className = "menu-grid";
+
+				groups[catName].forEach(item => {
+					grid.appendChild(createDishCard(item));
+				});
+
+				section.appendChild(grid);
+				container.appendChild(section);
+			});
+		}
+
+		function createDishCard(item) {
+			const card = document.createElement("div");
+			card.className = `dish-card ${item.available ? '' : 'unavailable'}`;
+
+			let inCartQty = cart[item.item_id] ? cart[item.item_id].qty : 0;
+
+			card.innerHTML = `
+				<div class="dish-img-wrap">
+					<img src="${item.image || '/assets/restaurant_management/images/dishes/placeholder.jpg'}" alt="${item.name}" class="dish-img" loading="lazy">
+					<div class="diet-badge ${item.is_veg ? 'veg' : 'non-veg'}" title="${item.is_veg ? 'Vegetarian' : 'Non-Vegetarian'}"></div>
+					${item.available ? '' : '<div class="soldout-overlay">Sold Out</div>'}
+				</div>
+				<div class="dish-content">
+					<div class="dish-header-row">
+						<span class="dish-name">${item.name}</span>
+						<span class="dish-price">₹${item.price}</span>
+					</div>
+					<div class="dish-desc">${item.description || ''}</div>
+					<div class="dish-action-row" id="actionRow_${item.item_id}">
+						${renderCardAction(item, inCartQty)}
+					</div>
+				</div>
+			`;
+
+			return card;
+		}
+
+		function renderCardAction(item, qty) {
+			if (!item.available) {
+				return `<button type="button" class="btn-add-item" disabled>Unavailable</button>`;
+			}
+			if (qty > 0) {
+				return `
+					<div class="qty-stepper">
+						<button type="button" class="btn-step" onclick="changeItemQty('${item.item_id}', -1)">&minus;</button>
+						<span class="qty-val">${qty}</span>
+						<button type="button" class="btn-step" onclick="changeItemQty('${item.item_id}', 1)">&plus;</button>
+					</div>
+				`;
+			}
+			return `
+				<button type="button" class="btn-add-item" onclick="changeItemQty('${item.item_id}', 1)">
+					<span>&plus; Add</span>
+				</button>
+			`;
+		}
+
+		// Cart Operations
+		function changeItemQty(itemId, delta) {
+			let item = RAW_MENU.find(i => i.item_id === itemId);
+			if (!item || !item.available) return;
+
+			if (!cart[itemId]) {
+				cart[itemId] = { item: item, qty: 0, notes: "" };
+			}
+
+			cart[itemId].qty += delta;
+			if (cart[itemId].qty <= 0) {
+				delete cart[itemId];
+			}
+
+			// Update card action button
+			let actionElem = document.getElementById(`actionRow_${itemId}`);
+			if (actionElem) {
+				let qty = cart[itemId] ? cart[itemId].qty : 0;
+				actionElem.innerHTML = renderCardAction(item, qty);
+			}
+
+			updateCartUI();
+		}
+
+		function updateCartUI() {
+			let totalCartCount = 0;
+			let currentSubtotal = 0;
+
+			Object.values(cart).forEach(entry => {
+				totalCartCount += entry.qty;
+				currentSubtotal += (entry.qty * entry.item.price);
+			});
+
+			let activeOrdersSubtotal = 0;
+			if (activeOrderData && activeOrderData.subtotal) {
+				activeOrdersSubtotal = activeOrderData.subtotal;
+			}
+
+			let combinedSubtotal = currentSubtotal + activeOrdersSubtotal;
+			let gst = Math.round(combinedSubtotal * 0.05);
+			let grandTotal = combinedSubtotal + gst;
+
+			// Update bottom bar
+			const bottomBar = document.getElementById("bottomBar");
+			const cartCountBadge = document.getElementById("cartCountBadge");
+			const cartCountText = document.getElementById("cartItemCountText");
+			const cartTotalText = document.getElementById("cartTotalText");
+
+			if (totalCartCount > 0 || (activeOrderData && activeOrderData.items && activeOrderData.items.length > 0)) {
+				bottomBar.style.display = "block";
+				cartCountBadge.textContent = totalCartCount;
+				cartCountText.textContent = totalCartCount > 0 ? `${totalCartCount} new dish${totalCartCount > 1 ? 'es' : ''} in cart` : "Active table bill";
+				cartTotalText.textContent = `₹${grandTotal.toLocaleString()}`;
+			} else {
+				bottomBar.style.display = "none";
+			}
+
+			// Update bill summary in modal
+			document.getElementById("billSubtotal").textContent = `₹${combinedSubtotal.toLocaleString()}`;
+			document.getElementById("billGst").textContent = `₹${gst.toLocaleString()}`;
+			document.getElementById("billGrandTotal").textContent = `₹${grandTotal.toLocaleString()}`;
+
+			// Update submit button
+			const btnSubmit = document.getElementById("btnSubmitOrder");
+			if (totalCartCount > 0) {
+				btnSubmit.disabled = false;
+				document.getElementById("btnSubmitText").textContent = isSeated ? "Send Order to Kitchen" : "Unlock Table to Order";
+			} else {
+				btnSubmit.disabled = true;
+				document.getElementById("btnSubmitText").textContent = "Send Order to Kitchen";
+			}
+		}
+
+		function openCartModal() {
+			renderCartModalContents();
+			document.getElementById("cartModalAlert").style.display = "none";
+			document.getElementById("cartModalBackdrop").classList.add("active");
+		}
+
+		function closeCartModal() {
+			document.getElementById("cartModalBackdrop").classList.remove("active");
+		}
+
+		function renderCartModalContents() {
+			const list = document.getElementById("cartItemsList");
+			const notesSection = document.getElementById("orderNotesSection");
+			const subtotalLabel = document.getElementById("cartItemsSubtotalText");
+			list.innerHTML = "";
+
+			let cartEntries = Object.values(cart);
+			if (cartEntries.length === 0) {
+				list.innerHTML = `
+					<div style="text-align: center; color: #94a3b8; padding: 1.5rem 1rem; font-size: 0.85rem;">
+						No new items selected yet. Tap &plus; Add on any dish to add to this round!
+					</div>
+				`;
+				notesSection.style.display = "none";
+				subtotalLabel.textContent = "";
+			} else {
+				let sub = 0;
+				cartEntries.forEach(entry => {
+					let lineTotal = entry.qty * entry.item.price;
+					sub += lineTotal;
+
+					const row = document.createElement("div");
+					row.className = "cart-item-row";
+					row.innerHTML = `
+						<div class="cart-item-info">
+							<div class="cart-item-title">${entry.item.name}</div>
+							<div class="cart-item-sub">₹${entry.item.price} each</div>
+						</div>
+						<div class="cart-item-stepper">
+							<button type="button" class="cart-stepper-btn" onclick="changeItemQty('${entry.item.item_id}', -1)">&minus;</button>
+							<span style="font-size: 0.85rem; font-weight: 700; min-width: 18px; text-align: center;">${entry.qty}</span>
+							<button type="button" class="cart-stepper-btn" onclick="changeItemQty('${entry.item.item_id}', 1)">&plus;</button>
+						</div>
+						<div class="cart-item-price">₹${lineTotal.toLocaleString()}</div>
+					`;
+					list.appendChild(row);
+				});
+
+				notesSection.style.display = "block";
+				subtotalLabel.textContent = `₹${sub.toLocaleString()}`;
+			}
+
+			// Render active rounds already placed
+			const roundsSection = document.getElementById("activeRoundsSection");
+			const roundsList = document.getElementById("activeRoundsList");
+			roundsList.innerHTML = "";
+
+			if (activeOrderData && activeOrderData.items && activeOrderData.items.length > 0) {
+				roundsSection.style.display = "block";
+
+				if (activeOrderData.batches && activeOrderData.batches.length > 0) {
+					activeOrderData.batches.forEach(batch => {
+						const batchDiv = document.createElement("div");
+						batchDiv.style.marginBottom = "0.75rem";
+						batchDiv.innerHTML = `
+							<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+								<span class="round-ticket-badge">${batch.round_name || 'Round ' + batch.round} • ${batch.status}</span>
+								<span style="font-size: 0.72rem; color: #64748b;">${batch.created_time_str || ''}</span>
+							</div>
+						`;
+						batch.items.forEach(it => {
+							const itLine = document.createElement("div");
+							itLine.className = "round-item-line";
+							itLine.innerHTML = `
+								<span>${it.name} &times; ${it.qty}</span>
+								<span style="font-weight: 600;">₹${(it.amount || it.price * it.qty).toLocaleString()}</span>
+							`;
+							batchDiv.appendChild(itLine);
+						});
+						roundsList.appendChild(batchDiv);
+					});
+				} else {
+					activeOrderData.items.forEach(it => {
+						const itLine = document.createElement("div");
+						itLine.className = "round-item-line";
+						itLine.innerHTML = `
+							<span>${it.name} &times; ${it.qty}</span>
+							<span style="font-weight: 600;">₹${(it.amount || it.price * it.qty).toLocaleString()}</span>
+						`;
+						roundsList.appendChild(itLine);
+					});
+				}
+			} else {
+				roundsSection.style.display = "none";
+			}
+
+			updateCartUI();
+		}
+
+		// Order Submission
+		function submitOrder() {
+			if (!isSeated) {
+				alert(`Table ${TABLE_NO} is currently not seated. Please ask restaurant staff to activate your table before placing orders.`);
+				return;
+			}
+
+			if (!verifiedPasscode) {
+				closeCartModal();
+				openPasscodeModal();
+				return;
+			}
+
+			let itemsPayload = Object.values(cart).map(c => ({
+				item_id: c.item.item_id,
+				qty: c.qty,
+				notes: c.notes || ""
+			}));
+
+			if (itemsPayload.length === 0) {
+				showCartError("Please select at least one dish.");
+				return;
+			}
+
+			const notesVal = document.getElementById("orderNotesInput").value.trim();
+
+			// Generate idempotent client token (crypto.randomUUID)
+			let idempotencyKey = "";
+			if (window.crypto && crypto.randomUUID) {
+				idempotencyKey = crypto.randomUUID();
+			} else {
+				idempotencyKey = 'IDEM-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
+			}
+
+			const btn = document.getElementById("btnSubmitOrder");
+			const spinner = document.getElementById("btnSubmitSpinner");
+			const text = document.getElementById("btnSubmitText");
+
+			btn.disabled = true;
+			spinner.style.display = "inline-block";
+			text.textContent = "Sending to Kitchen...";
+
+			fetch("/api/method/restaurant_management.restaurant_management.services.restaurant_store.api_submit_guest_order", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-www-form-urlencoded",
+					"X-Frappe-CSRF-Token": CSRF_TOKEN
+				},
+				body: new URLSearchParams({
+					table_no: TABLE_NO,
+					visit_code: verifiedPasscode,
+					items: JSON.stringify(itemsPayload),
+					notes: notesVal,
+					idempotency_key: idempotencyKey
+				})
+			})
+			.then(res => res.json())
+			.then(data => {
+				btn.disabled = false;
+				spinner.style.display = "none";
+				text.textContent = "Send Order to Kitchen";
+
+				if (data.message && data.message.success) {
+					// Clear cart
+					cart = {};
+					document.getElementById("orderNotesInput").value = "";
+
+					// Re-render menu cards
+					renderMenu();
+
+					// Fetch fresh table order details
+					refreshTableState();
+
+					showCartSuccess(`🎉 ${data.message.message} (Ticket: ${data.message.batch_id})`);
+					setTimeout(() => {
+						renderCartModalContents();
+					}, 300);
+				} else if (data._server_messages) {
+					try {
+						let parsed = JSON.parse(JSON.parse(data._server_messages)[0]);
+						showCartError(parsed.message || "Failed to submit order.");
+					} catch(e) {
+						showCartError("Failed to submit order.");
+					}
+				} else {
+					showCartError("Error placing order. Please ask staff.");
+				}
+			})
+			.catch(err => {
+				btn.disabled = false;
+				spinner.style.display = "none";
+				text.textContent = "Send Order to Kitchen";
+				showCartError("Network error. Please try again or ask staff.");
+			});
+		}
+
+		function showCartError(msg) {
+			const alert = document.getElementById("cartModalAlert");
+			alert.className = "alert-banner error";
+			alert.textContent = msg;
+			alert.style.display = "block";
+		}
+
+		function showCartSuccess(msg) {
+			const alert = document.getElementById("cartModalAlert");
+			alert.className = "alert-banner success";
+			alert.textContent = msg;
+			alert.style.display = "block";
+		}
+	</script>
+</body>
+</html>

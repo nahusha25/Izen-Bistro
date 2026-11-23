@@ -27,6 +27,19 @@ frappe.pages['restaurant-billing-payments'].on_page_load = function (wrapper) {
 	wrapper.billing_mgmt = new BillingPayments(wrapper, page);
 };
 
+frappe.pages['restaurant-billing-payments'].on_page_show = function (wrapper) {
+	if (wrapper.billing_mgmt) {
+		wrapper.billing_mgmt.fetch_data();
+		wrapper.billing_mgmt.start_auto_refresh();
+	}
+};
+
+frappe.pages['restaurant-billing-payments'].on_page_hide = function (wrapper) {
+	if (wrapper.billing_mgmt) {
+		wrapper.billing_mgmt.stop_auto_refresh();
+	}
+};
+
 class BillingPayments {
 	constructor(wrapper, page) {
 		this.wrapper = wrapper;
@@ -60,6 +73,8 @@ class BillingPayments {
 					</div>
 				</div>
 
+				<div class="billing-live-requests-banner"></div>
+
 				<div class="billing-kpi-grid"></div>
 
 				<div class="served-orders-container"></div>
@@ -74,6 +89,42 @@ class BillingPayments {
 
 		this.bind_global_events();
 		this.fetch_data();
+		this.start_auto_refresh();
+	}
+
+	start_auto_refresh() {
+		this.stop_auto_refresh();
+		let self = this;
+		this.refresh_interval = setInterval(() => {
+			if ($('.modal.show:visible').length > 0) return;
+			self.fetch_data_silent();
+		}, 2500);
+	}
+
+	stop_auto_refresh() {
+		if (this.refresh_interval) {
+			clearInterval(this.refresh_interval);
+			this.refresh_interval = null;
+		}
+	}
+
+	fetch_data_silent() {
+		let self = this;
+		frappe.call({
+			method: 'restaurant_management.restaurant_management.page.restaurant_billing_payments.restaurant_billing_payments.get_billing_data',
+			args: {
+				status: self.active_tab,
+				area: self.selected_area,
+				search: self.search_query,
+				date_filter: self.date_filter
+			},
+			callback: function (r) {
+				if (r.message) {
+					self.data = r.message;
+					self.render_all();
+				}
+			}
+		});
 	}
 
 	bind_global_events() {
@@ -84,6 +135,29 @@ class BillingPayments {
 
 		this.$container.on('click', '.btn-quick-generate-bill', function () {
 			self.open_generate_bill_dialog();
+		});
+
+		this.$container.on('click', '.btn-open-requested-bill', function () {
+			let order_id = $(this).data('order-id');
+			let table_no = $(this).data('table');
+			if (order_id) {
+				self.open_receipt_dialog(order_id);
+			} else if (table_no) {
+				self.open_receipt_dialog(table_no);
+			}
+		});
+
+		this.$container.on('click', '.btn-mark-bill-done', function () {
+			let table_no = $(this).data('table');
+			if (!table_no) return;
+			frappe.call({
+				method: 'restaurant_management.restaurant_management.page.restaurant_billing_payments.restaurant_billing_payments.mark_bill_handled',
+				args: { table_no: table_no },
+				callback: function (r) {
+					frappe.show_alert({ message: __('Bill request for Table {0} marked handled', [table_no]), indicator: 'green' });
+					self.fetch_data();
+				}
+			});
 		});
 	}
 
@@ -107,10 +181,68 @@ class BillingPayments {
 	}
 
 	render_all() {
+		this.render_bill_requests();
 		this.render_kpis();
 		this.render_served_orders();
 		this.render_filters();
 		this.render_bills_table();
+	}
+
+	render_bill_requests() {
+		let $banner = this.$container.find('.billing-live-requests-banner');
+		let requests = (this.data && this.data.bill_requests) || [];
+		if (!requests.length) {
+			$banner.empty().hide();
+			return;
+		}
+
+		let html = `
+			<div class="billing-alerts-card" style="background: #eff6ff; border: 1.5px solid #3b82f6; border-left: 5px solid #2563eb; border-radius: 8px; padding: 12px 16px; margin-bottom: 1.25rem; box-shadow: 0 2px 6px rgba(59, 130, 246, 0.15);">
+				<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+					<div style="font-weight: 800; color: #1e40af; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+						<span class="rm-pulse-dot" style="background: #2563eb; width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span>
+						<i class="fa fa-file-text-o"></i> <span>${__('Guest Bill Requests')} (${requests.length})</span>
+					</div>
+					<span style="font-size: 0.78rem; color: #1d4ed8; font-weight: 600;">${__('Guests waiting for consolidated bill')}</span>
+				</div>
+				<div class="billing-requests-list" style="display: flex; flex-direction: column; gap: 8px;">
+		`;
+
+		requests.forEach(req => {
+			html += `
+				<div class="billing-request-item" data-table="${req.table_no}" data-order-id="${req.order_id || ''}" style="background: #ffffff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+					<div style="display: flex; align-items: center; gap: 12px;">
+						<div style="background: #dbeafe; color: #1e40af; width: 34px; height: 34px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem;">
+							${req.table_no}
+						</div>
+						<div>
+							<div style="font-weight: 800; color: #0f172a; font-size: 0.92rem;">
+								Table ${req.table_no} &bull; ${req.customer || 'Guest'}
+							</div>
+							<div style="font-size: 0.78rem; color: #64748b; margin-top: 2px;">
+								<i class="fa fa-clock-o text-primary"></i> ${__('Requested at')} <strong>${req.time_str || req.requested_at}</strong>
+								${req.order_id ? ` &bull; Order ID: <strong>${req.order_id}</strong>` : ''}
+							</div>
+						</div>
+					</div>
+					<div style="display: flex; gap: 6px;">
+						<button type="button" class="btn btn-xs btn-primary btn-open-requested-bill" data-order-id="${req.order_id || ''}" data-table="${req.table_no}" style="background: #2563eb; border-color: #2563eb; font-weight: 700; padding: 5px 12px;">
+							<i class="fa fa-eye"></i> ${__('View Bill')}
+						</button>
+						<button type="button" class="btn btn-xs btn-default btn-mark-bill-done" data-table="${req.table_no}" style="color: #475569; border-color: #cbd5e1; font-weight: 600; padding: 5px 10px;">
+							<i class="fa fa-check"></i> ${__('Done')}
+						</button>
+					</div>
+				</div>
+			`;
+		});
+
+		html += `
+				</div>
+			</div>
+		`;
+
+		$banner.html(html).show();
 	}
 
 	render_kpis() {

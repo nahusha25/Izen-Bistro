@@ -17,6 +17,21 @@ $(document).on('app_ready', function () {
 	if (currentRoute && currentRoute[0] === 'point-of-sale') {
 		frappe.set_route('restaurant-order-management', 'new-order');
 	}
+
+	// Launcher tiles interaction: ensure clicking Customer Booking opens /book directly
+	$(document).on('click', '.desktop-icon[data-name="Customer Booking"], a[href="/book"], [data-label="Customer Booking"]', function (e) {
+		e.preventDefault();
+		window.location.href = '/book';
+	});
+
+	// Launcher tiles interaction: ensure clicking Restaurant opens staff dashboard
+	$(document).on('click', '.desktop-icon[data-name="Restaurant"], [data-label="Restaurant"]', function (e) {
+		let link = $(this).attr('data-link') || $(this).attr('href');
+		if (!link || link === '/desk' || link.includes('restaurant-dashboard')) {
+			e.preventDefault();
+			frappe.set_route('desk', 'restaurant-dashboard');
+		}
+	});
 });
 
 /**

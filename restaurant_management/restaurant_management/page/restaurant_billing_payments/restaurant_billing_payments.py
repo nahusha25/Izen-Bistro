@@ -55,3 +55,12 @@ def download_bill_pdf(bill_no=None, order_id=None):
 	ident = bill_no or order_id
 	return RestaurantStore.download_bill_pdf(ident)
 
+
+@frappe.whitelist()
+def mark_bill_handled(table_no):
+	"""
+	Marks a bill request as handled by staff/cashier.
+	"""
+	return RestaurantStore.mark_bill_handled(table_no)
+
+
