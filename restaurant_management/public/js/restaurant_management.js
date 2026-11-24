@@ -18,10 +18,10 @@ $(document).on('app_ready', function () {
 		frappe.set_route('restaurant-order-management', 'new-order');
 	}
 
-	// Launcher tiles interaction: ensure clicking Customer Booking opens /book directly
-	$(document).on('click', '.desktop-icon[data-name="Customer Booking"], a[href="/book"], [data-label="Customer Booking"]', function (e) {
+	// Launcher tiles interaction: ensure clicking Customer Booking opens customer booking page directly
+	$(document).on('click', '.desktop-icon[data-name="Customer Booking"], a[href="/book"], a[href="/customer-booking"], [data-label="Customer Booking"]', function (e) {
 		e.preventDefault();
-		window.location.href = '/book';
+		window.location.href = '/customer-booking';
 	});
 
 	// Launcher tiles interaction: ensure clicking Restaurant opens staff dashboard

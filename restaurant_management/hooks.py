@@ -211,63 +211,23 @@ app_include_js = "/assets/restaurant_management/js/restaurant_management.js"
 
 # Request Events
 # ----------------
-# before_request = ["restaurant_management.utils.before_request"]
+before_request = ["restaurant_management.utils.before_request"]
 # after_request = ["restaurant_management.utils.after_request"]
 
-# Job Events
-# ----------
-# before_job = ["restaurant_management.utils.before_job"]
-# after_job = ["restaurant_management.utils.after_job"]
-
-# User Data Protection
+# Website Route Rules
 # --------------------
-
-# user_data_fields = [
-# 	{
-# 		"doctype": "{doctype_1}",
-# 		"filter_by": "{filter_by}",
-# 		"redact_fields": ["{field_1}", "{field_2}"],
-# 		"partial": 1,
-# 	},
-# 	{
-# 		"doctype": "{doctype_2}",
-# 		"filter_by": "{filter_by}",
-# 		"partial": 1,
-# 	},
-# 	{
-# 		"doctype": "{doctype_3}",
-# 		"strict": False,
-# 	},
-# 	{
-# 		"doctype": "{doctype_4}"
-# 	}
-# ]
-
-# Authentication and authorization
-# --------------------------------
-
-# auth_hooks = [
-# 	"restaurant_management.auth.validate"
-# ]
-
-# Automatically update python controller files with type annotations for this app.
-# export_python_type_annotations = True
-
-# default_log_clearing_doctypes = {
-# 	"Logging DocType Name": 30  # days to retain logs
-# }
-
-# Translation
-# ------------
-# List of apps whose translatable strings should be excluded from this app's translations.
-# ignore_translatable_strings_from = []
+website_route_rules = [
+	{"from_route": "/book", "to_route": "book"},
+	{"from_route": "/customer-booking", "to_route": "customer_booking"},
+	{"from_route": "/booking", "to_route": "customer_booking"},
+]
 
 # Fixtures
 fixtures = [
 	{
 		"dt": "Desktop Icon",
 		"filters": [
-			["name", "in", ["Customer Booking", "Restaurant"]]
+			["name", "in", ["Customer Booking", "Restaurant", "Restaurant Management"]]
 		]
 	}
 ]

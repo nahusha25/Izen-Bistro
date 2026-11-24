@@ -8,7 +8,7 @@
  "icon_type": "App",
  "idx": 2,
  "label": "Customer Booking",
- "link": "/book",
+ "link": "/customer-booking",
  "link_to": null,
  "link_type": "External",
  "logo_url": "/assets/restaurant_management/images/calendar_booking.svg",

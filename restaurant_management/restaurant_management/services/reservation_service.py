@@ -330,7 +330,7 @@ class ReservationService:
 				"table_area": b.get("table_area", ""),
 				"notes": b.get("notes", ""),
 				"cancel_token": c_tok,
-				"manage_url": f"/book?ref={b['booking_ref']}&token={c_tok}",
+				"manage_url": f"/customer-booking?ref={b['booking_ref']}&token={c_tok}",
 				"is_retry": True
 			}
 
@@ -375,7 +375,7 @@ class ReservationService:
 					"table_area": b.get("table_area", ""),
 					"notes": b.get("notes", ""),
 					"cancel_token": c_tok,
-					"manage_url": f"/book?ref={b['booking_ref']}&token={c_tok}",
+					"manage_url": f"/customer-booking?ref={b['booking_ref']}&token={c_tok}",
 					"is_retry": True
 				}
 
@@ -489,7 +489,7 @@ class ReservationService:
 				"table_area": assigned_table_area,
 				"notes": (notes or "").strip(),
 				"cancel_token": cancel_token,
-				"manage_url": f"/book?ref={booking_ref}&token={cancel_token}",
+				"manage_url": f"/customer-booking?ref={booking_ref}&token={cancel_token}",
 				"is_retry": False
 			}
 

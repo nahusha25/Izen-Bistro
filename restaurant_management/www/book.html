@@ -1426,7 +1426,8 @@
 
 				// Update URL with manage link so user can bookmark or refresh
 				if (b.cancel_token && window.history.replaceState) {
-					window.history.replaceState({}, '', `/book?ref=${encodeURIComponent(b.booking_ref)}&token=${encodeURIComponent(b.cancel_token)}`);
+					const basePath = window.location.pathname.includes('customer-booking') ? '/customer-booking' : window.location.pathname;
+					window.history.replaceState({}, '', `${basePath}?ref=${encodeURIComponent(b.booking_ref)}&token=${encodeURIComponent(b.cancel_token)}`);
 				}
 
 				bookingCard.style.display = "none";

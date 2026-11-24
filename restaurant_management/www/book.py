@@ -3,8 +3,12 @@
 
 import datetime
 import frappe
-from restaurant_management.restaurant_management.services.restaurant_store import RestaurantStore
-from restaurant_management.restaurant_management.services.reservation_service import ReservationService
+try:
+	from restaurant_management.restaurant_management.services.restaurant_store import RestaurantStore
+	from restaurant_management.restaurant_management.services.reservation_service import ReservationService
+except ImportError:
+	from restaurant_management.services.restaurant_store import RestaurantStore
+	from restaurant_management.services.reservation_service import ReservationService
 
 no_cache = 1
 
