@@ -3,7 +3,10 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<script>window.frappe = window.frappe || {};</script>
+	<!-- csrf_token -->
 	<meta name="csrf-token" content="{{ csrf_token or '' }}">
+	<script>window.frappe.csrf_token = window.frappe.csrf_token || "{{ csrf_token or '' }}";</script>
 	<title>{{ title or "Book a table | Izen Bistro" }}</title>
 	<link rel="icon" type="image/x-icon" href="/assets/restaurant_management/images/dishes/placeholder.jpg">
 	<style>
@@ -1186,8 +1189,10 @@
 			}
 
 			// 3. Fetch Availability
-			async function fetchAvailability() {
-				hideSubmitError();
+			async function fetchAvailability(clearError = true) {
+				if (clearError) {
+					hideSubmitError();
+				}
 				slotsGrid.innerHTML = '<div class="slot-loading">Checking real-time availability...</div>';
 
 				try {
@@ -1365,7 +1370,7 @@
 						isSubmitting = false;
 						btnSubmit.disabled = false;
 						btnSubmit.innerHTML = `<span>Book table</span>`;
-						fetchAvailability();
+						fetchAvailability(false);
 						return;
 					}
 

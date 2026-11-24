@@ -58,9 +58,17 @@ def get_context(context):
 	context.dish_image = "/assets/restaurant_management/images/dishes/biryani_bowl.jpg"
 	csrf = ""
 	try:
-		csrf = frappe.session.csrf_token
+		csrf = getattr(getattr(frappe.local, "session", None), "data", {}).get("csrf_token", "")
+		if not csrf and hasattr(frappe, "session") and hasattr(frappe.session, "data"):
+			csrf = frappe.session.data.get("csrf_token", "")
 	except Exception:
 		pass
+	if not csrf:
+		try:
+			from frappe.sessions import get_csrf_token
+			csrf = get_csrf_token() or ""
+		except Exception:
+			pass
 	context.csrf_token = csrf
 
 	# Support direct booking management link: /book?ref=BK-...&token=...
