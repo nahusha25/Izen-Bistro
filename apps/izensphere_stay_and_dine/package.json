@@ -3,7 +3,7 @@
   "private": true,
   "description": "Build entrypoint for the Izensphere Stay and Dine front-end SPA.",
   "scripts": {
-    "build": "cd frontend && npm run build",
+    "build": "cd frontend && npm ci --no-audit --no-fund && npm run build",
     "dev": "cd frontend && npm run dev"
   }
 }
