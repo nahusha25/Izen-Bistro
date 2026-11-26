@@ -1,0 +1,206 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "allow_rename": 1,
+ "autoname": "format:{property}-{policy_code}",
+ "creation": "2026-11-23 11:55:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "property",
+  "policy_name",
+  "policy_code",
+  "policy_type",
+  "column_break_1",
+  "is_active",
+  "is_default",
+  "section_break_rules",
+  "free_cancel_deadline_hours",
+  "fixed_fee",
+  "percentage_fee",
+  "column_break_2",
+  "no_show_fee_type",
+  "no_show_fee_amount",
+  "allow_hotel_cancellation_waiver",
+  "section_break_description",
+  "description"
+ ],
+ "fields": [
+  {
+   "fieldname": "property",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Property",
+   "options": "Property",
+   "reqd": 1
+  },
+  {
+   "fieldname": "policy_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Policy Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "policy_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Policy Code",
+   "reqd": 1
+  },
+  {
+   "default": "Free Cancellation",
+   "fieldname": "policy_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Policy Type",
+   "options": "Free Cancellation\nFixed Fee\nPercentage\nOne Night Tariff\nNon-Refundable",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Active"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_default",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Default Policy"
+  },
+  {
+   "fieldname": "section_break_rules",
+   "fieldtype": "Section Break",
+   "label": "Cancellation Window & Fees"
+  },
+  {
+   "default": "24",
+   "description": "Hours before check-in time. Set to 0 if cancellation fee applies immediately.",
+   "fieldname": "free_cancel_deadline_hours",
+   "fieldtype": "Int",
+   "label": "Free Cancellation Deadline (Hours before check-in)"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.policy_type=='Fixed Fee'",
+   "fieldname": "fixed_fee",
+   "fieldtype": "Currency",
+   "label": "Fixed Cancellation Fee"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.policy_type=='Percentage'",
+   "fieldname": "percentage_fee",
+   "fieldtype": "Percent",
+   "label": "Percentage Cancellation Fee (%)"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "One Night Tariff",
+   "fieldname": "no_show_fee_type",
+   "fieldtype": "Select",
+   "label": "No-Show Fee Type",
+   "options": "One Night Tariff\nFull Stay\nPercentage\nFixed Fee\nNone"
+  },
+  {
+   "default": "0",
+   "fieldname": "no_show_fee_amount",
+   "fieldtype": "Currency",
+   "label": "No-Show Fee Amount / %"
+  },
+  {
+   "default": "1",
+   "description": "Whether front desk managers can waive cancellation fees for special circumstances",
+   "fieldname": "allow_hotel_cancellation_waiver",
+   "fieldtype": "Check",
+   "label": "Allow Hotel Fee Waiver"
+  },
+  {
+   "fieldname": "section_break_description",
+   "fieldtype": "Section Break",
+   "label": "Guest-Facing Information"
+  },
+  {
+   "description": "Customer-facing description shown on booking cards and confirmations. If left blank, generated automatically.",
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Policy Description"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-11-23 11:55:00.000000",
+ "modified_by": "Administrator",
+ "module": "Izensphere Stay and Dine",
+ "name": "Cancellation Policy",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Hotel Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Revenue Manager",
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Front Desk"
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Kamra Agent"
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "policy_name",
+ "track_changes": 1
+}
