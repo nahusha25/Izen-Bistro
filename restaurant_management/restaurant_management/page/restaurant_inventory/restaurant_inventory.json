@@ -16,9 +16,23 @@
   },
   {
    "role": "Restaurant Manager"
+  },
+  {
+   "role": "Front Desk"
+  },
+  {
+   "role": "F&B Manager"
+  },
+  {
+   "role": "Hotel Admin"
+  },
+  {
+   "role": "Kitchen"
+  },
+  {
+   "role": "Finance"
   }
  ],
  "standard": "Yes",
- "title": "Inventory & Warehouse — Izen Bistro"
+ "title": "Inventory & Warehouse \u2014 Izen Bistro"
 }
-

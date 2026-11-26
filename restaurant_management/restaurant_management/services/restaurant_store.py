@@ -2166,7 +2166,10 @@ class RestaurantStore:
 	@classmethod
 	def get_floor_data(cls):
 		data = cls.get_data()
-		tables = data.get("tables", [])
+		tables = [
+			t for t in data.get("tables", [])
+			if not (t.get("area") == "Room Service" or str(t.get("table_no", "")).startswith("Room "))
+		]
 
 		# Ensure all tables have shape defined (Round or Rectangular)
 		round_tables = {"T-01", "T-03", "T-05", "T-07", "T-09", "T-13", "T-14", "T-17"}
@@ -2242,20 +2245,23 @@ class RestaurantStore:
 
 		# Synchronize active confirmed reservations for today from persistent DB
 		today_res = []
+		all_upcoming = []
 		try:
 			if frappe.db and frappe.db.table_exists("Restaurant Reservation"):
 				today_str = frappe.utils.nowdate()
-				today_res = frappe.db.sql(
+				all_upcoming = frappe.db.sql(
 					"""
-					SELECT booking_ref, table_no, customer_name, customer_mobile, customer_id,
+					SELECT booking_ref, table_no, table_area, customer_name, customer_mobile, customer_id,
 					       booking_date, booking_time, start_time, end_time, party_size, notes, status, source
 					FROM `tabRestaurant Reservation`
-					WHERE booking_date = %s AND status = 'Confirmed'
-					ORDER BY start_time ASC
+					WHERE booking_date >= %s AND status = 'Confirmed'
+					ORDER BY booking_date ASC, start_time ASC
+					LIMIT 40
 					""",
 					(today_str,),
 					as_dict=True
 				)
+				today_res = [r for r in all_upcoming if str(r.get("booking_date")) == str(today_str)]
 		except Exception as e:
 			frappe.log_error(f"Error loading reservations in get_floor_data: {str(e)}")
 
@@ -2369,6 +2375,21 @@ class RestaurantStore:
 			},
 			"areas": areas_list,
 			"tables": tables,
+			"all_upcoming_reservations": [
+				{
+					"booking_ref": r["booking_ref"],
+					"table_no": r["table_no"],
+					"table_area": r.get("table_area") or "Main Dining Hall",
+					"booking_date": str(r["booking_date"]),
+					"booking_time": str(r["booking_time"]),
+					"party_size": r["party_size"],
+					"customer_name": r["customer_name"],
+					"customer_mobile": r.get("customer_mobile") or "",
+					"notes": r.get("notes") or "",
+					"status": r.get("status") or "Confirmed",
+				}
+				for r in all_upcoming
+			],
 			"sample_customers": sample_customers,
 			"customers": customers_list,
 			"menu_items": data.get("menu_items", []),
@@ -2774,6 +2795,155 @@ class RestaurantStore:
 		}
 
 	@classmethod
+	def get_active_room_reservation(cls, room_no, property=None):
+		"""
+		Retrieves the active Checked In reservation for a given hotel room.
+		Matches on exact Room doctype name or any Room sharing room_number across properties.
+		"""
+		if not room_no:
+			return None
+		clean_no = str(room_no).replace("Room", "").replace("room", "").strip()
+		cond_prop = "AND property = %s" if property else ""
+		params = [clean_no, clean_no, f"%-{clean_no}"] + ([property] if property else [])
+		room_docs = frappe.db.sql(
+			f"""
+			SELECT name FROM `tabRoom`
+			WHERE (room_number = %s OR name = %s OR name LIKE %s) {cond_prop}
+			""",
+			tuple(params),
+			as_dict=True,
+		)
+		candidates = {clean_no} | {r["name"] for r in room_docs}
+		placeholders = ", ".join(["%s"] * len(candidates))
+		prop_filter = "AND property = %s" if property else ""
+		q_params = list(candidates) + [f"%-{clean_no}"] + ([property] if property else [])
+		res = frappe.db.sql(
+			f"""
+			SELECT name, guest, guest_name, booked_by_phone, check_in_date, check_out_date,
+			       room, property, status, precheckin_token, room_charges_allowed
+			FROM `tabReservation`
+			WHERE status = 'Checked In'
+			  AND (room IN ({placeholders}) OR room LIKE %s)
+			  {prop_filter}
+			ORDER BY modified DESC
+			LIMIT 1
+			""",
+			tuple(q_params),
+			as_dict=True,
+		)
+		if res:
+			return res[0]
+		return None
+
+	@classmethod
+	def post_room_service_order_to_folio(cls, order):
+		"""
+		Posts delivered room service food charge to the guest's Folio in Izensphere Stay & Dine.
+		Enforces:
+		- 100% Idempotency: exact order_id in ({order_id}) prevents double charges on retry.
+		- Checks room charges permission on stay (assert_room_charges_allowed).
+		- Records itemized dishes, 5% F&B GST, and business date.
+		- Updates order with payment_method='Room Transfer' and payment_status='Charged to Room'.
+		"""
+		if not order:
+			return None
+		order_id = order.get("order_id")
+		res_name = order.get("reservation")
+		room_no = order.get("room") or str(order.get("table_no", "")).replace("Room", "").strip()
+
+		if not res_name and room_no:
+			res_dict = cls.get_active_room_reservation(room_no)
+			if res_dict:
+				res_name = res_dict.get("name")
+				order["reservation"] = res_name
+
+		if not res_name:
+			frappe.log_error(f"Cannot post room charge: No reservation found for room {room_no} (order {order_id})")
+			return None
+
+		res = frappe.get_doc("Reservation", res_name)
+		from izensphere_stay_and_dine.pos import assert_room_charges_allowed
+		assert_room_charges_allowed(res.name)
+
+		from izensphere_stay_and_dine.folio import target_folio, _recalculate
+		folio_name = target_folio(res, "Food & Beverage", is_alcohol=0)
+		folio = frappe.get_doc("Folio", folio_name)
+
+		if folio.status == "Closed":
+			frappe.throw(_("Folio {0} is closed — cannot post room charge.").format(folio_name))
+
+		# IDEMPOTENCY CHECK
+		ref_tag = f"({order_id})"
+		existing_charge = next((c for c in folio.charges if ref_tag in (c.description or "")), None)
+
+		data = cls.get_data()
+		live_order = next((o for o in data.get("orders", []) if o.get("order_id") == order_id), order)
+
+		if existing_charge:
+			live_order["posted_to_folio"] = True
+			live_order["folio"] = folio.name
+			live_order["folio_charge_id"] = existing_charge.name
+			live_order["payment_method"] = "Room Transfer"
+			live_order["payment_status"] = "Charged to Room"
+			cls.save_data(data)
+			return {
+				"already_posted": True,
+				"folio": folio.name,
+				"charge_name": existing_charge.name,
+				"order_id": order_id
+			}
+
+		items = live_order.get("items", [])
+		detail = ", ".join(f"{it.get('name')} ×{int(it.get('quantity', 1))}" for it in items)
+		desc = f"Room Service: {detail} ({order_id})"
+
+		from izensphere_stay_and_dine.business_date import get_business_date
+		bdate = get_business_date(res.property)
+		order_subtotal = float(live_order.get("subtotal") or round(float(live_order.get("total", 0)) / 1.05, 2))
+		gst_rate = 5.0
+
+		folio.append("charges", {
+			"posting_date": bdate,
+			"charge_type": "Food & Beverage",
+			"reservation": res.name,
+			"description": desc,
+			"qty": 1,
+			"rate": order_subtotal,
+			"amount": order_subtotal,
+			"gst_rate": gst_rate,
+			"auto_posted": 1,
+			"is_alcohol": 0,
+		})
+		_recalculate(folio)
+
+		from izensphere_stay_and_dine.ledger import save_folio, record_charge_ledger
+		save_folio(folio)
+
+		new_charge = folio.charges[-1]
+		try:
+			record_charge_ledger(folio, new_charge.as_dict())
+		except Exception:
+			frappe.log_error(title="Folio ledger charge write failed")
+
+		live_order["posted_to_folio"] = True
+		live_order["folio"] = folio.name
+		live_order["folio_charge_id"] = new_charge.name
+		live_order["payment_method"] = "Room Transfer"
+		live_order["payment_status"] = "Charged to Room"
+		cls.save_data(data)
+
+		order_total = round(float(live_order.get("total") or round(order_subtotal * 1.05, 2)), 2)
+
+		return {
+			"success": True,
+			"folio": folio.name,
+			"charge_name": new_charge.name,
+			"order_id": order_id,
+			"total": order_total,
+			"description": desc
+		}
+
+	@classmethod
 	def update_table_status(
 		cls,
 		table_no,
@@ -2918,7 +3088,10 @@ class RestaurantStore:
 		No artificial/historical demo counts or revenues are mixed into today's operational totals.
 		"""
 		data = cls.get_data()
-		tables = data.get("tables", [])
+		tables = [
+			t for t in data.get("tables", [])
+			if not (t.get("area") == "Room Service" or str(t.get("table_no", "")).startswith("Room "))
+		]
 		orders = data.get("orders", [])
 		hist = data.get("historical_summary", {})
 		bills = data.get("bills", [])
@@ -3796,15 +3969,46 @@ class RestaurantStore:
 
 		table = next((t for t in data.get("tables", []) if t["table_no"] == table_no), None)
 		if not table:
-			frappe.throw(_("Table {0} not found").format(table_no))
+			if str(table_no).startswith("Room") or cls.get_active_room_reservation(table_no):
+				clean_no = str(table_no).replace("Room", "").replace("room", "").strip()
+				table = {
+					"table_no": f"Room {clean_no}",
+					"area": "Room Service",
+					"capacity": 2,
+					"status": "Available",
+					"order_id": None,
+					"customer": customer or "Hotel Guest",
+					"customer_mobile": customer_mobile or "",
+					"service_type": "Room Service",
+				}
+				data.setdefault("tables", []).append(table)
+			else:
+				frappe.throw(_("Table {0} not found").format(table_no))
 
-		# Prevent duplicate active orders on already occupied tables
+		# Prevent duplicate active orders on already occupied tables (auto-release stale dynamic Room Service slots)
 		if table.get("status") == "Occupied" and table.get("order_id"):
-			frappe.throw(
-				_("Table {0} already has an active order ({1}) and is currently occupied.").format(
-					table_no, table["order_id"]
-				)
+			is_room_table = table.get("area") == "Room Service" or str(table_no).startswith("Room")
+			existing_tbl_order = next(
+				(o for o in data.get("orders", []) if o.get("order_id") == table.get("order_id")),
+				None,
 			)
+			order_still_active = bool(
+				existing_tbl_order
+				and existing_tbl_order.get("status") not in ("Delivered", "Served", "Paid", "Cancelled")
+			)
+			if is_room_table and (
+				not order_still_active
+				or (customer_id and existing_tbl_order and existing_tbl_order.get("reservation") and existing_tbl_order.get("reservation") != customer_id)
+			):
+				table["status"] = "Available"
+				table["order_id"] = None
+				table["order_status"] = None
+			else:
+				frappe.throw(
+					_("Table {0} already has an active order ({1}) and is currently occupied.").format(
+						table_no, table["order_id"]
+					)
+				)
 
 		# Auto-resolve customer from table if occupied or available
 		if not customer_mobile and table.get("customer_mobile"):
@@ -3840,7 +4044,7 @@ class RestaurantStore:
 		for it in items:
 			item_id = it.get("item_id")
 			try:
-				qty = int(it.get("qty", 1))
+				qty = int(it.get("qty") or it.get("quantity") or 1)
 			except (ValueError, TypeError):
 				qty = 1
 			if qty <= 0:
@@ -3910,6 +4114,7 @@ class RestaurantStore:
 			"Preparing": "badge-preparing",
 			"Ready": "badge-warning",
 			"Served": "badge-served",
+			"Delivered": "badge-served",
 			"Billed": "badge-billed",
 			"Paid": "badge-positive",
 			"Cancelled": "badge-neutral",
@@ -3938,6 +4143,10 @@ class RestaurantStore:
 			"created_time_str": created_time_str,
 			"time_ago": "Just now",
 			"inventory_deducted": False,
+			"service_type": "Room Service" if (str(table_no).startswith("Room") or table.get("service_type") == "Room Service") else "Dine-in",
+			"room": str(table_no).replace("Room", "").strip() if (str(table_no).startswith("Room") or table.get("service_type") == "Room Service") else "",
+			"payment_method": "Room Transfer" if (str(table_no).startswith("Room") or table.get("service_type") == "Room Service") else "",
+			"payment_status": "Pending",
 			"payment_status": "Unpaid",
 			"payment_method": "",
 			"notes": notes or "",
@@ -4041,7 +4250,7 @@ class RestaurantStore:
 		for it in items:
 			item_id = it.get("item_id")
 			try:
-				qty = int(it.get("qty", 1))
+				qty = int(it.get("qty") or it.get("quantity") or 1)
 			except (ValueError, TypeError):
 				qty = 1
 			if qty <= 0:
@@ -4558,6 +4767,7 @@ class RestaurantStore:
 			filtered_active.append(t)
 
 		return {
+			"tickets": active_tickets,
 			"kpis": {
 				"new_orders": len(confirmed_tickets),
 				"preparing": len(preparing_tickets),
@@ -4569,7 +4779,7 @@ class RestaurantStore:
 				"preparing": [t for t in filtered_active if t.get("status") == "Preparing"],
 				"ready": [t for t in filtered_active if t.get("status") == "Ready"],
 			},
-			"areas": ["All Areas", "Main Dining Hall", "Garden Patio", "Rooftop Terrace"],
+			"areas": ["All Areas", "Main Dining Hall", "Garden Patio", "Rooftop Terrace", "Room Service"],
 			"server_time": frappe.utils.now(),
 		}
 
@@ -4609,7 +4819,7 @@ class RestaurantStore:
 		}
 
 		# Handle kitchen food preparation stock deduction and cancellation reversal
-		if new_status in ["Preparing", "Ready", "Served"]:
+		if new_status in ["Preparing", "Ready", "Served", "Delivered"]:
 			if target_batch and not target_batch.get("inventory_deducted"):
 				cls._deduct_inventory_for_order(data, target_order, batch_id=target_batch.get("batch_id"))
 			elif target_order and not target_order.get("inventory_deducted"):
@@ -4639,12 +4849,27 @@ class RestaurantStore:
 			for b in target_order.get("batches", []):
 				b["status"] = new_status
 
-		# Sync table order_status
+		# Sync table order_status (and release dynamic Room Service table slot once delivered/cancelled)
 		table = next((t for t in data.get("tables", []) if t.get("order_id") == target_order.get("order_id")), None)
 		if table:
 			table["order_status"] = target_order["status"]
+			is_room_slot = table.get("area") == "Room Service" or str(table.get("table_no", "")).startswith("Room")
+			if is_room_slot and new_status in ["Served", "Delivered", "Cancelled"]:
+				table["status"] = "Available"
+				table["order_id"] = None
 
 		cls.save_data(data)
+
+		if new_status in ["Served", "Delivered"]:
+			if target_order.get("service_type") == "Room Service" or target_order.get("area") == "Room Service" or target_order.get("reservation") or str(target_order.get("table_no", "")).startswith("Room"):
+				try:
+					post_res = cls.post_room_service_order_to_folio(target_order)
+					if isinstance(post_res, dict) and post_res.get("folio"):
+						target_order["posted_to_folio"] = True
+						target_order["folio"] = post_res["folio"]
+				except Exception as e:
+					frappe.log_error(f"Error posting room charge on {new_status}: {str(e)}")
+
 		return target_order
 
 	# =========================================================================
@@ -7365,11 +7590,78 @@ def api_get_table_qr(table_no):
 @frappe.whitelist(allow_guest=True)
 def api_get_table_menu(table_no, visit_code=None):
 	"""
-	Public customer endpoint to browse menu and view table state.
+	Public customer endpoint to browse menu and view table/room state.
 	Anonymous browsing is permitted.
-	If valid visit_code is supplied for an Occupied table, active orders are returned.
+	Supports both dining tables (e.g. T-03) and hotel room service (e.g. Room 204).
 	"""
 	data = RestaurantStore.get_data()
+
+	# Check if this is a hotel room service request
+	is_room = str(table_no).startswith("Room") or str(table_no).isdigit() or RestaurantStore.get_active_room_reservation(table_no)
+	if is_room:
+		clean_room = str(table_no).replace("Room", "").replace("room", "").strip()
+		res = RestaurantStore.get_active_room_reservation(clean_room)
+		target_table_no = f"Room {clean_room}"
+		if not res:
+			is_seated = False
+			is_verified = False
+			token_invalid = False
+			table_status = "Vacant"
+			guest_name = ""
+			room_charges_allowed = False
+			active_order = None
+		else:
+			is_staff = (getattr(frappe.session, "user", None) != "Guest")
+			clean_code = str(visit_code).strip() if visit_code else ""
+			expected_token = str(res.get("precheckin_token") or "").strip()
+			is_verified = is_staff or bool(clean_code and (clean_code == expected_token or clean_code == expected_token[:4]))
+			token_invalid = bool(clean_code and not is_verified)
+			table_status = "Vacant" if token_invalid else "Occupied"
+			is_seated = False if token_invalid else True
+			guest_name = res.get("guest_name", "") if is_verified else ""
+			room_charges_allowed = bool(res.get("room_charges_allowed", 1))
+			active_order = None
+			if is_verified:
+				active_order = next((RestaurantStore.get_order_details(o["order_id"]) for o in data.get("orders", []) if (o.get("table_no") == target_table_no or o.get("reservation") == res["name"]) and o.get("status") not in ["Cancelled", "Paid"]), None)
+
+		menu_items = []
+		for it in data.get("menu_items", []):
+			menu_items.append({
+				"item_id": it.get("item_id"),
+				"name": it.get("name"),
+				"category": it.get("category"),
+				"price": it.get("price"),
+				"is_veg": it.get("is_veg", True),
+				"image": it.get("image", ""),
+				"description": it.get("description", ""),
+				"available": it.get("available", True),
+			})
+		restaurant_info = RestaurantStore.get_restaurant_info()
+
+		return {
+			"table": {
+				"table_no": target_table_no,
+				"area": "Room Service",
+				"capacity": 2,
+				"status": table_status,
+				"is_seated": is_seated,
+				"is_verified": is_verified,
+				"token_invalid": token_invalid,
+				"has_active_order": bool(active_order),
+				"guest_name": guest_name,
+				"room_charges_allowed": room_charges_allowed,
+				"checked_out": not is_seated,
+				"waiter_request": None,
+				"bill_request": None,
+			},
+			"restaurant": {
+				"name": restaurant_info.get("name", "Izen Bistro"),
+				"tagline": restaurant_info.get("tagline", "Nagarbhavi, Bengaluru"),
+			},
+			"menu_items": menu_items,
+			"active_order": active_order,
+		}
+
 	tables = data.get("tables", [])
 	target = next((t for t in tables if t.get("table_no") == table_no), None)
 	if not target:
@@ -7426,9 +7718,37 @@ def api_get_table_menu(table_no, visit_code=None):
 @frappe.whitelist(allow_guest=True)
 def api_verify_table_passcode(table_no, visit_code):
 	"""
-	Validates that the entered 4-digit passcode matches the currently seated visit.
+	Validates that the entered passcode matches the seated table visit or active hotel room stay.
 	"""
 	data = RestaurantStore.get_data()
+
+	is_room = str(table_no).startswith("Room") or str(table_no).isdigit() or RestaurantStore.get_active_room_reservation(table_no)
+	if is_room:
+		clean_room = str(table_no).replace("Room", "").replace("room", "").strip()
+		res = RestaurantStore.get_active_room_reservation(clean_room)
+		if not res:
+			frappe.throw(_("Room {0} does not currently have an active checked-in guest.").format(clean_room))
+
+		clean_code = str(visit_code).strip() if visit_code else ""
+		expected_token = str(res.get("precheckin_token") or "").strip()
+		is_staff = (getattr(frappe.session, "user", None) != "Guest")
+
+		if not is_staff and not (clean_code and (clean_code == expected_token or clean_code == expected_token[:4])):
+			frappe.throw(_("Incorrect stay passcode for Room {0}. Please check your stay details or keycard.").format(clean_room))
+
+		target_table_no = f"Room {clean_room}"
+		active_order = next((RestaurantStore.get_order_details(o["order_id"]) for o in data.get("orders", []) if (o.get("table_no") == target_table_no or o.get("reservation") == res["name"]) and o.get("status") not in ["Cancelled", "Paid"]), None)
+
+		return {
+			"verified": True,
+			"table_no": target_table_no,
+			"area": "Room Service",
+			"guest_name": res.get("guest_name", ""),
+			"active_order": active_order,
+			"waiter_request": None,
+			"bill_request": None,
+		}
+
 	tables = data.get("tables", [])
 	target = next((t for t in tables if t.get("table_no") == table_no), None)
 	if not target:
@@ -7460,13 +7780,13 @@ def api_verify_table_passcode(table_no, visit_code):
 @frappe.whitelist(allow_guest=True)
 def api_submit_guest_order(table_no, visit_code, items, notes="", idempotency_key=""):
 	"""
-	Guest order submission endpoint.
+	Guest order submission endpoint for both Dining Tables and Room Service.
 	Enforces:
-	1. Table must be currently Occupied.
-	2. visit_code must match the active seated visit.
+	1. Table must be Occupied OR hotel room must have an active Checked In reservation.
+	2. visit_code must match the active seated visit or private stay precheckin_token.
 	3. Items cannot be empty and items must be available.
 	4. Idempotency: exact idempotency_key returns cached response without duplicate additions or deductions.
-	5. Appends items to active order if one exists, or creates the first order for the visit.
+	5. Appends items to active order if one exists, or creates the first order for the visit/stay.
 	"""
 	if isinstance(items, str):
 		try:
@@ -7478,6 +7798,103 @@ def api_submit_guest_order(table_no, visit_code, items, notes="", idempotency_ke
 		frappe.throw(_("Your order must contain at least one dish."))
 
 	data = RestaurantStore.get_data()
+
+	# Handle Hotel Room Service
+	is_room = str(table_no).startswith("Room") or str(table_no).isdigit() or RestaurantStore.get_active_room_reservation(table_no)
+	if is_room:
+		clean_room = str(table_no).replace("Room", "").replace("room", "").strip()
+		res = RestaurantStore.get_active_room_reservation(clean_room)
+		if not res:
+			frappe.throw(_("Room service ordering is closed for Room {0}. Guest is no longer checked in.").format(clean_room))
+
+		clean_code = str(visit_code).strip() if visit_code else ""
+		expected_token = str(res.get("precheckin_token") or "").strip()
+		is_staff = (getattr(frappe.session, "user", None) != "Guest")
+		if not is_staff and not (clean_code and (clean_code == expected_token or clean_code == expected_token[:4])):
+			frappe.throw(_("Your stay has ended or this stay token is no longer active for Room {0}.").format(clean_room))
+
+		from izensphere_stay_and_dine.pos import assert_room_charges_allowed
+		assert_room_charges_allowed(res["name"])
+
+		target_table_no = f"Room {clean_room}"
+
+		# Check idempotency
+		idempotency_records = data.setdefault("idempotency_records", {})
+		if idempotency_key and idempotency_key in idempotency_records:
+			cached = idempotency_records[idempotency_key]
+			if cached.get("table_no") == target_table_no and cached.get("reservation") == res["name"]:
+				return cached.get("response")
+
+		existing_order = next((o for o in data.get("orders", []) if (o.get("table_no") == target_table_no or o.get("reservation") == res["name"]) and o.get("status") not in ["Cancelled", "Paid"]), None)
+
+		if existing_order:
+			res_order = RestaurantStore.add_items_to_order(
+				order_id=existing_order["order_id"],
+				table_no=target_table_no,
+				items=items,
+				notes=notes
+			)
+			order_obj = res_order.get("order", {})
+			order_id = existing_order["order_id"]
+			new_batch = res_order.get("new_batch", {})
+			round_no = res_order.get("round", 2)
+			batch_id = new_batch.get("batch_id") or f"{order_id}-R{round_no}"
+			total_amount = order_obj.get("total", 0)
+			formatted_amount = order_obj.get("formatted_amount") or f"₹{total_amount:,}"
+			order_status = order_obj.get("status", "Confirmed")
+			items_list = order_obj.get("items", [])
+		else:
+			# Ensure no stale order_id on dynamic room table
+			for t in data.get("tables", []):
+				if t.get("table_no") == target_table_no:
+					t["order_id"] = None
+			RestaurantStore.save_data(data)
+
+			res_order = RestaurantStore.create_order(
+				table_no=target_table_no,
+				customer=res.get("guest_name", "Hotel Guest"),
+				items=items,
+				notes=notes,
+				initial_status="Confirmed",
+				customer_mobile=res.get("booked_by_phone", ""),
+				customer_id=res["name"]
+			)
+			order_id = res_order.get("order_id")
+			batch_id = f"{order_id}-R1"
+			round_no = 1
+			total_amount = res_order.get("total", 0)
+			formatted_amount = res_order.get("formatted_amount") or f"₹{total_amount:,}"
+			order_status = res_order.get("status", "Confirmed")
+			items_list = res_order.get("items", [])
+
+		result_payload = {
+			"success": True,
+			"order_id": order_id,
+			"batch_id": batch_id,
+			"round": round_no,
+			"table_no": target_table_no,
+			"room": clean_room,
+			"total": total_amount,
+			"formatted_amount": formatted_amount,
+			"status": order_status,
+			"message": f"Room service order sent to Bistro kitchen! (Round {round_no})",
+			"items": items_list,
+		}
+
+		if idempotency_key:
+			fresh_data = RestaurantStore.get_data()
+			fresh_data.setdefault("idempotency_records", {})[idempotency_key] = {
+				"table_no": target_table_no,
+				"reservation": res["name"],
+				"order_id": order_id,
+				"batch_id": batch_id,
+				"response": result_payload,
+				"timestamp": frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M:%S")
+			}
+			RestaurantStore.save_data(fresh_data)
+
+		return result_payload
+
 	tables = data.get("tables", [])
 	target = next((t for t in tables if t.get("table_no") == table_no), None)
 	if not target:
@@ -7632,4 +8049,246 @@ def api_cancel_customer_booking(booking_ref, cancel_token, reason=""):
 
 
 
+
+
+
+# =============================================================================
+# Room Service & Front Desk Integration APIs
+# =============================================================================
+
+@frappe.whitelist()
+def api_submit_reception_room_order(room, items, notes="", property=None):
+	"""
+	Reception staff endpoint to enter room service orders for an active in-house stay.
+	"""
+	if getattr(frappe.session, "user", None) == "Guest":
+		frappe.throw(_("Staff authentication required to place orders from reception."), frappe.PermissionError)
+
+	clean_room = str(room).replace("Room", "").replace("room", "").strip()
+	if "-" in clean_room:
+		room_number_val = frappe.db.get_value("Room", clean_room, "room_number") or clean_room.split("-")[-1]
+	else:
+		room_number_val = clean_room
+	res = RestaurantStore.get_active_room_reservation(room_number_val, property=property)
+	if not res:
+		frappe.throw(_("Cannot place room service order: Room {0} has no active checked-in guest.").format(room_number_val))
+
+	from izensphere_stay_and_dine.pos import assert_room_charges_allowed
+	assert_room_charges_allowed(res["name"])
+
+	data = RestaurantStore.get_data()
+	room_table = f"Room {room_number_val}"
+	existing_order = next(
+		(
+			o for o in data.get("orders", [])
+			if (o.get("reservation") == res["name"] or (not o.get("reservation") and o.get("table_no") == room_table))
+			and o.get("status") not in ["Cancelled", "Paid", "Served", "Delivered"]
+		),
+		None,
+	)
+
+	if isinstance(items, str):
+		try:
+			items = json.loads(items)
+		except Exception:
+			items = []
+
+	if existing_order:
+		res_order = RestaurantStore.add_items_to_order(order_id=existing_order["order_id"], table_no=room_table, items=items, notes=notes)
+		order_obj = res_order.get("order", {})
+		order_id = existing_order["order_id"]
+		round_no = res_order.get("round", 2)
+		batch_id = res_order.get("new_batch", {}).get("batch_id") or f"{order_id}-R{round_no}"
+		total_amount = order_obj.get("total", 0)
+		formatted_amount = order_obj.get("formatted_amount") or f"₹{total_amount:,}"
+		items_list = order_obj.get("items", [])
+	else:
+		# Clear any stale occupied state on dynamic room slot before creating a new stay order
+		changed_stale = False
+		for t in data.get("tables", []):
+			if t.get("table_no") == room_table:
+				t["order_id"] = None
+				t["status"] = "Available"
+				changed_stale = True
+		if changed_stale:
+			RestaurantStore.save_data(data)
+
+		res_order = RestaurantStore.create_order(
+			table_no=room_table,
+			customer=res.get("guest_name", "Hotel Guest"),
+			items=items,
+			notes=notes,
+			initial_status="Confirmed",
+			customer_mobile=res.get("booked_by_phone", ""),
+			customer_id=res["name"],
+		)
+		order_id = res_order.get("order_id")
+		round_no = 1
+		batch_id = f"{order_id}-R1"
+		total_amount = res_order.get("total", 0)
+		formatted_amount = res_order.get("formatted_amount") or f"₹{total_amount:,}"
+		items_list = res_order.get("items", [])
+
+	# Explicitly stamp Room Service metadata on the stored order
+	latest_data = RestaurantStore.get_data()
+	stored = next((o for o in latest_data.get("orders", []) if o.get("order_id") == order_id), None)
+	if stored:
+		stored["service_type"] = "Room Service"
+		stored["area"] = "Room Service"
+		stored["room"] = room_number_val
+		stored["reservation"] = res["name"]
+		stored["property"] = res.get("property") or ""
+		RestaurantStore.save_data(latest_data)
+
+	return {
+		"success": True,
+		"order_id": order_id,
+		"batch_id": batch_id,
+		"round": round_no,
+		"room": room_number_val,
+		"table_no": room_table,
+		"guest_name": res.get("guest_name", ""),
+		"reservation": res["name"],
+		"total": total_amount,
+		"formatted_amount": formatted_amount,
+		"message": f"Reception order sent to Bistro kitchen! (Round {round_no})",
+		"items": items_list,
+	}
+
+
+@frappe.whitelist()
+def api_get_room_service_overview(property=None):
+	"""Returns active checked-in hotel rooms + all Room Service orders + Bistro menu."""
+	if getattr(frappe.session, "user", None) == "Guest":
+		frappe.throw(_("Staff authentication required."), frappe.PermissionError)
+
+	data = RestaurantStore.get_data()
+	res_filters = {"status": "Checked In", "room": ("is", "set")}
+	if property:
+		res_filters["property"] = property
+	stays = frappe.get_all(
+		"Reservation",
+		filters=res_filters,
+		fields=["name", "property", "guest_name", "room", "check_in_date", "check_out_date", "room_charges_allowed", "precheckin_token"],
+		order_by="room asc",
+	)
+	room_nums = {
+		r.name: r.room_number
+		for r in frappe.get_all(
+			"Room",
+			filters={"property": property} if property else {},
+			fields=["name", "room_number"],
+		)
+	}
+	checked_in = []
+	for s in stays:
+		rn = room_nums.get(s.room) or (s.room.split("-")[-1] if s.room and "-" in s.room else s.room)
+		checked_in.append({
+			"reservation": s.name,
+			"property": s.property,
+			"guest_name": s.guest_name,
+			"room": s.room,
+			"room_number": rn,
+			"check_in_date": str(s.check_in_date),
+			"check_out_date": str(s.check_out_date),
+			"room_charges_allowed": int(s.room_charges_allowed if s.room_charges_allowed is not None else 1),
+		})
+
+	res_set = {s.name for s in stays}
+	orders = []
+	for o in data.get("orders", []):
+		is_rs = (
+			o.get("service_type") == "Room Service"
+			or o.get("area") == "Room Service"
+			or str(o.get("table_no", "")).startswith("Room ")
+			or o.get("room")
+		)
+		if not is_rs:
+			continue
+		if property and o.get("property") and o.get("property") != property and o.get("reservation") not in res_set:
+			continue
+		rn = o.get("room") or str(o.get("table_no", "")).replace("Room", "").strip()
+		orders.append({
+			"order_id": o.get("order_id"),
+			"room": rn,
+			"table_no": o.get("table_no") or f"Room {rn}",
+			"guest_name": o.get("customer") or "Guest",
+			"reservation": o.get("reservation") or o.get("customer_id") or "",
+			"status": o.get("status") or "Confirmed",
+			"items": o.get("items") or [],
+			"batches": o.get("batches") or [],
+			"notes": o.get("notes") or "",
+			"subtotal": o.get("subtotal") or 0,
+			"total": o.get("total") or 0,
+			"formatted_amount": o.get("formatted_amount") or f"₹{o.get('total') or 0}",
+			"posted_to_folio": bool(o.get("posted_to_folio")),
+			"folio": o.get("folio") or "",
+			"created_at": o.get("created_at") or "",
+			"created_time_str": o.get("created_time_str") or "",
+		})
+
+	orders.sort(key=lambda x: x.get("created_at") or "", reverse=True)
+	return {
+		"checked_in_rooms": checked_in,
+		"orders": orders,
+		"menu_items": [m for m in data.get("menu_items", []) if m.get("available", True)],
+		"base_url": RestaurantStore.get_customer_base_url(),
+	}
+
+
+@frappe.whitelist()
+def api_get_room_qr(room):
+	"""
+	Returns the QR code SVG and URL for In-Room Dining for a hotel room.
+	URL is generated from the integration site's configured customer address.
+	"""
+	clean_room = str(room).replace("Room", "").replace("room", "").strip()
+	base_url = RestaurantStore.get_customer_base_url()
+	res = RestaurantStore.get_active_room_reservation(clean_room)
+	if res and res.get("precheckin_token"):
+		room_url = f"{base_url}/order?room={clean_room}&token={res.get('precheckin_token')}"
+	else:
+		room_url = f"{base_url}/order?room={clean_room}"
+
+	svg_content = ""
+	try:
+		import io
+		from pyqrcode import create as qrcreate
+		code = qrcreate(room_url, error="M")
+		stream = io.BytesIO()
+		code.svg(stream, scale=6, background="#ffffff", module_color="#1e3a8a", quiet_zone=4, xmldecl=False, omithw=True)
+		svg_content = stream.getvalue().decode("utf-8").strip()
+		if "<svg" in svg_content:
+			if "viewBox=" not in svg_content:
+				svg_content = svg_content.replace("<svg ", '<svg viewBox="0 0 246 246" ', 1)
+			if 'width="100%"' not in svg_content:
+				svg_content = svg_content.replace("<svg ", '<svg width="100%" height="100%" style="display:block;width:100%;height:100%;aspect-ratio:1/1;" ', 1)
+	except Exception as e:
+		frappe.log_error(f"Error generating room QR: {str(e)}")
+
+	return {
+		"room": clean_room,
+		"room_url": room_url,
+		"qr_svg": svg_content,
+		"has_guest": bool(res),
+		"guest_name": res.get("guest_name", "") if res else ""
+	}
+
+
+@frappe.whitelist()
+def api_post_room_order_to_folio(order_id):
+	"""
+	Staff/system endpoint to manually or idempotently post/re-post a room service order to hotel folio.
+	"""
+	data = RestaurantStore.get_data()
+	order = next((o for o in data.get("orders", []) if o.get("order_id") == order_id), None)
+	if not order:
+		frappe.throw(_("Order {0} not found").format(order_id))
+	return RestaurantStore.post_room_service_order_to_folio(order)
+
+
+# Bind module-level api_* functions onto RestaurantStore class for convenience
+for _attr_name in list(globals().keys()):
+	if _attr_name.startswith("api_") and callable(globals()[_attr_name]):
+		setattr(RestaurantStore, _attr_name, staticmethod(globals()[_attr_name]))
 

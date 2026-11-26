@@ -227,7 +227,7 @@ fixtures = [
 	{
 		"dt": "Desktop Icon",
 		"filters": [
-			["name", "in", ["Customer Booking", "Restaurant", "Restaurant Management"]]
+			["name", "in", ["Customer Booking", "Izen Bistro", "Restaurant Management", "Izen Stay & Dine"]]
 		]
 	}
 ]

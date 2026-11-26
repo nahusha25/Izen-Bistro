@@ -597,9 +597,12 @@ class KitchenDisplaySystem {
 				</button>
 			`;
 		} else if (colType === 'ready') {
+			const isRoom = (order.area === 'Room Service' || (order.table_no && String(order.table_no).startsWith('Room')));
+			const btnLabel = isRoom ? __('Mark Delivered') : __('Mark Served');
+			const nextStatus = isRoom ? 'Delivered' : 'Served';
 			actionBtnHtml = `
-				<button type="button" class="btn-kds-action btn-mark-served" data-order-id="${order.order_id}" data-next-status="Served">
-					<i class="fa fa-check"></i> ${__('Mark Served')}
+				<button type="button" class="btn-kds-action btn-mark-served" data-order-id="${order.order_id}" data-next-status="${nextStatus}">
+					<i class="fa fa-check"></i> ${btnLabel}
 				</button>
 			`;
 		}
@@ -827,7 +830,7 @@ class KitchenDisplaySystem {
 					</div>
 					<div>
 						<div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; font-weight: 700;">${__('Table & Area')}</div>
-						<div style="font-size: 1rem; font-weight: 700; color: #0f172a;">Table ${ticket.table_no} &bull; ${ticket.area}</div>
+						<div style="font-size: 1rem; font-weight: 700; color: #0f172a;">${(String(ticket.table_no).startsWith('Room') ? ticket.table_no : ('Table ' + ticket.table_no))} &bull; ${ticket.area}</div>
 					</div>
 					<div>
 						<div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; font-weight: 700;">${__('Customer')}</div>

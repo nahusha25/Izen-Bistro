@@ -1007,31 +1007,55 @@
 
 			<div class="table-badge-pill" id="tableBadge">
 				<span class="table-dot {{ '' if is_seated else 'inactive' }}" id="tableStatusDot"></span>
-				<span id="tableLabel">Table {{ table_no }}</span>
+				<span id="tableLabel">{% if room_entry_mode %}In-Room Dining{% elif table_no.startswith("Room") %}{{ table_no }}{% else %}Table {{ table_no }}{% endif %}</span>
 			</div>
 		</div>
 	</header>
 
 	<main class="order-container">
 
-		<!-- Table Status Bar -->
-		<div class="table-status-bar" id="statusBar">
+		{% if room_entry_mode %}
+		<div class="table-status-bar" id="roomEntryCard" style="flex-direction: column; align-items: stretch; gap: 14px; padding: 24px; max-width: 540px; margin: 28px auto;">
+			<div style="display:flex; align-items:center; gap:10px;">
+				<span style="font-size:24px;">🏨</span>
+				<div>
+					<div style="font-size:17px; font-weight:700; color:#0f172a;">In-Room Dining — Enter Your Room Number</div>
+					<div style="font-size:13px; color:#64748b;">Enter only your hotel room number to open the room service menu.</div>
+				</div>
+			</div>
+			<form id="roomEntryForm" onsubmit="event.preventDefault(); const v = document.getElementById('roomNumberInput').value.trim(); if (v) window.location.href='/order?room=' + encodeURIComponent(v);" style="display:flex; gap:10px; flex-wrap:wrap;">
+				<input type="text" id="roomNumberInput" placeholder="Enter Room No (e.g. 101 or Room 4)" required autofocus style="flex:1; min-width:200px; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:15px;" />
+				<button type="submit" id="btnGoToRoom" style="padding:10px 18px; border-radius:10px; border:none; background:#142b49; color:#fff; font-weight:600; font-size:14px; cursor:pointer;">Open Room Service Menu →</button>
+			</form>
+		</div>
+		{% endif %}
+
+		<!-- Table / Room Status Bar -->
+		<div class="table-status-bar" id="statusBar" {% if room_entry_mode %}style="display:none;"{% endif %}>
 			<div class="status-info">
 				<span class="status-icon" id="statusIcon">
-					{% if is_seated %}🍽️{% else %}ℹ️{% endif %}
+					{% if is_room_service %}🏨{% elif is_seated %}🍽️{% else %}ℹ️{% endif %}
 				</span>
 				<div class="status-text" id="statusMessage">
-					{% if is_seated %}
-						Table <strong>{{ table_no }}</strong> is seated • Enter passcode to order
+					{% if is_room_service %}
+						{% if is_seated %}
+							<strong>{{ table_no }}</strong>{% if guest_name %} • Guest: <strong>{{ guest_name }}</strong>{% endif %} • Room Service Active
+						{% else %}
+							<strong>{{ table_no }}</strong> • Your stay has ended • Room service ordering is closed
+						{% endif %}
 					{% else %}
-						Table <strong>{{ table_no }}</strong> is currently open • Browse menu freely
+						{% if is_seated %}
+							Table <strong>{{ table_no }}</strong> is seated • Enter passcode to order
+						{% else %}
+							Table <strong>{{ table_no }}</strong> is currently open • Browse menu freely
+						{% endif %}
 					{% endif %}
 				</div>
 			</div>
 
 			<div id="statusAction">
 				{% if is_seated %}
-					<button type="button" class="btn-unlock-visit" id="btnOpenPasscodeModal">Enter Passcode</button>
+					<button type="button" class="btn-unlock-visit" id="btnOpenPasscodeModal">{% if is_room_service %}Enter Stay Passcode{% else %}Enter Passcode{% endif %}</button>
 				{% endif %}
 			</div>
 		</div>
@@ -1154,24 +1178,34 @@
 
 	<!-- Passcode Verification Modal Sheet -->
 	<div class="modal-backdrop" id="passcodeModalBackdrop">
-		<div class="modal-sheet" style="max-height: 400px;">
+		<div class="modal-sheet" style="max-height: 420px;">
 			<div class="modal-header">
-				<div class="modal-title">Enter Table Passcode</div>
+				<div class="modal-title">{% if is_room_service %}Room Stay Authorization{% else %}Enter Table Passcode{% endif %}</div>
 				<button type="button" class="btn-close-modal" id="btnClosePasscodeModal">&times;</button>
 			</div>
 
 			<div class="modal-body">
 				<div id="passcodeAlert" class="alert-banner"></div>
 				<p class="pin-desc">
-					Ask your server or check your printed table QR stand for the <strong>4-digit passcode</strong> to join Table {{ table_no }}'s visit.
+					{% if is_room_service %}
+						Enter your private <strong>Stay Token</strong> or 4-digit passcode to authorize in-room dining for <strong>{{ table_no }}</strong>.
+					{% else %}
+						Ask your server or check your printed table QR stand for the <strong>4-digit passcode</strong> to join Table {{ table_no }}'s visit.
+					{% endif %}
 				</p>
 
+				{% if is_room_service %}
+				<div style="margin: 0.85rem 0 1.25rem 0;">
+					<input type="text" id="roomStayTokenInput" class="search-input" placeholder="Paste Stay Token or enter 4-digit PIN" style="border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0.65rem 0.85rem; width: 100%; font-size: 0.95rem; text-align: center; font-family: monospace;">
+				</div>
+				{% else %}
 				<div class="pin-input-container">
 					<input type="tel" maxlength="1" class="pin-digit" id="pin1" autofocus autocomplete="off">
 					<input type="tel" maxlength="1" class="pin-digit" id="pin2" autocomplete="off">
 					<input type="tel" maxlength="1" class="pin-digit" id="pin3" autocomplete="off">
 					<input type="tel" maxlength="1" class="pin-digit" id="pin4" autocomplete="off">
 				</div>
+				{% endif %}
 
 				<div style="text-align: center;">
 					<button type="button" class="btn-submit-order" id="btnVerifyPasscode" style="width: 100%; max-width: 280px; margin: 0 auto;">
@@ -1186,14 +1220,24 @@
 	<script>
 		// Data passed from server template
 		const TABLE_NO = "{{ table_no }}";
+		const ROOM_ENTRY_MODE = {{ 'true' if room_entry_mode else 'false' }};
 		const RAW_MENU = {{ menu_items_json | safe }};
 		const INITIAL_IS_SEATED = {{ 'true' if is_seated else 'false' }};
 		const INITIAL_CODE = "{{ initial_code }}";
+		const IS_ROOM_SERVICE = {{ 'true' if is_room_service else 'false' }};
 		const CSRF_TOKEN = (window.frappe && window.frappe.csrf_token) || "{{ frappe.session.csrf_token }}" || "";
 
 		// Client State
 		let cart = {}; // item_id -> { item: object, qty: number, notes: string }
-		let verifiedPasscode = sessionStorage.getItem(`izen_passcode_${TABLE_NO}`) || INITIAL_CODE || "";
+		const URL_PARAMS = new URLSearchParams(window.location.search);
+		const URL_TOKEN = (URL_PARAMS.get("token") || URL_PARAMS.get("code") || "").trim();
+		const HAS_URL_TOKEN = Boolean(URL_TOKEN);
+		if (IS_ROOM_SERVICE && !INITIAL_CODE && HAS_URL_TOKEN) {
+			sessionStorage.removeItem(`izen_passcode_${TABLE_NO}`);
+		}
+		let verifiedPasscode = (IS_ROOM_SERVICE && HAS_URL_TOKEN && !INITIAL_CODE)
+			? ""
+			: (sessionStorage.getItem(`izen_passcode_${TABLE_NO}`) || INITIAL_CODE || "");
 		let activeOrderData = null;
 		let tableData = null;
 		let currentCategory = "all";
@@ -1215,9 +1259,11 @@
 
 		// Refresh table status and active order from server
 		function refreshTableState() {
+			if (ROOM_ENTRY_MODE || !TABLE_NO) return;
 			let url = `/api/method/restaurant_management.restaurant_management.services.restaurant_store.api_get_table_menu?table_no=${encodeURIComponent(TABLE_NO)}`;
-			if (verifiedPasscode) {
-				url += `&visit_code=${encodeURIComponent(verifiedPasscode)}`;
+			const checkCode = verifiedPasscode || (IS_ROOM_SERVICE ? URL_TOKEN : "");
+			if (checkCode) {
+				url += `&visit_code=${encodeURIComponent(checkCode)}`;
 			}
 
 			fetch(url)
@@ -1225,8 +1271,13 @@
 				.then(data => {
 					if (data.message) {
 						let msg = data.message;
-						isSeated = msg.table.is_seated;
+						const staleRoomLink = IS_ROOM_SERVICE && (msg.table.token_invalid || (HAS_URL_TOKEN && !msg.table.is_verified));
+						isSeated = Boolean(msg.table.is_seated) && !staleRoomLink;
 						tableData = msg.table;
+						if (staleRoomLink) {
+							verifiedPasscode = "";
+							sessionStorage.removeItem(`izen_passcode_${TABLE_NO}`);
+						}
 						if (msg.active_order) {
 							activeOrderData = msg.active_order;
 						} else {
@@ -1256,7 +1307,11 @@
 			if (!isSeated) {
 				dot.classList.add("inactive");
 				icon.textContent = "ℹ️";
-				msg.innerHTML = `Table <strong>${TABLE_NO}</strong> is open • Browse menu freely`;
+				if (IS_ROOM_SERVICE) {
+					msg.innerHTML = `<strong>${TABLE_NO}</strong> • Your stay has ended • Room service ordering is closed`;
+				} else {
+					msg.innerHTML = `Table <strong>${TABLE_NO}</strong> is open • Browse menu freely`;
+				}
 				action.innerHTML = "";
 				verifiedPasscode = "";
 				sessionStorage.removeItem(`izen_passcode_${TABLE_NO}`);
@@ -1264,32 +1319,48 @@
 			} else if (verifiedPasscode) {
 				dot.classList.remove("inactive");
 				icon.textContent = "✅";
-				msg.innerHTML = `Table <strong>${TABLE_NO}</strong> Active • Visit Passcode: <span class="passcode-pill">${verifiedPasscode}</span>`;
-				action.innerHTML = `<span style="font-size: 0.78rem; color: #047857; font-weight: 600;">Ordering Active</span>`;
+				if (IS_ROOM_SERVICE) {
+					const gName = (tableData && tableData.guest_name) || "{{ guest_name }}";
+					msg.innerHTML = `<strong>${TABLE_NO}</strong> Active • Guest: <strong>${gName || 'Hotel Guest'}</strong>`;
+					action.innerHTML = `<span style="font-size: 0.78rem; color: #047857; font-weight: 600;">Room Service Active</span>`;
+				} else {
+					msg.innerHTML = `Table <strong>${TABLE_NO}</strong> Active • Visit Passcode: <span class="passcode-pill">${verifiedPasscode}</span>`;
+					action.innerHTML = `<span style="font-size: 0.78rem; color: #047857; font-weight: 600;">Ordering Active</span>`;
+				}
 				if (serviceBar) {
 					serviceBar.style.display = "block";
-					// Sync waiter state
-					if (tableData && tableData.waiter_request) {
-						btnWaiter.classList.add("active-notified");
-						lblWaiter.textContent = "Waiter notified";
+					if (IS_ROOM_SERVICE) {
+						lblWaiter.textContent = "Front Desk Help";
+						lblBill.textContent = "Charge to Room Folio";
 					} else {
-						btnWaiter.classList.remove("active-notified");
-						lblWaiter.textContent = "Call waiter";
-					}
-					// Sync bill state
-					if (tableData && tableData.bill_request) {
-						btnBill.classList.add("active-notified");
-						lblBill.textContent = "Bill requested";
-					} else {
-						btnBill.classList.remove("active-notified");
-						lblBill.textContent = "Request bill";
+						// Sync waiter state
+						if (tableData && tableData.waiter_request) {
+							btnWaiter.classList.add("active-notified");
+							lblWaiter.textContent = "Waiter notified";
+						} else {
+							btnWaiter.classList.remove("active-notified");
+							lblWaiter.textContent = "Call waiter";
+						}
+						// Sync bill state
+						if (tableData && tableData.bill_request) {
+							btnBill.classList.add("active-notified");
+							lblBill.textContent = "Bill requested";
+						} else {
+							btnBill.classList.remove("active-notified");
+							lblBill.textContent = "Request bill";
+						}
 					}
 				}
 			} else {
 				dot.classList.remove("inactive");
-				icon.textContent = "🍽️";
-				msg.innerHTML = `Table <strong>${TABLE_NO}</strong> is seated • Enter passcode to order`;
-				action.innerHTML = `<button type="button" class="btn-unlock-visit" id="btnOpenPasscodeModal" onclick="openPasscodeModal()">Enter Passcode</button>`;
+				icon.textContent = IS_ROOM_SERVICE ? "🏨" : "🍽️";
+				if (IS_ROOM_SERVICE) {
+					msg.innerHTML = `<strong>${TABLE_NO}</strong> is checked in • Enter stay token to order`;
+					action.innerHTML = `<button type="button" class="btn-unlock-visit" id="btnOpenPasscodeModal" onclick="openPasscodeModal()">Enter Stay Passcode</button>`;
+				} else {
+					msg.innerHTML = `Table <strong>${TABLE_NO}</strong> is seated • Enter passcode to order`;
+					action.innerHTML = `<button type="button" class="btn-unlock-visit" id="btnOpenPasscodeModal" onclick="openPasscodeModal()">Enter Passcode</button>`;
+				}
 				if (serviceBar) serviceBar.style.display = "none";
 			}
 		}
@@ -1379,23 +1450,27 @@
 
 			// Search input
 			const searchInput = document.getElementById("dishSearch");
-			searchInput.addEventListener("input", function() {
-				searchQuery = this.value.trim().toLowerCase();
-				renderMenu();
-			});
+			if (searchInput) {
+				searchInput.addEventListener("input", function() {
+					searchQuery = this.value.trim().toLowerCase();
+					renderMenu();
+				});
+			}
 
 			// Veg filter toggle
 			const vegBtn = document.getElementById("vegFilterBtn");
-			vegBtn.addEventListener("click", function() {
-				vegOnly = !vegOnly;
-				this.classList.toggle("active", vegOnly);
-				renderMenu();
-			});
+			if (vegBtn) {
+				vegBtn.addEventListener("click", function() {
+					vegOnly = !vegOnly;
+					this.classList.toggle("active", vegOnly);
+					renderMenu();
+				});
+			}
 
 			// Cart modal triggers
-			document.getElementById("btnOpenCartModal").addEventListener("click", openCartModal);
-			document.getElementById("btnCloseCartModal").addEventListener("click", closeCartModal);
-			document.getElementById("cartModalBackdrop").addEventListener("click", function(e) {
+			document.getElementById("btnOpenCartModal")?.addEventListener("click", openCartModal);
+			document.getElementById("btnCloseCartModal")?.addEventListener("click", closeCartModal);
+			document.getElementById("cartModalBackdrop")?.addEventListener("click", function(e) {
 				if (e.target === this) closeCartModal();
 			});
 
@@ -1404,12 +1479,12 @@
 			if (btnOpenPasscode) {
 				btnOpenPasscode.addEventListener("click", openPasscodeModal);
 			}
-			document.getElementById("btnClosePasscodeModal").addEventListener("click", closePasscodeModal);
-			document.getElementById("passcodeModalBackdrop").addEventListener("click", function(e) {
+			document.getElementById("btnClosePasscodeModal")?.addEventListener("click", closePasscodeModal);
+			document.getElementById("passcodeModalBackdrop")?.addEventListener("click", function(e) {
 				if (e.target === this) closePasscodeModal();
 			});
 
-			// PIN digits auto-advance
+			// PIN digits auto-advance (only present for dining tables, not room service)
 			const pins = [
 				document.getElementById("pin1"),
 				document.getElementById("pin2"),
@@ -1418,21 +1493,22 @@
 			];
 
 			pins.forEach((pin, idx) => {
+				if (!pin) return;
 				pin.addEventListener("input", function() {
-					if (this.value.length === 1 && idx < 3) {
+					if (this.value.length === 1 && idx < 3 && pins[idx + 1]) {
 						pins[idx + 1].focus();
 					}
 					checkPinComplete();
 				});
 				pin.addEventListener("keydown", function(e) {
-					if (e.key === "Backspace" && this.value === "" && idx > 0) {
+					if (e.key === "Backspace" && this.value === "" && idx > 0 && pins[idx - 1]) {
 						pins[idx - 1].focus();
 					}
 				});
 			});
 
-			document.getElementById("btnVerifyPasscode").addEventListener("click", submitPasscode);
-			document.getElementById("btnSubmitOrder").addEventListener("click", submitOrder);
+			document.getElementById("btnVerifyPasscode")?.addEventListener("click", submitPasscode);
+			document.getElementById("btnSubmitOrder")?.addEventListener("click", submitOrder);
 
 			const btnWaiter = document.getElementById("btnCallWaiter");
 			if (btnWaiter) {
@@ -1446,10 +1522,10 @@
 		}
 
 		function checkPinComplete() {
-			const p1 = document.getElementById("pin1").value;
-			const p2 = document.getElementById("pin2").value;
-			const p3 = document.getElementById("pin3").value;
-			const p4 = document.getElementById("pin4").value;
+			const p1 = document.getElementById("pin1")?.value || "";
+			const p2 = document.getElementById("pin2")?.value || "";
+			const p3 = document.getElementById("pin3")?.value || "";
+			const p4 = document.getElementById("pin4")?.value || "";
 			const code = `${p1}${p2}${p3}${p4}`;
 			if (code.length === 4) {
 				submitPasscode();
@@ -1457,9 +1533,10 @@
 		}
 
 		function openPasscodeModal() {
-			document.getElementById("passcodeAlert").style.display = "none";
-			document.getElementById("passcodeModalBackdrop").classList.add("active");
-			document.getElementById("pin1").focus();
+			const alertEl = document.getElementById("passcodeAlert");
+			if (alertEl) alertEl.style.display = "none";
+			document.getElementById("passcodeModalBackdrop")?.classList.add("active");
+			(document.getElementById("roomStayTokenInput") || document.getElementById("pin1"))?.focus();
 		}
 
 		function closePasscodeModal() {
@@ -1467,14 +1544,20 @@
 		}
 
 		function submitPasscode() {
-			const p1 = document.getElementById("pin1").value;
-			const p2 = document.getElementById("pin2").value;
-			const p3 = document.getElementById("pin3").value;
-			const p4 = document.getElementById("pin4").value;
-			const code = `${p1}${p2}${p3}${p4}`.trim();
+			let code = "";
+			const tokenInput = document.getElementById("roomStayTokenInput");
+			if (tokenInput && tokenInput.value.trim()) {
+				code = tokenInput.value.trim();
+			} else {
+				const p1 = document.getElementById("pin1") ? document.getElementById("pin1").value : "";
+				const p2 = document.getElementById("pin2") ? document.getElementById("pin2").value : "";
+				const p3 = document.getElementById("pin3") ? document.getElementById("pin3").value : "";
+				const p4 = document.getElementById("pin4") ? document.getElementById("pin4").value : "";
+				code = `${p1}${p2}${p3}${p4}`.trim();
+			}
 
 			if (code.length < 4) {
-				showPasscodeError("Please enter the full 4-digit passcode.");
+				showPasscodeError("Please enter your passcode or Stay Token.");
 				return;
 			}
 

@@ -442,6 +442,12 @@ class ReservationService:
 			# Customer profile lookup or creation
 			cust = RestaurantStore.get_or_create_customer(name=clean_name, mobile=clean_mobile, update_visit=False)
 
+			# Release any old Cancelled rows with this key so guest can rebook the slot cleanly
+			frappe.db.sql(
+				"UPDATE `tabRestaurant Reservation` SET idempotency_key = NULL WHERE idempotency_key = %s AND status = 'Cancelled'",
+				(idempotency_key,),
+			)
+
 			# Generate unique Booking Reference and unguessable cancellation token
 			booking_ref = cls.generate_booking_reference(booking_date)
 			cancel_token = secrets.token_urlsafe(32)
@@ -553,6 +559,7 @@ class ReservationService:
 
 		doc = frappe.get_doc("Restaurant Reservation", res_name)
 		doc.status = "Cancelled"
+		doc.idempotency_key = None
 		doc.save(ignore_permissions=True)
 		frappe.db.commit()
 

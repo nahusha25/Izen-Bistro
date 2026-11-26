@@ -657,6 +657,10 @@ class FloorManagement {
 
 		this.container.on('click', '.live-request-pill', function () {
 			let table_no = $(this).data('table');
+			let area = $(this).data('area');
+			if (area && area !== me.current_area && me.data && (me.data.areas || []).some(a => a.name === area)) {
+				me.current_area = area;
+			}
 			if (table_no) {
 				me.select_table(table_no);
 			}
@@ -698,9 +702,37 @@ class FloorManagement {
 		this.container.find('.floor-last-updated').text(frappe.datetime.now_time());
 		this.render_summary(this.data.summary);
 		this.render_live_requests_banner(this.data.tables);
+		this.render_upcoming_reservations_bar(this.data.all_upcoming_reservations || []);
 		this.render_area_tabs(this.data.areas);
 		this.render_2d_floor_plan();
 		this.render_detail_panel();
+	}
+
+	render_upcoming_reservations_bar(reservations) {
+		let $bar = $('#floor-upcoming-res-bar');
+		if (!$bar.length) {
+			$bar = $('<div id="floor-upcoming-res-bar" style="margin-bottom: 12px; display: none;"></div>').insertBefore('.floor-controls-bar');
+		}
+		if (!reservations || reservations.length === 0) {
+			$bar.hide().empty();
+			return;
+		}
+		const pills = reservations.slice(0, 12).map(r => `
+			<span class="live-request-pill upcoming-res-pill" data-table="${frappe.utils.escape_html(r.table_no)}" data-area="${frappe.utils.escape_html(r.table_area || '')}" data-ref="${frappe.utils.escape_html(r.booking_ref)}" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:16px;font-size:0.78rem;font-weight:600;background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;cursor:pointer;">
+				<i class="fa fa-calendar-check-o"></i>
+				<span style="font-family:monospace;font-weight:800;">${frappe.utils.escape_html(r.booking_ref)}</span>
+				<span>· ${frappe.utils.escape_html(r.customer_name)}</span>
+				<span style="color:#c2410c;">(${frappe.utils.escape_html(r.table_no)} · ${frappe.utils.escape_html(r.booking_date)} ${frappe.utils.escape_html(r.booking_time)} · ${r.party_size}p)</span>
+			</span>
+		`).join('');
+		$bar.html(`
+			<div style="background:#ffffff;border-radius:10px;border:1px solid #fed7aa;padding:8px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+				<span style="font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:#9a3412;display:inline-flex;align-items:center;gap:6px;">
+					<i class="fa fa-calendar"></i> ${__('Upcoming Table Reservations')} (${reservations.length}):
+				</span>
+				<div style="display:flex;gap:6px;flex-wrap:wrap;">${pills}</div>
+			</div>
+		`).show();
 	}
 
 	render_live_requests_banner(tables) {
@@ -762,8 +794,8 @@ class FloorManagement {
 		const allTables = (this.data && this.data.tables) ? this.data.tables : [];
 		const total = allTables.length || (summary && summary.total != null ? summary.total : 0);
 		const occupied = allTables.filter(t => t.status === 'Occupied').length;
-		const reserved = allTables.filter(t => t.status === 'Reserved').length;
-		const available = Math.max(0, total - occupied - reserved);
+		const reserved = allTables.filter(t => (t.upcoming_reservations && t.upcoming_reservations.length > 0) || !!t.next_reservation || t.status === 'Reserved').length;
+		const available = allTables.filter(t => t.status === 'Available').length;
 		const occupancy_pct = total > 0 ? Math.round((occupied / total) * 100) + '%' : '0%';
 
 		$('#kpi-floor-total').text(total);
@@ -1374,8 +1406,11 @@ class FloorManagement {
 		let statusClass = `t2d-status-${table.status.toLowerCase()}`;
 
 		// Filter status check
+		let hasUpcoming = (table.upcoming_reservations && table.upcoming_reservations.length > 0) || !!table.next_reservation;
 		let isMatch = true;
-		if (this.current_status !== 'All' && table.status !== this.current_status) {
+		if (this.current_status === 'Reserved') {
+			isMatch = hasUpcoming || table.status === 'Reserved';
+		} else if (this.current_status !== 'All' && table.status !== this.current_status) {
 			isMatch = false;
 		}
 		if (this.search_query && !table.table_no.toLowerCase().includes(this.search_query) && !(table.customer && table.customer.toLowerCase().includes(this.search_query))) {

@@ -30,6 +30,24 @@
   },
   {
    "role": "Sales Manager"
+  },
+  {
+   "role": "Front Desk"
+  },
+  {
+   "role": "F&B Manager"
+  },
+  {
+   "role": "Hotel Admin"
+  },
+  {
+   "role": "Kitchen"
+  },
+  {
+   "role": "Finance"
+  },
+  {
+   "role": "Restaurant Manager"
   }
  ],
  "script": null,
@@ -38,4 +56,3 @@
  "system_page": 0,
  "title": "Order Management"
 }
-
