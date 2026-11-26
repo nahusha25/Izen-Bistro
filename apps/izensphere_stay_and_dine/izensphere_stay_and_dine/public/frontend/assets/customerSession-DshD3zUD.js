@@ -1,0 +1,1 @@
+const e="izensphere_customer_session";function c(){try{const t=localStorage.getItem(e);if(!t)return[];const r=JSON.parse(t);return Array.isArray(r)?r:[]}catch{return[]}}function a(t,r){try{if(!t)return;const o=c().filter(s=>s.reservation!==t),n=[{reservation:t,token:r||void 0,timestamp:Date.now()},...o];localStorage.setItem(e,JSON.stringify(n.slice(0,50)))}catch{}}export{a as r};

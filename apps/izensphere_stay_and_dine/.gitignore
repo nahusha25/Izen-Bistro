@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/tsconfig.tsbuildinfo
+
+# Frappe
+izensphere_stay_and_dine/public/dist/
+izensphere_stay_and_dine/public/node_modules/
+*.log
+
+# Local
+.DS_Store
+.env
+
+# Internal operator plans — keep local only, never publish
+PLAN.md
+docs/adr-str.md
+docs-site/node_modules/
+docs-site/.vitepress/dist/
+docs-site/.vitepress/cache/
+
+graphify-out/
+node_modules
