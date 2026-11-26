@@ -2795,25 +2795,49 @@ class RestaurantStore:
 		}
 
 	@classmethod
-	def get_active_room_reservation(cls, room_no, property=None):
+	def get_active_room_reservation(cls, room_no, property=None, token=None):
 		"""
 		Retrieves the active Checked In reservation for a given hotel room.
 		Matches on exact Room doctype name or any Room sharing room_number across properties.
 		"""
 		if not room_no:
 			return None
-		clean_no = str(room_no).replace("Room", "").replace("room", "").strip()
+		clean_tok = str(token).strip() if token else ""
+		if clean_tok:
+			clean_no_tok = str(room_no).replace("Room", "").replace("room", "").strip()
+			prop_cond = "AND property = %s" if property else ""
+			tok_params = [clean_tok, f"{clean_tok}%"] + ([property] if property else [])
+			tok_res = frappe.db.sql(
+				f"""
+				SELECT name, guest, guest_name, booked_by_phone, check_in_date, check_out_date,
+				       room, property, status, precheckin_token, room_charges_allowed
+				FROM `tabReservation`
+				WHERE status = 'Checked In'
+				  AND (precheckin_token = %s OR precheckin_token LIKE %s)
+				  {prop_cond}
+				ORDER BY modified DESC
+				LIMIT 5
+				""",
+				tuple(tok_params),
+				as_dict=True,
+			)
+			for r in tok_res:
+				r_room = str(r.get("room") or "")
+				if r_room == clean_no_tok or r_room.endswith(f"-{clean_no_tok}"):
+					return r
+		raw_no = str(room_no).strip()
+		clean_no = raw_no.replace("Room", "").replace("room", "").strip()
 		cond_prop = "AND property = %s" if property else ""
-		params = [clean_no, clean_no, f"%-{clean_no}"] + ([property] if property else [])
+		params = [raw_no, clean_no, f"Room {clean_no}", raw_no, clean_no, f"%-{raw_no}", f"%-Room {clean_no}"] + ([property] if property else [])
 		room_docs = frappe.db.sql(
 			f"""
 			SELECT name FROM `tabRoom`
-			WHERE (room_number = %s OR name = %s OR name LIKE %s) {cond_prop}
+			WHERE (room_number IN (%s, %s, %s) OR name IN (%s, %s) OR name LIKE %s OR name LIKE %s) {cond_prop}
 			""",
 			tuple(params),
 			as_dict=True,
 		)
-		candidates = {clean_no} | {r["name"] for r in room_docs}
+		candidates = {raw_no, clean_no} | {r["name"] for r in room_docs}
 		placeholders = ", ".join(["%s"] * len(candidates))
 		prop_filter = "AND property = %s" if property else ""
 		q_params = list(candidates) + [f"%-{clean_no}"] + ([property] if property else [])
@@ -2852,7 +2876,7 @@ class RestaurantStore:
 		room_no = order.get("room") or str(order.get("table_no", "")).replace("Room", "").strip()
 
 		if not res_name and room_no:
-			res_dict = cls.get_active_room_reservation(room_no)
+			res_dict = cls.get_active_room_reservation(room_no, property=order.get("property"))
 			if res_dict:
 				res_name = res_dict.get("name")
 				order["reservation"] = res_name
@@ -7588,7 +7612,7 @@ def api_get_table_qr(table_no):
 
 
 @frappe.whitelist(allow_guest=True)
-def api_get_table_menu(table_no, visit_code=None):
+def api_get_table_menu(table_no, visit_code=None, property=None):
 	"""
 	Public customer endpoint to browse menu and view table/room state.
 	Anonymous browsing is permitted.
@@ -7600,7 +7624,7 @@ def api_get_table_menu(table_no, visit_code=None):
 	is_room = str(table_no).startswith("Room") or str(table_no).isdigit() or RestaurantStore.get_active_room_reservation(table_no)
 	if is_room:
 		clean_room = str(table_no).replace("Room", "").replace("room", "").strip()
-		res = RestaurantStore.get_active_room_reservation(clean_room)
+		res = RestaurantStore.get_active_room_reservation(clean_room, property=property, token=visit_code)
 		target_table_no = f"Room {clean_room}"
 		if not res:
 			is_seated = False
@@ -7622,7 +7646,7 @@ def api_get_table_menu(table_no, visit_code=None):
 			room_charges_allowed = bool(res.get("room_charges_allowed", 1))
 			active_order = None
 			if is_verified:
-				active_order = next((RestaurantStore.get_order_details(o["order_id"]) for o in data.get("orders", []) if (o.get("table_no") == target_table_no or o.get("reservation") == res["name"]) and o.get("status") not in ["Cancelled", "Paid"]), None)
+				active_order = next((RestaurantStore.get_order_details(o["order_id"]) for o in data.get("orders", []) if (o.get("reservation") == res["name"] or (not o.get("reservation") and o.get("table_no") == target_table_no)) and o.get("status") not in ["Cancelled", "Paid", "Delivered", "Served"]), None)
 
 		menu_items = []
 		for it in data.get("menu_items", []):
@@ -7725,7 +7749,7 @@ def api_verify_table_passcode(table_no, visit_code):
 	is_room = str(table_no).startswith("Room") or str(table_no).isdigit() or RestaurantStore.get_active_room_reservation(table_no)
 	if is_room:
 		clean_room = str(table_no).replace("Room", "").replace("room", "").strip()
-		res = RestaurantStore.get_active_room_reservation(clean_room)
+		res = RestaurantStore.get_active_room_reservation(clean_room, property=property, token=visit_code)
 		if not res:
 			frappe.throw(_("Room {0} does not currently have an active checked-in guest.").format(clean_room))
 
@@ -7825,7 +7849,7 @@ def api_submit_guest_order(table_no, visit_code, items, notes="", idempotency_ke
 			if cached.get("table_no") == target_table_no and cached.get("reservation") == res["name"]:
 				return cached.get("response")
 
-		existing_order = next((o for o in data.get("orders", []) if (o.get("table_no") == target_table_no or o.get("reservation") == res["name"]) and o.get("status") not in ["Cancelled", "Paid"]), None)
+		existing_order = next((o for o in data.get("orders", []) if (o.get("reservation") == res["name"] or (not o.get("reservation") and o.get("table_no") == target_table_no)) and o.get("status") not in ["Cancelled", "Paid", "Delivered", "Served"]), None)
 
 		if existing_order:
 			res_order = RestaurantStore.add_items_to_order(
@@ -8064,11 +8088,11 @@ def api_submit_reception_room_order(room, items, notes="", property=None):
 	if getattr(frappe.session, "user", None) == "Guest":
 		frappe.throw(_("Staff authentication required to place orders from reception."), frappe.PermissionError)
 
-	clean_room = str(room).replace("Room", "").replace("room", "").strip()
-	if "-" in clean_room:
-		room_number_val = frappe.db.get_value("Room", clean_room, "room_number") or clean_room.split("-")[-1]
+	raw_room = str(room).strip()
+	if "-" in raw_room:
+		room_number_val = frappe.db.get_value("Room", raw_room, "room_number") or raw_room.split("-")[-1]
 	else:
-		room_number_val = clean_room
+		room_number_val = raw_room
 	res = RestaurantStore.get_active_room_reservation(room_number_val, property=property)
 	if not res:
 		frappe.throw(_("Cannot place room service order: Room {0} has no active checked-in guest.").format(room_number_val))
